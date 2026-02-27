@@ -1,4 +1,4 @@
-import { API_VERSION, HealthResponseSchema } from "@bridgeed/shared";
+import { HealthResponseSchema } from "@bridgeed/shared";
 import type { RequestHandler } from "express";
 
 import { env } from "../config/env";
@@ -19,8 +19,7 @@ export const getVersion: RequestHandler = (_req, res) => {
   res.status(200).json(
     successResponse({
       version,
-      env: env.NODE_ENV,
-      apiVersion: API_VERSION
+      env: env.NODE_ENV
     })
   );
 };
