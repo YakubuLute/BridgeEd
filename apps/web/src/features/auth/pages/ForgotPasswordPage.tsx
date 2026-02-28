@@ -5,7 +5,13 @@ import { useNavigate } from "react-router-dom";
 import { AuthLayout } from "../AuthLayout";
 import { ArrowLeftIcon, CheckCircleIcon, MailIcon } from "../AuthIcons";
 import { validateEmail } from "../auth.constants";
-import { authCardStyle, getActionButtonStyles, getAuthInputStyles } from "../auth.styles";
+import {
+  authCardStyle,
+  authInputClassNames,
+  getActionButtonClassName,
+  getActionButtonStyles,
+  getAuthInputStyles
+} from "../auth.styles";
 
 export const ForgotPasswordPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -82,6 +88,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
                   Email Address
                 </Text>
                 <Input
+                  classNames={authInputClassNames}
                   leftSection={<MailIcon />}
                   onChange={(event) => setEmail(event.currentTarget.value)}
                   placeholder="teacher@example.com"
@@ -95,13 +102,14 @@ export const ForgotPasswordPage = (): JSX.Element => {
               </Stack>
 
               <Button
+                className={getActionButtonClassName(isEmailValid)}
                 color="gray"
                 disabled={!isEmailValid || isLoading}
                 fullWidth
                 onClick={handleSubmit}
                 radius={14}
                 size="md"
-                styles={getActionButtonStyles(isEmailValid)}
+                styles={getActionButtonStyles()}
               >
                 {isLoading ? "Sending..." : "Send Reset Link"}
               </Button>
@@ -183,12 +191,13 @@ export const ForgotPasswordPage = (): JSX.Element => {
               </Stack>
 
               <Button
+                className={getActionButtonClassName(true)}
                 color="gray"
                 fullWidth
                 onClick={() => navigate("/login/email")}
                 radius={14}
                 size="md"
-                styles={getActionButtonStyles(true)}
+                styles={getActionButtonStyles()}
               >
                 <Group gap={8} justify="center" wrap="nowrap">
                   <ArrowLeftIcon />

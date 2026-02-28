@@ -17,7 +17,13 @@ import {
   sanitizePhoneDigits,
   toE164Phone
 } from "../auth.constants";
-import { authCardStyle, getActionButtonStyles, getOtpDigitStyles } from "../auth.styles";
+import {
+  authCardStyle,
+  authOtpInputClassNames,
+  getActionButtonClassName,
+  getActionButtonStyles,
+  getOtpDigitStyles
+} from "../auth.styles";
 
 type Feedback = {
   tone: "error" | "success" | "info";
@@ -272,13 +278,14 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
               </Stack>
 
               <Button
+                className={getActionButtonClassName(isPhoneValid)}
                 color="gray"
                 disabled={!isPhoneValid || requestOtpMutation.isPending}
                 fullWidth
                 onClick={handleSendOtp}
                 radius={14}
                 size="md"
-                styles={getActionButtonStyles(isPhoneValid)}
+                styles={getActionButtonStyles()}
               >
                 {requestOtpMutation.isPending ? "Sending..." : "Send OTP"}
               </Button>
@@ -319,6 +326,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                     <Input
                       key={`otp-${index}`}
                       aria-label={`OTP digit ${index + 1}`}
+                      classNames={authOtpInputClassNames}
                       inputMode="numeric"
                       maxLength={1}
                       onChange={(event) => handleOtpChange(index, event.currentTarget.value)}
@@ -352,13 +360,14 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
               </Stack>
 
               <Button
+                className={getActionButtonClassName(isOtpValid)}
                 color="gray"
                 disabled={!isOtpValid || verifyOtpMutation.isPending}
                 fullWidth
                 onClick={handleVerifyOtp}
                 radius={14}
                 size="md"
-                styles={getActionButtonStyles(isOtpValid)}
+                styles={getActionButtonStyles()}
               >
                 {verifyOtpMutation.isPending ? "Verifying..." : "Verify & Login"}
               </Button>

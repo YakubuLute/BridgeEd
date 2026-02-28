@@ -13,7 +13,13 @@ import {
   validateEmail,
   validatePassword
 } from "../auth.constants";
-import { authCardStyle, getActionButtonStyles, getAuthInputStyles } from "../auth.styles";
+import {
+  authCardStyle,
+  authInputClassNames,
+  getActionButtonClassName,
+  getActionButtonStyles,
+  getAuthInputStyles
+} from "../auth.styles";
 
 const DEMO_LOGIN_EMAIL = "teacher@bridgeed.gh";
 const DEMO_LOGIN_PASSWORD = "Teacher123";
@@ -170,6 +176,7 @@ export const EmailLoginPage = (): JSX.Element => {
               Email Address
             </Text>
             <Input
+              classNames={authInputClassNames}
               disabled={isLockedOut}
               leftSection={<MailIcon />}
               onChange={(event) => setEmail(event.currentTarget.value)}
@@ -185,6 +192,7 @@ export const EmailLoginPage = (): JSX.Element => {
               Password
             </Text>
             <Input
+              classNames={authInputClassNames}
               disabled={isLockedOut}
               leftSection={<LockIcon />}
               onChange={(event) => setPassword(event.currentTarget.value)}
@@ -251,13 +259,14 @@ export const EmailLoginPage = (): JSX.Element => {
           </Group>
 
           <Button
+            className={getActionButtonClassName(isFormValid)}
             color="gray"
             disabled={!email || !password || isLoading || isLockedOut}
             fullWidth
             onClick={handleLogin}
             radius={14}
             size="md"
-            styles={getActionButtonStyles(isFormValid)}
+            styles={getActionButtonStyles()}
           >
             {isLoading ? "Logging in..." : isLockedOut ? "Account Locked" : "Login"}
           </Button>
