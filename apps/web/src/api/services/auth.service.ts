@@ -89,7 +89,7 @@ export const requestOtp = async ({ phoneNumber }: RequestOtpInput): Promise<Requ
       expiresInSeconds
     };
   } catch (error: unknown) {
-    throwNormalizedAuthError(error);
+    return throwNormalizedAuthError(error);
   }
 };
 
@@ -133,6 +133,6 @@ export const verifyOtp = async ({
         : undefined
     };
   } catch (error: unknown) {
-    throwNormalizedAuthError(error);
+    return throwNormalizedAuthError(error);
   }
 };

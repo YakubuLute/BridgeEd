@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 import {
   Alert,
   Anchor,
@@ -6,14 +7,10 @@ import {
   Button,
   Card,
   Center,
-  Container,
   Group,
   Input,
-  Loader,
-  PinInput,
   Stack,
-  Text,
-  Title
+  Text
 } from "@mantine/core";
 
 import { useRequestOtpMutation, useVerifyOtpMutation } from "../../api/hooks/useAuthMutations";
@@ -29,25 +26,26 @@ const OTP_LENGTH = 6;
 const SESSION_STORAGE_KEY = "bridgeed.session";
 const DEFAULT_OTP_EXPIRY_SECONDS = 300;
 
-const formatCountdown = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
+const emptyOtp = (): string[] => Array.from({ length: OTP_LENGTH }, () => "");
 
-  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-};
-
-const sanitizeDigits = (value: string): string =>
+const sanitizePhoneDigits = (value: string): string =>
   value.replace(/[^\d]/g, "").slice(0, PHONE_DIGIT_LIMIT);
 
 const toE164Phone = (value: string): string => `${COUNTRY_CODE}${value.replace(/^0/, "")}`;
+
+const formatCountdown = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+};
 
 const PhoneIcon = (): JSX.Element => (
   <svg
     aria-hidden="true"
     fill="none"
-    height="30"
+    height="24"
     viewBox="0 0 24 24"
-    width="30"
+    width="24"
     xmlns="http://www.w3.org/2000/svg"
   >
     <path
@@ -62,15 +60,16 @@ const PhoneIcon = (): JSX.Element => (
 
 export const PhoneOtpLoginPage = (): JSX.Element => {
   const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [otpCode, setOtpCode] = useState<string>("");
+  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [otp, setOtp] = useState<string[]>(emptyOtp);
   const [otpRequestId, setOtpRequestId] = useState<string | null>(null);
   const [expiresAtMs, setExpiresAtMs] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const otpInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const configuredExpiry = useMemo(() => {
     const parsedValue = Number(import.meta.env.VITE_OTP_EXPIRY_SECONDS ?? DEFAULT_OTP_EXPIRY_SECONDS);
-
     if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
       return DEFAULT_OTP_EXPIRY_SECONDS;
     }
@@ -78,21 +77,24 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
     return Math.floor(parsedValue);
   }, []);
 
-  const otpExpired = Boolean(otpRequestId) && secondsLeft <= 0;
+  const otpExpired = step === "otp" && secondsLeft <= 0;
+  const otpValue = otp.join("");
 
   const requestOtpMutation = useRequestOtpMutation({
     onSuccess: (result) => {
       const expirySeconds = result.expiresInSeconds ?? configuredExpiry;
+      setStep("otp");
       setOtpRequestId(result.requestId);
-      setSecondsLeft(expirySeconds);
       setExpiresAtMs(Date.now() + expirySeconds * 1000);
-      setOtpCode("");
+      setSecondsLeft(expirySeconds);
+      setOtp(emptyOtp());
       setFeedback({
         tone: "info",
-        message: `OTP sent to ${COUNTRY_CODE} ${phoneNumber}. It will expire in ${Math.round(
-          expirySeconds / 60
-        )} minute(s).`
+        message: `OTP sent to ${COUNTRY_CODE} ${phoneNumber}. Expires in ${formatCountdown(expirySeconds)}.`
       });
+      window.setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 0);
     },
     onError: (error) => {
       setFeedback({
@@ -129,17 +131,17 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
   });
 
   useEffect(() => {
-    if (!expiresAtMs) {
+    if (!expiresAtMs || step !== "otp") {
       return;
     }
 
     const timer = window.setInterval(() => {
-      const remaining = Math.max(0, Math.ceil((expiresAtMs - Date.now()) / 1000));
-      setSecondsLeft(remaining);
+      const remainingSeconds = Math.max(0, Math.ceil((expiresAtMs - Date.now()) / 1000));
+      setSecondsLeft(remainingSeconds);
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [expiresAtMs]);
+  }, [expiresAtMs, step]);
 
   const handleSendOtp = (): void => {
     if (phoneNumber.length !== PHONE_DIGIT_LIMIT) {
@@ -152,6 +154,30 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
 
     setFeedback(null);
     requestOtpMutation.mutate({ phoneNumber: toE164Phone(phoneNumber) });
+  };
+
+  const handleOtpChange = (index: number, value: string): void => {
+    const digit = value.replace(/[^\d]/g, "").slice(0, 1);
+
+    setOtp((currentOtp) => {
+      const nextOtp = [...currentOtp];
+      nextOtp[index] = digit;
+      return nextOtp;
+    });
+
+    if (feedback?.tone === "error") {
+      setFeedback(null);
+    }
+
+    if (digit && index < OTP_LENGTH - 1) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, event: KeyboardEvent<HTMLInputElement>): void => {
+    if (event.key === "Backspace" && !otp[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
   };
 
   const handleVerifyOtp = (): void => {
@@ -171,10 +197,10 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
       return;
     }
 
-    if (otpCode.length !== OTP_LENGTH) {
+    if (otpValue.length !== OTP_LENGTH) {
       setFeedback({
         tone: "error",
-        message: "Enter the 6-digit OTP."
+        message: "Enter the complete 6-digit OTP."
       });
       return;
     }
@@ -183,7 +209,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
     verifyOtpMutation.mutate({
       phoneNumber: toE164Phone(phoneNumber),
       requestId: otpRequestId,
-      otp: otpCode
+      otp: otpValue
     });
   };
 
@@ -197,105 +223,258 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
     }
 
     setFeedback(null);
+    setOtp(emptyOtp());
     requestOtpMutation.mutate({ phoneNumber: toE164Phone(phoneNumber) });
   };
 
+  const handleChangeNumber = (): void => {
+    setStep("phone");
+    setOtp(emptyOtp());
+    setOtpRequestId(null);
+    setExpiresAtMs(null);
+    setSecondsLeft(0);
+    setFeedback(null);
+  };
+
   return (
-    <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-10">
-      <Container px={0} size={500}>
-        <Stack align="center" gap={48}>
-          <Stack align="center" gap="sm">
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "16px"
+      }}
+    >
+      <Box style={{ width: "100%", maxWidth: "390px" }}>
+        <Stack gap={32}>
+          <Stack align="center" gap={16}>
             <Center
-              h={112}
+              h={72}
               style={{
                 borderRadius: "50%",
                 backgroundColor: "#070A24"
               }}
-              w={112}
+              w={72}
             >
-              <Text c="white" fw={500} fz={58} lh={1}>
+              <Text c="white" fw={500} fz={28} lh="28px">
                 B
               </Text>
             </Center>
 
-            <Title c="#0B0D1D" fw={700} order={1} ta="center">
+            <Text c="#0B0D1D" fw={700} fz={22} lh="32px" ta="center">
               BridgeEd
-            </Title>
-            <Text c="#6A6C7D" fw={500} fz={38} ta="center">
+            </Text>
+            <Text c="#6A6C7D" fw={500} fz={16} lh="24px" ta="center">
               Bridging Foundational Learning Gaps.
             </Text>
           </Stack>
 
           <Card
-            p={{ base: "xl", sm: 44 }}
-            radius={20}
-            shadow="sm"
+            p={24}
+            radius={16}
             style={{
-              width: "100%",
               border: "1px solid #D5D6DD",
-              backgroundColor: "#F7F7F9"
+              backgroundColor: "#F7F7F9",
+              boxShadow: "0px 1px 3px rgba(15, 23, 42, 0.12)"
             }}
           >
-            <Stack gap={30}>
-              <Stack align="center" gap="xs">
-                <Title c="#121421" fw={700} order={2} ta="center">
-                  Welcome Back
-                </Title>
-                <Text c="#696C7D" fw={500} fz={24} maw={470} ta="center">
-                  Enter your phone number to receive a one-time password
-                </Text>
-              </Stack>
+            <Stack gap={24}>
+              {step === "phone" && (
+                <>
+                  <Stack align="center" gap={8}>
+                    <Text c="#121421" fw={700} fz={22} lh="32px" ta="center">
+                      Welcome Back
+                    </Text>
+                    <Text c="#696C7D" fw={500} fz={16} lh="24px" ta="center">
+                      Enter your phone number to receive a one-time password
+                    </Text>
+                  </Stack>
 
-              <Box>
-                <Text c="#151721" fw={700} fz={24} mb={14}>
-                  Phone Number
-                </Text>
-                <Group
-                  gap="sm"
-                  px="lg"
-                  py="md"
-                  style={{
-                    minHeight: "88px",
-                    borderRadius: "18px",
-                    backgroundColor: "#E8E8ED"
-                  }}
-                  wrap="nowrap"
-                >
-                  <PhoneIcon />
-                  <Text c="#151721" fw={500} fz={34}>
-                    {COUNTRY_CODE}
-                  </Text>
-                  <Input
-                    aria-label="Phone number"
-                    autoComplete="tel-national"
-                    inputMode="numeric"
-                    maxLength={PHONE_DIGIT_LIMIT}
-                    onChange={(event) => {
-                      setPhoneNumber(sanitizeDigits(event.currentTarget.value));
-                      if (feedback?.tone === "error") {
-                        setFeedback(null);
-                      }
-                    }}
-                    pattern="[0-9]*"
-                    placeholder="XX XXX XXXX"
+                  <Stack gap={8}>
+                    <Text c="#151721" fw={700} fz={16} lh="24px">
+                      Phone Number
+                    </Text>
+
+                    <Group
+                      gap={8}
+                      px={16}
+                      py={8}
+                      style={{
+                        minHeight: "64px",
+                        borderRadius: "14px",
+                        backgroundColor: "#E8E8ED"
+                      }}
+                      wrap="nowrap"
+                    >
+                      <PhoneIcon />
+                      <Text c="#151721" fw={500} fz={20} lh="28px">
+                        {COUNTRY_CODE}
+                      </Text>
+                      <Input
+                        aria-label="Phone number"
+                        autoComplete="tel-national"
+                        inputMode="numeric"
+                        maxLength={PHONE_DIGIT_LIMIT}
+                        onChange={(event) => {
+                          setPhoneNumber(sanitizePhoneDigits(event.currentTarget.value));
+                          if (feedback?.tone === "error") {
+                            setFeedback(null);
+                          }
+                        }}
+                        placeholder="XX XXX XXXX"
+                        styles={{
+                          input: {
+                            height: "48px",
+                            fontSize: "20px",
+                            lineHeight: "28px",
+                            color: "#757684",
+                            background: "transparent",
+                            border: "none",
+                            width: "100%"
+                          }
+                        }}
+                        value={phoneNumber}
+                        variant="unstyled"
+                      />
+                    </Group>
+
+                    <Text c="#696C7D" fz={14} fw={500} lh="20px">
+                      Enter your 10-digit mobile number
+                    </Text>
+                  </Stack>
+
+                  <Button
+                    color="gray"
+                    disabled={phoneNumber.length < PHONE_DIGIT_LIMIT || requestOtpMutation.isPending}
+                    fullWidth
+                    onClick={handleSendOtp}
+                    radius={14}
+                    size="md"
                     styles={{
-                      input: {
-                        height: 60,
-                        fontSize: "2rem",
-                        color: "#757684",
-                        background: "transparent",
-                        border: "none",
-                        width: "100%"
+                      label: {
+                        fontSize: "16px",
+                        lineHeight: "24px",
+                        fontWeight: 700
+                      },
+                      root: {
+                        minHeight: "56px",
+                        backgroundColor: "#868791"
                       }
                     }}
-                    value={phoneNumber}
-                    variant="unstyled"
-                  />
-                </Group>
-                <Text c="#696C7D" fz={18} fw={500} mt={12}>
-                  Enter your 10-digit mobile number
-                </Text>
-              </Box>
+                  >
+                    {requestOtpMutation.isPending ? "Sending..." : "Send OTP"}
+                  </Button>
+
+                  <Group justify="center">
+                    <Anchor c="#1B1D2D" component="button" fw={700} fz={16} lh="24px" type="button">
+                      Login with Email
+                    </Anchor>
+                  </Group>
+                </>
+              )}
+
+              {step === "otp" && (
+                <>
+                  <Stack align="center" gap={8}>
+                    <Text c="#121421" fw={700} fz={22} lh="32px" ta="center">
+                      Verify Code
+                    </Text>
+                    <Text c="#696C7D" fw={500} fz={16} lh="24px" ta="center">
+                      Enter the 6-digit code sent to
+                    </Text>
+                    <Text c="#151721" fw={600} fz={16} lh="24px" ta="center">
+                      {COUNTRY_CODE} {phoneNumber}
+                    </Text>
+                  </Stack>
+
+                  <Stack gap={16}>
+                    <Group gap={8} justify="center" wrap="nowrap">
+                      {otp.map((digit, index) => (
+                        <Input
+                          key={`otp-${index}`}
+                          aria-label={`OTP digit ${index + 1}`}
+                          inputMode="numeric"
+                          maxLength={1}
+                          onChange={(event) => handleOtpChange(index, event.currentTarget.value)}
+                          onKeyDown={(event) => handleOtpKeyDown(index, event)}
+                          ref={(node) => {
+                            otpInputRefs.current[index] = node;
+                          }}
+                          styles={{
+                            input: {
+                              width: "48px",
+                              height: "56px",
+                              textAlign: "center",
+                              fontSize: "20px",
+                              lineHeight: "28px",
+                              borderRadius: "12px",
+                              border: "2px solid #D5D6DD",
+                              backgroundColor: "#E8E8ED",
+                              color: "#151721"
+                            }
+                          }}
+                          type="tel"
+                          value={digit}
+                        />
+                      ))}
+                    </Group>
+
+                    <Stack align="center" gap={4}>
+                      <Text c={otpExpired ? "red" : "#696C7D"} fz={14} fw={500} lh="20px" ta="center">
+                        {otpExpired ? "OTP expired." : `Expires in ${formatCountdown(secondsLeft)}`}
+                      </Text>
+                      <Anchor
+                        c="#1B1D2D"
+                        component="button"
+                        fw={600}
+                        fz={14}
+                        lh="20px"
+                        onClick={handleResendOtp}
+                        type="button"
+                      >
+                        Resend OTP
+                      </Anchor>
+                    </Stack>
+                  </Stack>
+
+                  <Button
+                    color="gray"
+                    disabled={otpValue.length !== OTP_LENGTH || verifyOtpMutation.isPending || otpExpired}
+                    fullWidth
+                    onClick={handleVerifyOtp}
+                    radius={14}
+                    size="md"
+                    styles={{
+                      label: {
+                        fontSize: "16px",
+                        lineHeight: "24px",
+                        fontWeight: 700
+                      },
+                      root: {
+                        minHeight: "56px",
+                        backgroundColor: "#868791"
+                      }
+                    }}
+                  >
+                    {verifyOtpMutation.isPending ? "Verifying..." : "Verify & Login"}
+                  </Button>
+
+                  <Group justify="center">
+                    <Anchor
+                      c="#696C7D"
+                      component="button"
+                      fw={500}
+                      fz={14}
+                      lh="20px"
+                      onClick={handleChangeNumber}
+                      type="button"
+                    >
+                      Change Phone Number
+                    </Anchor>
+                  </Group>
+                </>
+              )}
 
               {feedback && (
                 <Alert
@@ -312,93 +491,14 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                   {feedback.message}
                 </Alert>
               )}
-
-              <Button
-                color="gray"
-                disabled={requestOtpMutation.isPending}
-                fullWidth
-                onClick={handleSendOtp}
-                radius={18}
-                size="xl"
-                styles={{
-                  label: {
-                    fontSize: "2rem",
-                    fontWeight: 700
-                  },
-                  root: {
-                    minHeight: "88px",
-                    backgroundColor: "#868791"
-                  }
-                }}
-              >
-                {requestOtpMutation.isPending ? <Loader color="white" size="sm" /> : "Send OTP"}
-              </Button>
-
-              {otpRequestId && (
-                <Stack gap="xs">
-                  <Text c="#151721" fw={700} fz={22}>
-                    Enter OTP
-                  </Text>
-                  <PinInput
-                    aria-label="One-time password input"
-                    inputMode="numeric"
-                    length={OTP_LENGTH}
-                    onChange={(value) => {
-                      setOtpCode(value);
-                      if (feedback?.tone === "error") {
-                        setFeedback(null);
-                      }
-                    }}
-                    oneTimeCode
-                    size="lg"
-                    styles={{
-                      input: {
-                        minHeight: "62px",
-                        width: "100%",
-                        fontSize: "1.6rem"
-                      },
-                      root: {
-                        display: "grid",
-                        gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
-                        gap: "0.5rem"
-                      }
-                    }}
-                    type="number"
-                    value={otpCode}
-                  />
-                  <Group justify="space-between" mt={4}>
-                    <Text c={otpExpired ? "red" : "#696C7D"} fz={16} fw={500}>
-                      {otpExpired ? "OTP expired." : `Expires in ${formatCountdown(secondsLeft)}`}
-                    </Text>
-                    <Anchor c="#1B1D2D" component="button" fw={600} onClick={handleResendOtp} type="button">
-                      Resend OTP
-                    </Anchor>
-                  </Group>
-                  <Button
-                    color="dark"
-                    disabled={verifyOtpMutation.isPending}
-                    fullWidth
-                    mt="xs"
-                    onClick={handleVerifyOtp}
-                    radius={16}
-                    size="lg"
-                  >
-                    {verifyOtpMutation.isPending ? "Verifying..." : "Verify OTP"}
-                  </Button>
-                </Stack>
-              )}
-
-              <Button color="dark" fw={700} size="lg" variant="subtle">
-                Login with Email
-              </Button>
             </Stack>
           </Card>
 
-          <Text c="#6A6C7D" fz={22} fw={500} ta="center">
+          <Text c="#6A6C7D" fz={14} fw={500} lh="20px" ta="center">
             Secure login for authorized teachers only
           </Text>
         </Stack>
-      </Container>
+      </Box>
     </main>
   );
 };
