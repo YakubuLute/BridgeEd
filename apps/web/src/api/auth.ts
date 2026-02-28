@@ -151,23 +151,18 @@ export const verifyOtp = async ({
     throw new Error("Login succeeded but no secure session token was returned.");
   }
 
+  const userPayload = data.user && typeof data.user === "object" ? (data.user as UserPayload) : null;
+
   return {
     accessToken,
     refreshToken: typeof data.refreshToken === "string" ? data.refreshToken : undefined,
     expiresAt: typeof data.expiresAt === "string" ? data.expiresAt : undefined,
-    user:
-      data.user && typeof data.user === "object"
-        ? {
-            id: typeof (data.user as UserPayload).id === "string" ? (data.user as UserPayload).id : undefined,
-            role:
-              typeof (data.user as UserPayload).role === "string"
-                ? (data.user as UserPayload).role
-                : undefined,
-            name:
-              typeof (data.user as UserPayload).name === "string"
-                ? (data.user as UserPayload).name
-                : undefined
-          }
-        : undefined
+    user: userPayload
+      ? {
+          id: typeof userPayload.id === "string" ? userPayload.id : undefined,
+          role: typeof userPayload.role === "string" ? userPayload.role : undefined,
+          name: typeof userPayload.name === "string" ? userPayload.name : undefined
+        }
+      : undefined
   };
 };

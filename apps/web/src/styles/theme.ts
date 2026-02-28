@@ -2,6 +2,13 @@ import { createTheme } from "@mantine/core";
 
 export const bridgeEdTheme = createTheme({
   fontFamily: "Open Sans, sans-serif",
+  fontSizes: {
+    h1: "28px",
+    h2: "22px",
+    body: "16px",
+    caption: "14px",
+    small: "12px"
+  },
   primaryColor: "bridgeed",
   colors: {
     bridgeed: [
