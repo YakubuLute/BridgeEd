@@ -12,3 +12,15 @@ body {
 #root {
   min-height: 100vh;
 }
+
+.auth-phone-field {
+  border: 2px solid #d5d6dd;
+  border-radius: 14px;
+  background-color: #e8e8ed;
+  transition: border-color 120ms ease;
+}
+
+.auth-phone-field:hover,
+.auth-phone-field:focus-within {
+  border-color: #000000;
+}
