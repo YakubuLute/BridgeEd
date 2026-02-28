@@ -15,9 +15,8 @@ import {
   Text,
   Title
 } from "@mantine/core";
-import { useMutation } from "@tanstack/react-query";
 
-import { requestOtp, verifyOtp } from "../../api/auth";
+import { useRequestOtpMutation, useVerifyOtpMutation } from "../../api/hooks/useAuthMutations";
 
 type Feedback = {
   tone: "error" | "success" | "info";
@@ -81,8 +80,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
 
   const otpExpired = Boolean(otpRequestId) && secondsLeft <= 0;
 
-  const requestOtpMutation = useMutation({
-    mutationFn: async (normalizedPhone: string) => requestOtp({ phoneNumber: normalizedPhone }),
+  const requestOtpMutation = useRequestOtpMutation({
     onSuccess: (result) => {
       const expirySeconds = result.expiresInSeconds ?? configuredExpiry;
       setOtpRequestId(result.requestId);
@@ -104,18 +102,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
     }
   });
 
-  const verifyOtpMutation = useMutation({
-    mutationFn: async (otp: string) => {
-      if (!otpRequestId) {
-        throw new Error("Request OTP before verifying.");
-      }
-
-      return verifyOtp({
-        phoneNumber: toE164Phone(phoneNumber),
-        requestId: otpRequestId,
-        otp
-      });
-    },
+  const verifyOtpMutation = useVerifyOtpMutation({
     onSuccess: (result) => {
       sessionStorage.setItem(
         SESSION_STORAGE_KEY,
@@ -164,7 +151,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
     }
 
     setFeedback(null);
-    requestOtpMutation.mutate(toE164Phone(phoneNumber));
+    requestOtpMutation.mutate({ phoneNumber: toE164Phone(phoneNumber) });
   };
 
   const handleVerifyOtp = (): void => {
@@ -193,7 +180,11 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
     }
 
     setFeedback(null);
-    verifyOtpMutation.mutate(otpCode);
+    verifyOtpMutation.mutate({
+      phoneNumber: toE164Phone(phoneNumber),
+      requestId: otpRequestId,
+      otp: otpCode
+    });
   };
 
   const handleResendOtp = (): void => {
@@ -206,7 +197,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
     }
 
     setFeedback(null);
-    requestOtpMutation.mutate(toE164Phone(phoneNumber));
+    requestOtpMutation.mutate({ phoneNumber: toE164Phone(phoneNumber) });
   };
 
   return (
