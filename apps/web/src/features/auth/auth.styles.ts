@@ -6,7 +6,7 @@ export const authCardStyle = {
 
 export const authInputBaseStyle = {
   height: "56px",
-  borderRadius: "14px",
+  borderRadius: "10px",
   border: "2px solid #D5D6DD",
   backgroundColor: "#E8E8ED",
   fontSize: "16px",
@@ -36,7 +36,7 @@ export const getOtpDigitStyles = () => ({
     textAlign: "center" as const,
     fontSize: "20px",
     lineHeight: "28px",
-    borderRadius: "12px",
+    borderRadius: "8px",
     border: "2px solid #D5D6DD",
     backgroundColor: "#E8E8ED",
     color: "#151721",
@@ -47,7 +47,7 @@ export const getOtpDigitStyles = () => ({
 
 export const getPhoneFieldContainerStyle = () => ({
   minHeight: "64px",
-  borderRadius: "14px",
+  borderRadius: "8px",
   border: "2px solid #D5D6DD",
   backgroundColor: "#E8E8ED",
   transition: "border-color 120ms ease"
@@ -60,8 +60,9 @@ export const getActionButtonStyles = () => ({
     fontWeight: 700
   },
   root: {
-    minHeight: "56px"
-  }
+    minHeight: "60px"
+  },
+
 });
 
 export const getActionButtonClassName = (isReady: boolean): string =>

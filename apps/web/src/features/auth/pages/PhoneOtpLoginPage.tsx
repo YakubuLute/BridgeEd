@@ -283,7 +283,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                 disabled={!isPhoneValid || requestOtpMutation.isPending}
                 fullWidth
                 onClick={handleSendOtp}
-                radius={14}
+                radius={10}
                 size="md"
                 styles={getActionButtonStyles()}
               >
