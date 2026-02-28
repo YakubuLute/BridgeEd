@@ -211,7 +211,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
 
   return (
     <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-10">
-      <Container px={0} size={740}>
+      <Container px={0} size={500}>
         <Stack align="center" gap={48}>
           <Stack align="center" gap="sm">
             <Center
