@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Anchor, Box, Button, Card, Center, Group, Input, Stack, Text } from "@mantine/core";
+import { Alert, Anchor, Box, Button, Card, Center, Group, Input, Stack, Text } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 
+import { useForgotPasswordMutation } from "../../../api/hooks/useAuthMutations";
 import { AuthLayout } from "../AuthLayout";
-import { ArrowLeftIcon, CheckCircleIcon, MailIcon } from "../AuthIcons";
+import { AlertCircleIcon, ArrowLeftIcon, CheckCircleIcon, MailIcon } from "../AuthIcons";
 import { validateEmail } from "../auth.constants";
 import {
   authCardStyle,
@@ -16,28 +17,47 @@ import {
 export const ForgotPasswordPage = (): JSX.Element => {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [submittedEmail, setSubmittedEmail] = useState<string>("");
+  const [resetTokenExpiresInMinutes, setResetTokenExpiresInMinutes] = useState<number>(60);
+  const [error, setError] = useState<string>("");
 
   const isEmailValid = validateEmail(email);
+  const activeEmail = isSubmitted ? submittedEmail : email;
+
+  const forgotPasswordMutation = useForgotPasswordMutation({
+    onSuccess: (result) => {
+      setError("");
+      setIsSubmitted(true);
+      setSubmittedEmail(result.email);
+      setEmail(result.email);
+      setResetTokenExpiresInMinutes(result.resetTokenExpiresInMinutes);
+    },
+    onError: (mutationError) => {
+      setError(mutationError instanceof Error ? mutationError.message : "Unable to send reset email.");
+    }
+  });
+
+  const requestReset = (targetEmail: string): void => {
+    forgotPasswordMutation.mutate({
+      email: targetEmail.trim().toLowerCase()
+    });
+  };
 
   const handleSubmit = (): void => {
     if (!isEmailValid) {
       return;
     }
 
-    setIsLoading(true);
-    window.setTimeout(() => {
-      setIsLoading(false);
-      setIsSubmitted(true);
-    }, 1500);
+    requestReset(email);
   };
 
   const handleResend = (): void => {
-    setIsLoading(true);
-    window.setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
+    if (!activeEmail) {
+      return;
+    }
+
+    requestReset(activeEmail);
   };
 
   return (
@@ -72,6 +92,23 @@ export const ForgotPasswordPage = (): JSX.Element => {
     >
       <Card p={24} radius={16} style={authCardStyle}>
         <Stack gap={24}>
+          {error && (
+            <Alert
+              color="red"
+              icon={<AlertCircleIcon />}
+              radius="md"
+              styles={{
+                message: {
+                  fontSize: "14px",
+                  lineHeight: "20px"
+                }
+              }}
+              variant="light"
+            >
+              {error}
+            </Alert>
+          )}
+
           {!isSubmitted && (
             <>
               <Stack align="center" gap={8}>
@@ -104,14 +141,14 @@ export const ForgotPasswordPage = (): JSX.Element => {
               <Button
                 className={getActionButtonClassName(isEmailValid)}
                 color="gray"
-                disabled={!isEmailValid || isLoading}
+                disabled={!isEmailValid || forgotPasswordMutation.isPending}
                 fullWidth
                 onClick={handleSubmit}
                 radius={14}
                 size="md"
                 styles={getActionButtonStyles()}
               >
-                {isLoading ? "Sending..." : "Send Reset Link"}
+                {forgotPasswordMutation.isPending ? "Sending..." : "Send Reset Link"}
               </Button>
 
               <Group justify="center">
@@ -153,7 +190,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
                   We&apos;ve sent password reset instructions to:
                 </Text>
                 <Text c="#151721" fw={600} fz={14} lh="20px" ta="center">
-                  {email}
+                  {submittedEmail}
                 </Text>
               </Stack>
 
@@ -173,7 +210,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
                     1. Check your email inbox
                   </Text>
                   <Text c="#6A6C7D" fz={14} lh="20px">
-                    2. Click the reset link (valid for 1 hour)
+                    2. Click the reset link (valid for {resetTokenExpiresInMinutes} minutes)
                   </Text>
                   <Text c="#6A6C7D" fz={14} lh="20px">
                     3. Create a new password
@@ -186,7 +223,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
                   Didn&apos;t receive the email?
                 </Text>
                 <Anchor component="button" fw={600} fz={14} lh="20px" onClick={handleResend} type="button">
-                  {isLoading ? "Sending..." : "Resend Email"}
+                  {forgotPasswordMutation.isPending ? "Sending..." : "Resend Email"}
                 </Anchor>
               </Stack>
 

@@ -1,7 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, Anchor, Button, Card, Group, Input, Stack, Text } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 
+import {
+  readEmailLoginErrorDetails,
+  useEmailLoginMutation
+} from "../../../api/hooks/useAuthMutations";
 import { AuthLayout } from "../AuthLayout";
 import { AlertCircleIcon, LockIcon, MailIcon } from "../AuthIcons";
 import {
@@ -21,30 +25,84 @@ import {
   getAuthInputStyles
 } from "../auth.styles";
 
-const DEMO_LOGIN_EMAIL = "teacher@bridgeed.gh";
-const DEMO_LOGIN_PASSWORD = "Teacher123";
-
 export const EmailLoginPage = (): JSX.Element => {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
   const [failedAttempts, setFailedAttempts] = useState<number>(0);
-  const [isLockedOut, setIsLockedOut] = useState<boolean>(false);
+  const [maxAttemptsAllowed, setMaxAttemptsAllowed] = useState<number>(MAX_LOGIN_ATTEMPTS);
+  const [lockoutSecondsRemaining, setLockoutSecondsRemaining] = useState<number>(0);
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const passwordValidation = useMemo(() => validatePassword(password), [password]);
   const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
+  const isLockedOut = lockoutSecondsRemaining > 0;
+  const lockoutMinutesRemaining = Math.max(1, Math.ceil(lockoutSecondsRemaining / 60));
   const isFormValid = validateEmail(email) && passwordValidation.isValid && !isLockedOut;
+
+  const emailLoginMutation = useEmailLoginMutation({
+    onSuccess: (result) => {
+      setFailedAttempts(0);
+      setMaxAttemptsAllowed(MAX_LOGIN_ATTEMPTS);
+      setLockoutSecondsRemaining(0);
+      setError("");
+      setSuccess("Login successful. A secure session has been created.");
+
+      sessionStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify({
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          expiresAt: result.expiresAt,
+          user: result.user,
+          loginAt: new Date().toISOString()
+        })
+      );
+    },
+    onError: (mutationError) => {
+      const details = readEmailLoginErrorDetails(mutationError);
+      const errorMessage =
+        mutationError instanceof Error ? mutationError.message : "Unable to login right now.";
+
+      setError(errorMessage);
+      setSuccess("");
+
+      if (!details) {
+        return;
+      }
+
+      const maxAttempts = details.maxAttempts ?? MAX_LOGIN_ATTEMPTS;
+      const attemptsRemaining = details.attemptsRemaining ?? maxAttempts;
+      setMaxAttemptsAllowed(maxAttempts);
+      setFailedAttempts(Math.max(0, maxAttempts - attemptsRemaining));
+
+      if (details.isLockedOut) {
+        const lockoutMinutes = details.lockoutMinutes ?? LOCKOUT_DURATION_MINUTES;
+        setLockoutSecondsRemaining(lockoutMinutes * 60);
+      }
+    }
+  });
+
+  useEffect(() => {
+    if (!isLockedOut) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setLockoutSecondsRemaining((currentValue) => (currentValue > 0 ? currentValue - 1 : 0));
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [isLockedOut]);
 
   const handleLogin = (): void => {
     setError("");
     setSuccess("");
 
     if (isLockedOut) {
-      setError(`Account locked. Please try again in ${LOCKOUT_DURATION_MINUTES} minutes.`);
+      setError(`Account locked. Please try again in ${lockoutMinutesRemaining} minutes.`);
       return;
     }
 
@@ -58,42 +116,10 @@ export const EmailLoginPage = (): JSX.Element => {
       return;
     }
 
-    setIsLoading(true);
-
-    window.setTimeout(() => {
-      setIsLoading(false);
-
-      const loginSuccess = email === DEMO_LOGIN_EMAIL && password === DEMO_LOGIN_PASSWORD;
-      if (loginSuccess) {
-        setFailedAttempts(0);
-        sessionStorage.setItem(
-          SESSION_STORAGE_KEY,
-          JSON.stringify({
-            accessToken: "email-login-demo-session",
-            user: {
-              role: "teacher",
-              name: email
-            },
-            loginAt: new Date().toISOString()
-          })
-        );
-        setSuccess("Login successful. A secure session has been created.");
-        return;
-      }
-
-      const newFailedAttempts = failedAttempts + 1;
-      setFailedAttempts(newFailedAttempts);
-
-      if (newFailedAttempts >= MAX_LOGIN_ATTEMPTS) {
-        setIsLockedOut(true);
-        setError(`Too many failed attempts. Account locked for ${LOCKOUT_DURATION_MINUTES} minutes.`);
-        return;
-      }
-
-      setError(
-        `Invalid email or password. ${MAX_LOGIN_ATTEMPTS - newFailedAttempts} attempt(s) remaining.`
-      );
-    }, 1000);
+    emailLoginMutation.mutate({
+      email: email.trim(),
+      password
+    });
   };
 
   return (
@@ -151,7 +177,7 @@ export const EmailLoginPage = (): JSX.Element => {
               }}
               variant="light"
             >
-              Warning: {MAX_LOGIN_ATTEMPTS - failedAttempts} attempt(s) remaining before lockout
+              Warning: {Math.max(0, maxAttemptsAllowed - failedAttempts)} attempt(s) remaining before lockout
             </Alert>
           )}
 
@@ -261,14 +287,14 @@ export const EmailLoginPage = (): JSX.Element => {
           <Button
             className={getActionButtonClassName(isFormValid)}
             color="gray"
-            disabled={!email || !password || isLoading || isLockedOut}
+            disabled={!isFormValid || emailLoginMutation.isPending}
             fullWidth
             onClick={handleLogin}
             radius={14}
             size="md"
             styles={getActionButtonStyles()}
           >
-            {isLoading ? "Logging in..." : isLockedOut ? "Account Locked" : "Login"}
+            {emailLoginMutation.isPending ? "Logging in..." : isLockedOut ? "Account Locked" : "Login"}
           </Button>
 
           <Group justify="center">

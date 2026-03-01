@@ -49,7 +49,7 @@ const readDataRecord = (payload: unknown): Record<string, unknown> => {
 
 const throwNormalizedAuthError = (error: unknown): never => {
   if (isApiClientError(error) && error.code === "ECONNABORTED") {
-    throw new Error("OTP send timed out after 10 seconds. Please try again.");
+    throw new Error("Request timed out after 10 seconds. Please try again.");
   }
 
   if (isApiClientError(error) && ["INVALID_CREDENTIALS", "ACCOUNT_LOCKED"].includes(error.code ?? "")) {
