@@ -9,6 +9,7 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
   GEMINI_API_KEY: z.string().min(1, "GEMINI_API_KEY is required"),
+  JWT_ACCESS_SECRET: z.string().min(32, "JWT_ACCESS_SECRET must be at least 32 characters"),
   CLIENT_ORIGIN: z.string().url().default("http://localhost:5173"),
   OTP_EXPIRY_SECONDS: z.coerce.number().int().min(30).default(300),
   AUTH_SESSION_TTL_MINUTES: z.coerce.number().int().min(5).default(60),
