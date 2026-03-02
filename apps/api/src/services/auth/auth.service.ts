@@ -42,6 +42,25 @@ const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 const isStrongPassword = (password: string): boolean =>
   password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
 
+const normalizeScope = (scope?: AuthScope): AuthScope | undefined => {
+  if (!scope) {
+    return undefined;
+  }
+
+  const normalizedScope: AuthScope = {};
+  if (scope.schoolId) {
+    normalizedScope.schoolId = scope.schoolId;
+  }
+  if (scope.districtId) {
+    normalizedScope.districtId = scope.districtId;
+  }
+  if (scope.region) {
+    normalizedScope.region = scope.region;
+  }
+
+  return Object.keys(normalizedScope).length > 0 ? normalizedScope : undefined;
+};
+
 const mapUserToSessionUser = (user: {
   userId: string;
   role: Role;
@@ -51,7 +70,7 @@ const mapUserToSessionUser = (user: {
   id: user.userId,
   role: user.role,
   name: user.name,
-  scope: user.scope
+  scope: normalizeScope(user.scope)
 });
 
 const createSession = (user: SessionUser): LoginSessionResponse => {
