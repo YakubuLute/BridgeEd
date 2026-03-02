@@ -39,7 +39,9 @@ describe("Class and learner routes", () => {
   });
 
   beforeEach(async () => {
-    await mongoose.connection.db.dropDatabase();
+    if (mongoose.connection.db) {
+      await mongoose.connection.db.dropDatabase();
+    }
   });
 
   afterAll(async () => {

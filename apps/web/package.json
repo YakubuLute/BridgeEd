@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "pnpm --filter @bridgeed/shared build && vitest run"
   },
   "dependencies": {
     "@bridgeed/shared": "workspace:*",

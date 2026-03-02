@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import type { ClassRecord } from "@bridgeed/shared";
+import { GradeLevel, type ClassRecord } from "@bridgeed/shared";
 
 import { bridgeEdTheme } from "../../../styles/theme";
 import { ClassLearnersPage } from "./ClassLearnersPage";
@@ -30,7 +30,7 @@ const defaultClass: ClassRecord = {
   schoolId: "school-demo-001",
   teacherId: "teacher-1",
   name: "JHS 1A",
-  gradeLevel: "JHS1",
+  gradeLevel: GradeLevel.JHS1,
   subject: "Math",
   academicYear: "2025/2026",
   isActive: true,
