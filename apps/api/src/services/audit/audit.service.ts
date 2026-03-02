@@ -1,6 +1,8 @@
 type AuditEvent = {
   action: string;
   actor: string;
+  actorId?: string;
+  actorRole?: string;
   entity: string;
   entityId?: string;
   result: "success" | "failure";
