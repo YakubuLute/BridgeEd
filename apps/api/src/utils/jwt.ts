@@ -52,6 +52,10 @@ export const verifyAccessToken = (token: string): JwtAuthClaims => {
   }
 
   const expectedSignature = sign(`${header}.${payload}`);
+  if (signature.length !== expectedSignature.length) {
+    throw new AppError(401, "INVALID_TOKEN", "Invalid access token signature.");
+  }
+
   const isValidSignature = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
   if (!isValidSignature) {
     throw new AppError(401, "INVALID_TOKEN", "Invalid access token signature.");
