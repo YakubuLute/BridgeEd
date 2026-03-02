@@ -55,13 +55,12 @@ export const ClassesPage = (): JSX.Element => {
     }
   });
 
-  const classes = classesQuery.data ?? [];
   const isCreateDisabled = classForm.name.trim().length === 0 || createClassMutation.isPending;
 
-  const sortedClasses = useMemo(
-    () => [...classes].sort((a, b) => a.name.localeCompare(b.name)),
-    [classes]
-  );
+  const sortedClasses = useMemo(() => {
+    const sourceClasses = classesQuery.data ?? [];
+    return [...sourceClasses].sort((a, b) => a.name.localeCompare(b.name));
+  }, [classesQuery.data]);
 
   const handleCreateClass = (): void => {
     if (classForm.name.trim().length === 0) {

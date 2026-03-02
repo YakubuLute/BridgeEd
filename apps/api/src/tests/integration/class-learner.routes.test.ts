@@ -46,7 +46,9 @@ describe("Class and learner routes", () => {
 
   afterAll(async () => {
     await mongoose.disconnect();
-    await mongoServer.stop();
+    if (mongoServer) {
+      await mongoServer.stop();
+    }
   });
 
   it("returns 401 for protected routes without auth", async () => {

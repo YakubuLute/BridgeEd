@@ -2,7 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import type { LearnerProfileResponse } from "@bridgeed/shared";
+import { GradeLevel, type LearnerProfileResponse } from "@bridgeed/shared";
+import type { ReactNode } from "react";
 
 import { bridgeEdTheme } from "../../../styles/theme";
 import { LearnerProfilePage } from "./LearnerProfilePage";
@@ -11,6 +12,10 @@ const mockUseLearnerProfileQuery = vi.fn();
 
 vi.mock("../../../api/hooks/useLearnerQueries", () => ({
   useLearnerProfileQuery: (learnerId: string) => mockUseLearnerProfileQuery(learnerId)
+}));
+
+vi.mock("../components/DashboardLayout", () => ({
+  DashboardLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>
 }));
 
 const renderPage = (): void => {
@@ -32,7 +37,7 @@ const buildProfile = (overrides: Partial<LearnerProfileResponse>): LearnerProfil
     schoolId: "school-demo-001",
     classId: "class-1",
     name: "Kwame Mensah",
-    gradeLevel: "JHS1",
+    gradeLevel: GradeLevel.JHS1,
     createdBy: "teacher-1",
     createdAt: "2026-02-20T00:00:00.000Z",
     updatedAt: "2026-02-20T00:00:00.000Z"
@@ -99,6 +104,6 @@ describe("LearnerProfilePage", () => {
 
     expect(screen.getByText("Literacy Screener")).toBeInTheDocument();
     expect(screen.getByText("Phonics & Decoding")).toBeInTheDocument();
-    expect(screen.getByText(/Feb/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Feb/).length).toBeGreaterThan(0);
   });
 });

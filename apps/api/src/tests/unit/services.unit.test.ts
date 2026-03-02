@@ -26,7 +26,9 @@ describe("Service unit behavior", () => {
 
   afterAll(async () => {
     await mongoose.disconnect();
-    await mongoServer.stop();
+    if (mongoServer) {
+      await mongoServer.stop();
+    }
   });
 
   it("requires school scope for class creation", async () => {

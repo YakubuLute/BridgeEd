@@ -3,6 +3,7 @@ import { MantineProvider } from "@mantine/core";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { GradeLevel, type ClassRecord } from "@bridgeed/shared";
+import type { ReactNode } from "react";
 
 import { bridgeEdTheme } from "../../../styles/theme";
 import { ClassLearnersPage } from "./ClassLearnersPage";
@@ -22,6 +23,10 @@ vi.mock("../../../api/hooks/useLearnerQueries", () => ({
     mockUseCreateLearnerMutation(classId, options),
   useBatchCreateLearnersMutation: (classId: string, options: unknown) =>
     mockUseBatchCreateLearnersMutation(classId, options)
+}));
+
+vi.mock("../components/DashboardLayout", () => ({
+  DashboardLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>
 }));
 
 const defaultClass: ClassRecord = {
