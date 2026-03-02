@@ -304,6 +304,17 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                 >
                   Login with Email
                 </Anchor>
+                <Anchor
+                  c="#1B1D2D"
+                  component="button"
+                  fw={600}
+                  fz={16}
+                  lh="24px"
+                  onClick={() => navigate("/register")}
+                  type="button"
+                >
+                  Create Account
+                </Anchor>
               </Group>
             </>
           )}

@@ -5,6 +5,7 @@ import { RequireAuth } from "./features/auth/components/RequireAuth";
 import { EmailLoginPage } from "./features/auth/pages/EmailLoginPage";
 import { ForgotPasswordPage } from "./features/auth/pages/ForgotPasswordPage";
 import { PhoneOtpLoginPage } from "./features/auth/pages/PhoneOtpLoginPage";
+import { RegisterPage } from "./features/auth/pages/RegisterPage";
 import {
   NationalAdminDashboardPage,
   SchoolAdminDashboardPage
@@ -19,6 +20,7 @@ const App = (): JSX.Element => (
   <Routes>
     <Route element={<PhoneOtpLoginPage />} path="/" />
     <Route element={<EmailLoginPage />} path="/login/email" />
+    <Route element={<RegisterPage />} path="/register" />
     <Route element={<ForgotPasswordPage />} path="/forgot-password" />
     <Route
       element={

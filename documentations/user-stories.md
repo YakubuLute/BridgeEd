@@ -39,6 +39,18 @@
 * Users only see permitted modules.
 * Data visibility is scoped by organization hierarchy.
 
+## US-1.4 Email Registration
+
+**As a Teacher**, I want to create an account with my school identifier so that I can securely access class and learner tools.
+
+**AC:**
+
+* Required fields: Full Name, Email, Password, School Identifier.
+* Email must be unique across users.
+* Password policy enforced (minimum 8 chars, uppercase, lowercase, number).
+* New account defaults to Teacher role and is scoped to the provided school.
+* Successful registration creates secure session.
+
 ---
 
 # EPIC 2 — School & Class Management

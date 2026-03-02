@@ -2,8 +2,11 @@ import { Role } from "@bridgeed/shared";
 
 import { SchoolModel } from "../../models/school.model";
 import { UserModel } from "../../models/user.model";
+import { hashPassword } from "../../utils/password";
 
 export const bootstrapSeedData = async (): Promise<void> => {
+  const teacherPasswordHash = await hashPassword("Teacher123");
+
   await Promise.all([
     SchoolModel.updateOne(
       { schoolId: "school-demo-001" },
@@ -23,6 +26,9 @@ export const bootstrapSeedData = async (): Promise<void> => {
         $set: {
           name: "BridgeEd Teacher",
           email: "teacher@bridgeed.gh",
+          passwordHash: teacherPasswordHash,
+          failedLoginAttempts: 0,
+          lockedUntilMs: null,
           role: Role.Teacher,
           scope: {
             schoolId: "school-demo-001",

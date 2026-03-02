@@ -62,6 +62,23 @@ export const EmailLoginRequestSchema = z.object({
 
 export type EmailLoginRequest = z.infer<typeof EmailLoginRequestSchema>;
 
+export const RegisterEmailRequestSchema = z.object({
+  name: z.string().trim().min(1, "Name is required."),
+  schoolId: z.string().trim().min(1, "School identifier is required."),
+  email: z.string().email(),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters.")
+    .regex(/[A-Z]/, "Password must include at least one uppercase letter.")
+    .regex(/[a-z]/, "Password must include at least one lowercase letter.")
+    .regex(/[0-9]/, "Password must include at least one number.")
+});
+
+export const RegisterEmailResponseSchema = LoginSessionResponseSchema;
+
+export type RegisterEmailRequest = z.infer<typeof RegisterEmailRequestSchema>;
+export type RegisterEmailResponse = z.infer<typeof RegisterEmailResponseSchema>;
+
 export const ForgotPasswordRequestSchema = z.object({
   email: z.string().email()
 });

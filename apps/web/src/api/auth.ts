@@ -1,5 +1,6 @@
 export {
   loginWithEmail,
+  registerWithEmail,
   readEmailLoginErrorDetails,
   requestOtp,
   requestPasswordReset,
@@ -8,6 +9,8 @@ export {
   type EmailLoginResult,
   type ForgotPasswordInput,
   type ForgotPasswordResult,
+  type RegisterEmailInput,
+  type RegisterEmailResult,
   type RequestOtpInput,
   type RequestOtpResult,
   type VerifyOtpInput,

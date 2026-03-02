@@ -6,6 +6,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { app } from "../../app";
 import { AttemptModel } from "../../models/attempt.model";
 import { DiagnosticResultModel } from "../../models/diagnostic-result.model";
+import { bootstrapSeedData } from "../../services/bootstrap/bootstrap.service";
 import { createAccessToken } from "../../utils/jwt";
 import { createUuidV7 } from "../../utils/uuid";
 
@@ -42,6 +43,7 @@ describe("Class and learner routes", () => {
     if (mongoose.connection.db) {
       await mongoose.connection.db.dropDatabase();
     }
+    await bootstrapSeedData();
   });
 
   afterAll(async () => {
