@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { Role } from "@bridgeed/shared";
 import type {
+  AuthScope,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   LoginSessionResponse,
@@ -11,6 +12,7 @@ import type {
 
 import { env } from "../../config/env";
 import { AppError } from "../../utils/app-error";
+import { createAccessToken } from "../../utils/jwt";
 import { logAuditEvent, toAuditActor } from "../audit/audit.service";
 
 type OtpRecord = {
@@ -26,6 +28,7 @@ type AuthAccount = {
     id: string;
     role: Role;
     name: string;
+    scope?: AuthScope;
   };
   failedAttempts: number;
   lockedUntilMs: number | null;
@@ -48,7 +51,12 @@ const accountsByEmail = new Map<string, AuthAccount>([
       user: {
         id: "teacher-1",
         role: Role.Teacher,
-        name: "BridgeEd Teacher"
+        name: "BridgeEd Teacher",
+        scope: {
+          schoolId: "school-demo-001",
+          districtId: "district-demo-001",
+          region: "Greater Accra"
+        }
       },
       failedAttempts: 0,
       lockedUntilMs: null
@@ -62,7 +70,13 @@ const createOtpCode = (): string => `${Math.floor(100000 + Math.random() * 90000
 const createSession = (user: AuthAccount["user"]): LoginSessionResponse => {
   const expiresAt = new Date(Date.now() + env.AUTH_SESSION_TTL_MINUTES * 60_000).toISOString();
   return {
-    accessToken: createToken(),
+    accessToken: createAccessToken({
+      userId: user.id,
+      role: user.role,
+      name: user.name,
+      scope: user.scope,
+      ttlMinutes: env.AUTH_SESSION_TTL_MINUTES
+    }),
     refreshToken: createToken(),
     expiresAt,
     user
@@ -153,7 +167,12 @@ export const authService = {
     const user = {
       id: `teacher-${payload.phoneNumber.slice(-6)}`,
       role: Role.Teacher,
-      name: "BridgeEd Teacher"
+      name: "BridgeEd Teacher",
+      scope: {
+        schoolId: "school-demo-001",
+        districtId: "district-demo-001",
+        region: "Greater Accra"
+      }
     };
 
     logAuditEvent({

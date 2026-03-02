@@ -5,6 +5,7 @@ const toHex = (value: number): string => value.toString(16).padStart(2, "0");
 export const createUuidV7 = (): string => {
   const now = BigInt(Date.now());
   const random = crypto.randomBytes(10);
+  const randomByte = (index: number): number => random[index] ?? 0;
   const bytes = new Uint8Array(16);
 
   bytes[0] = Number((now >> 40n) & 0xffn);
@@ -13,16 +14,16 @@ export const createUuidV7 = (): string => {
   bytes[3] = Number((now >> 16n) & 0xffn);
   bytes[4] = Number((now >> 8n) & 0xffn);
   bytes[5] = Number(now & 0xffn);
-  bytes[6] = 0x70 | (random[0] & 0x0f);
-  bytes[7] = random[1];
-  bytes[8] = 0x80 | (random[2] & 0x3f);
-  bytes[9] = random[3];
-  bytes[10] = random[4];
-  bytes[11] = random[5];
-  bytes[12] = random[6];
-  bytes[13] = random[7];
-  bytes[14] = random[8];
-  bytes[15] = random[9];
+  bytes[6] = 0x70 | (randomByte(0) & 0x0f);
+  bytes[7] = randomByte(1);
+  bytes[8] = 0x80 | (randomByte(2) & 0x3f);
+  bytes[9] = randomByte(3);
+  bytes[10] = randomByte(4);
+  bytes[11] = randomByte(5);
+  bytes[12] = randomByte(6);
+  bytes[13] = randomByte(7);
+  bytes[14] = randomByte(8);
+  bytes[15] = randomByte(9);
 
   const hex = Array.from(bytes, toHex).join("");
   return [

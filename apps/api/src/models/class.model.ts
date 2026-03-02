@@ -10,6 +10,8 @@ type ClassDocument = {
   subject?: string;
   academicYear?: string;
   isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 const ClassSchema = new Schema<ClassDocument>(

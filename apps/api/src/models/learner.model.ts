@@ -8,6 +8,8 @@ type LearnerDocument = {
   name: string;
   gradeLevel: GradeLevel;
   createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 const LearnerSchema = new Schema<LearnerDocument>(

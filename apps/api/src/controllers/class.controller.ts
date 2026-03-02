@@ -9,6 +9,7 @@ import {
 
 import { classService } from "../services/classes/class.service";
 import { learnerService } from "../services/learners/learner.service";
+import type { AuthContext } from "../types/auth";
 import { successResponse } from "../utils/api-response";
 import { AppError } from "../utils/app-error";
 
@@ -20,7 +21,7 @@ const parseWithSchema = <T>(schemaName: string, parseResult: { success: boolean;
   return parseResult.data as T;
 };
 
-const getAuthContext = (auth: RequestHandler extends never ? never : Express.Request["auth"]) => {
+const getAuthContext = (auth: AuthContext | undefined): AuthContext => {
   if (!auth) {
     throw new AppError(401, "UNAUTHORIZED", "Authentication is required.");
   }
@@ -55,7 +56,8 @@ export const listClassesController: RequestHandler = async (req, res, next) => {
 export const updateClassController: RequestHandler = async (req, res, next) => {
   try {
     const payload = parseWithSchema("update class", UpdateClassRequestSchema.safeParse(req.body));
-    const classId = req.params.classId;
+    const classIdParam = req.params.classId;
+    const classId = Array.isArray(classIdParam) ? classIdParam[0] : classIdParam;
     if (!classId) {
       throw new AppError(400, "VALIDATION_ERROR", "Class identifier is required.");
     }
@@ -70,7 +72,8 @@ export const updateClassController: RequestHandler = async (req, res, next) => {
 
 export const listClassLearnersController: RequestHandler = async (req, res, next) => {
   try {
-    const classId = req.params.classId;
+    const classIdParam = req.params.classId;
+    const classId = Array.isArray(classIdParam) ? classIdParam[0] : classIdParam;
     if (!classId) {
       throw new AppError(400, "VALIDATION_ERROR", "Class identifier is required.");
     }
