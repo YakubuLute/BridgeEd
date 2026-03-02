@@ -60,6 +60,8 @@ export const EmailLoginPage = (): JSX.Element => {
           loginAt: new Date().toISOString()
         })
       );
+
+      navigate("/role-selection", { replace: true });
     },
     onError: (mutationError) => {
       const details = readEmailLoginErrorDetails(mutationError);

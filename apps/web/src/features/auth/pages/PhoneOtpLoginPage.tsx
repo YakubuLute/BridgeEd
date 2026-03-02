@@ -96,6 +96,8 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
         tone: "success",
         message: "Login successful. A secure session has been created."
       });
+
+      navigate("/role-selection", { replace: true });
     },
     onError: (error) => {
       setFeedback({
