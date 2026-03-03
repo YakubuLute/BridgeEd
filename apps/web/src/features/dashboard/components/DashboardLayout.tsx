@@ -24,6 +24,7 @@ const teacherNavItems: NavItem[] = [
 
 const schoolAdminNavItems: NavItem[] = [
   { path: "/dashboard/school-admin", label: "Dashboard" },
+  { path: "/school-admin/school", label: "School" },
   { path: "/school-admin/teachers", label: "Teachers" },
   { path: "/school-admin/transfers", label: "Transfers" },
   { path: "/school-admin/reports", label: "Reports" },

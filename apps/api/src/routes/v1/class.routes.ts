@@ -11,12 +11,9 @@ import { requireAuth, requireRoles } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
-router.use(requireAuth);
-router.use(requireRoles(Role.Teacher));
-
-router.post("/classes", createClassController);
-router.get("/classes", listClassesController);
-router.patch("/classes/:classId", updateClassController);
-router.get("/classes/:classId/learners", listClassLearnersController);
+router.post("/classes", requireAuth, requireRoles(Role.Teacher), createClassController);
+router.get("/classes", requireAuth, requireRoles(Role.Teacher), listClassesController);
+router.patch("/classes/:classId", requireAuth, requireRoles(Role.Teacher), updateClassController);
+router.get("/classes/:classId/learners", requireAuth, requireRoles(Role.Teacher), listClassLearnersController);
 
 export default router;

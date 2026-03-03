@@ -12,6 +12,7 @@ import type {
 } from "@bridgeed/shared";
 
 import { env } from "../../config/env";
+import { SchoolModel } from "../../models/school.model";
 import { UserModel } from "../../models/user.model";
 import { AppError } from "../../utils/app-error";
 import { createAccessToken } from "../../utils/jwt";
@@ -38,6 +39,7 @@ const passwordResetRecords = new Map<string, PasswordResetRecord>();
 const createToken = (): string => crypto.randomBytes(32).toString("hex");
 const createOtpCode = (): string => `${Math.floor(100000 + Math.random() * 900000)}`;
 const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+const normalizeSchoolId = (schoolId: string): string => schoolId.trim();
 
 const isStrongPassword = (password: string): boolean =>
   password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
@@ -202,12 +204,26 @@ export const authService = {
 
   async registerWithEmail(payload: RegisterEmailRequest): Promise<LoginSessionResponse> {
     const normalizedEmail = normalizeEmail(payload.email);
+    const normalizedSchoolId = normalizeSchoolId(payload.schoolId);
 
     if (!isStrongPassword(payload.password)) {
       throw new AppError(
         400,
         "WEAK_PASSWORD",
         "Password must be at least 8 characters and include uppercase, lowercase, and numeric characters."
+      );
+    }
+
+    const school = await SchoolModel.findOne({ schoolId: normalizedSchoolId }).exec();
+    if (!school) {
+      throw new AppError(400, "INVALID_SCHOOL_IDENTIFIER", "School identifier is invalid.");
+    }
+
+    if (!school.isActive) {
+      throw new AppError(
+        400,
+        "INVALID_SCHOOL_IDENTIFIER",
+        "School identifier is inactive. Contact your administrator."
       );
     }
 
@@ -226,7 +242,7 @@ export const authService = {
         lockedUntilMs: null,
         role: Role.Teacher,
         scope: {
-          schoolId: payload.schoolId.trim()
+          schoolId: school.schoolId
         }
       });
 

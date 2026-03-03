@@ -19,5 +19,8 @@ export const queryKeys = {
     create: () => ["learners", "create"] as const,
     batchCreate: () => ["learners", "batch-create"] as const,
     profile: (learnerId: string) => ["learners", learnerId, "profile"] as const
+  },
+  schools: {
+    detail: (schoolId: string) => ["schools", "detail", schoolId] as const
   }
 };

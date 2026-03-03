@@ -4,6 +4,7 @@ import { Role } from "@bridgeed/shared";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
 import { app } from "../../app";
+import { SchoolModel } from "../../models/school.model";
 import { UserModel } from "../../models/user.model";
 
 const API_PREFIX = "/api/v1";
@@ -20,6 +21,30 @@ describe("Auth routes", () => {
     if (mongoose.connection.db) {
       await mongoose.connection.db.dropDatabase();
     }
+
+    await SchoolModel.insertMany([
+      {
+        schoolId: "school-demo-001",
+        name: "BridgeEd Demo School 1",
+        district: "Accra Metro",
+        region: "Greater Accra",
+        isActive: true
+      },
+      {
+        schoolId: "school-demo-002",
+        name: "BridgeEd Demo School 2",
+        district: "Tema Metro",
+        region: "Greater Accra",
+        isActive: true
+      },
+      {
+        schoolId: "school-inactive-001",
+        name: "Inactive School",
+        district: "Kumasi Metro",
+        region: "Ashanti",
+        isActive: false
+      }
+    ]);
   });
 
   afterAll(async () => {
@@ -97,5 +122,29 @@ describe("Auth routes", () => {
 
     expect(response.status).toBe(400);
     expect(response.body?.error?.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("rejects registration with unknown school identifier", async () => {
+    const response = await request(app).post(`${API_PREFIX}/auth/email/register`).send({
+      name: "Teacher Three",
+      schoolId: "school-unknown-999",
+      email: "teacher.three@bridgeed.gh",
+      password: "Teacher123"
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body?.error?.code).toBe("INVALID_SCHOOL_IDENTIFIER");
+  });
+
+  it("rejects registration with inactive school identifier", async () => {
+    const response = await request(app).post(`${API_PREFIX}/auth/email/register`).send({
+      name: "Teacher Four",
+      schoolId: "school-inactive-001",
+      email: "teacher.four@bridgeed.gh",
+      password: "Teacher123"
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body?.error?.code).toBe("INVALID_SCHOOL_IDENTIFIER");
   });
 });

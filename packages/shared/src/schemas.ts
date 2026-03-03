@@ -156,6 +156,19 @@ export type CreateClassRequest = z.infer<typeof CreateClassRequestSchema>;
 export type UpdateClassRequest = z.infer<typeof UpdateClassRequestSchema>;
 export type ClassListResponse = z.infer<typeof ClassListResponseSchema>;
 
+export const SchoolSchema = z.object({
+  id: z.string().min(1),
+  schoolId: z.string().min(1),
+  name: z.string().min(1),
+  district: z.string().min(1),
+  region: z.string().min(1),
+  isActive: z.boolean(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime()
+});
+
+export type SchoolRecord = z.infer<typeof SchoolSchema>;
+
 export const LearnerSchema = z.object({
   id: z.string().min(1),
   learnerId: z.string().min(1),

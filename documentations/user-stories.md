@@ -64,6 +64,17 @@
 * School name, district, region required.
 * Unique school identifier generated.
 
+## US-2.1a Share School Identifier
+
+**As an Admin (National Admin or School Admin)**, I want to view and share a school identifier so that teachers can register under the correct school scope.
+
+**AC:**
+
+* Generated school identifier is visible in school details.
+* Admin can copy/share the school identifier with teachers.
+* Teacher registration validates school identifier against an existing active school.
+* Invalid or inactive school identifier returns a clear error message.
+
 ## US-2.2 Create Class
 
 **As a Teacher**, I want to create/manage classes so that learners are organized by grade.

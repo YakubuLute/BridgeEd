@@ -10,11 +10,8 @@ import { requireAuth, requireRoles } from "../../middlewares/auth.middleware";
 
 const router = Router();
 
-router.use(requireAuth);
-router.use(requireRoles(Role.Teacher));
-
-router.post("/learners", createLearnerController);
-router.post("/learners/batch", batchCreateLearnersController);
-router.get("/learners/:learnerId/profile", getLearnerProfileController);
+router.post("/learners", requireAuth, requireRoles(Role.Teacher), createLearnerController);
+router.post("/learners/batch", requireAuth, requireRoles(Role.Teacher), batchCreateLearnersController);
+router.get("/learners/:learnerId/profile", requireAuth, requireRoles(Role.Teacher), getLearnerProfileController);
 
 export default router;

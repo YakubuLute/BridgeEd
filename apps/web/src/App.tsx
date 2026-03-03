@@ -14,6 +14,7 @@ import { ClassesPage } from "./features/dashboard/pages/ClassesPage";
 import { ClassLearnersPage } from "./features/dashboard/pages/ClassLearnersPage";
 import { LearnerProfilePage } from "./features/dashboard/pages/LearnerProfilePage";
 import { RoleSelectionPage } from "./features/dashboard/pages/RoleSelectionPage";
+import { SchoolDetailsPage } from "./features/dashboard/pages/SchoolDetailsPage";
 import { TeacherDashboardPage } from "./features/dashboard/pages/TeacherDashboardPage";
 
 const App = (): JSX.Element => (
@@ -65,10 +66,26 @@ const App = (): JSX.Element => (
     <Route
       element={
         <RequireAuth allowedRoles={[Role.SchoolAdmin]}>
+          <SchoolDetailsPage />
+        </RequireAuth>
+      }
+      path="/school-admin/school"
+    />
+    <Route
+      element={
+        <RequireAuth allowedRoles={[Role.SchoolAdmin]}>
           <SchoolAdminDashboardPage />
         </RequireAuth>
       }
       path="/dashboard/school-admin"
+    />
+    <Route
+      element={
+        <RequireAuth allowedRoles={[Role.NationalAdmin]}>
+          <SchoolDetailsPage />
+        </RequireAuth>
+      }
+      path="/admin/schools"
     />
     <Route
       element={
