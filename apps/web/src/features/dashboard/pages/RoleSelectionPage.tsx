@@ -43,8 +43,9 @@ export const RoleSelectionPage = (): JSX.Element => {
     })
     .filter((value): value is { id: Role; title: string; description: string; path: string } => Boolean(value));
 
-  if (selectableRoles.length === 1) {
-    return <Navigate replace to={selectableRoles[0].path} />;
+  const singleSelectableRole = selectableRoles[0];
+  if (selectableRoles.length === 1 && singleSelectableRole) {
+    return <Navigate replace to={singleSelectableRole.path} />;
   }
 
   return (

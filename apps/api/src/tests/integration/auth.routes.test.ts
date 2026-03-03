@@ -6,6 +6,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { app } from "../../app";
 import { SchoolModel } from "../../models/school.model";
 import { UserModel } from "../../models/user.model";
+import { hashPassword } from "../../utils/password";
 
 const API_PREFIX = "/api/v1";
 
@@ -146,5 +147,32 @@ describe("Auth routes", () => {
 
     expect(response.status).toBe(400);
     expect(response.body?.error?.code).toBe("INVALID_SCHOOL_IDENTIFIER");
+  });
+
+  it("returns roles array for users with multiple assigned roles", async () => {
+    await UserModel.create({
+      userId: "multi-role-1",
+      name: "Multi Role User",
+      email: "multi.role@bridgeed.gh",
+      passwordHash: await hashPassword("Teacher123"),
+      role: Role.Teacher,
+      roles: [Role.Teacher, Role.SchoolAdmin],
+      scope: {
+        schoolId: "school-demo-001",
+        districtId: "district-demo-001",
+        region: "Greater Accra"
+      }
+    });
+
+    const loginResponse = await request(app).post(`${API_PREFIX}/auth/email/login`).send({
+      email: "multi.role@bridgeed.gh",
+      password: "Teacher123"
+    });
+
+    expect(loginResponse.status).toBe(200);
+    expect(loginResponse.body?.data?.user?.role).toBe(Role.Teacher);
+    expect(loginResponse.body?.data?.user?.roles).toEqual(
+      expect.arrayContaining([Role.Teacher, Role.SchoolAdmin])
+    );
   });
 });
