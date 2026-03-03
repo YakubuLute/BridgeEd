@@ -179,7 +179,7 @@ export const ClassesPage = (): JSX.Element => {
               <Card p={18} radius={12} withBorder>
                 <Stack gap={12}>
                   <Group justify="space-between">
-                    <Text c="#121421" fw={700} fz={18}>
+                    <Text c="#121421" fw={800} fz={18}>
                       My Classes
                     </Text>
                     <Text c="#6A6C7D" fz={13}>

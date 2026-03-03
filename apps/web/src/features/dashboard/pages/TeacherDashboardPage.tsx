@@ -1,10 +1,31 @@
-import { Link } from "react-router-dom";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Card,
+  Divider,
+  Group,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  ThemeIcon,
+  Title,
+} from "@mantine/core";
 import { Role } from "@bridgeed/shared";
+import { Link } from "react-router-dom";
 
 import { DashboardLayout } from "../components/DashboardLayout";
 
 type IconProps = {
   className?: string;
+};
+
+type StatItem = {
+  color: "green" | "bridgeed" | "yellow";
+  icon: (props: IconProps) => JSX.Element;
+  label: string;
+  value: string;
 };
 
 const IconUsers = ({ className }: IconProps): JSX.Element => (
@@ -61,30 +82,30 @@ const IconSettings = ({ className }: IconProps): JSX.Element => (
   </svg>
 );
 
-const stats = [
+const stats: StatItem[] = [
   {
+    color: "green",
     label: "Students",
     value: "165",
-    icon: IconUsers,
-    iconWrapperClassName: "bg-[#E7F3EC] text-[#1FA54A]"
+    icon: IconUsers
   },
   {
+    color: "green",
     label: "On Track",
     value: "78%",
-    icon: IconTrendUp,
-    iconWrapperClassName: "bg-[#E7F3EC] text-[#1FA54A]"
+    icon: IconTrendUp
   },
   {
+    color: "bridgeed",
     label: "Classes",
     value: "4",
-    icon: IconBook,
-    iconWrapperClassName: "bg-[#EEF0FA] text-[#121421]"
+    icon: IconBook
   },
   {
+    color: "yellow",
     label: "Pending",
     value: "12",
-    icon: IconFile,
-    iconWrapperClassName: "bg-[#F7EFE4] text-[#FB9700]"
+    icon: IconFile
   }
 ];
 
@@ -101,90 +122,125 @@ const recentActivity = [
   { student: "Kofi Owusu", action: "Progress updated", time: "1 day ago" }
 ];
 
-export const TeacherDashboardPage = (): JSX.Element => (
-  <DashboardLayout role={Role.Teacher}>
-    <div className="border-b border-[#d5d6dd] bg-[#f3f3f5]">
-      <div className="px-10 py-7 flex items-center justify-between">
-        <div>
-          <h1 className="text-[56px] leading-[64px] font-semibold text-[#121421]">Dashboard</h1>
-          <p className="text-[28px] leading-[38px] text-[#6A6C7D] mt-1">Welcome back, Teacher Name</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link
-            className="bg-[#16a34a] hover:bg-[#15803d] text-white text-[22px] leading-[32px] font-semibold px-8 py-5 rounded-2xl transition-colors"
-            to="/assessments"
-          >
-            New Assessment
-          </Link>
-          <button
-            className="w-20 h-20 rounded-2xl border border-[#d5d6dd] bg-transparent hover:bg-[#eceef2] flex items-center justify-center transition-colors text-[#121421]"
-            type="button"
-          >
-            <IconSettings className="w-8 h-8" />
-          </button>
-        </div>
-      </div>
-    </div>
+export const TeacherDashboardPage = (): JSX.Element => {
+  const borderColor = "var(--mantine-color-bridgeed-2)";
 
-    <div className="px-10 py-8">
-      <div className="grid grid-cols-4 gap-6 mb-10">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.label}
-              className="rounded-3xl border border-[#d5d6dd] bg-white px-8 py-7 shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+  return (
+    <DashboardLayout role={Role.Teacher}>
+      <Paper bg="white" radius={0} style={{ borderBottom: `1px solid ${borderColor}` }}>
+        <Group className="px-4 py-6 lg:px-8" justify="space-between">
+          <Stack gap={2}>
+            <Title c="bridgeed.9" order={1} size="h1">
+              Dashboard
+            </Title>
+            <Text c="bridgeed.6" fz={14}>
+              Welcome back, Teacher Name
+            </Text>
+          </Stack>
+
+          <Group gap="md">
+            <Button
+              color="green"
+              component={Link}
+              fw={600}
+              radius="md"
+              size="md"
+              to="/assessments"
             >
-              <div className="flex items-center gap-4">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${stat.iconWrapperClassName}`}>
-                  <Icon className="w-8 h-8" />
-                </div>
-                <div>
-                  <p className="text-[56px] leading-[60px] font-semibold text-[#121421]">{stat.value}</p>
-                  <p className="text-[24px] leading-[34px] text-[#6A6C7D] mt-2">{stat.label}</p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              New Assessment
+            </Button>
+            <ActionIcon
+              aria-label="Open settings"
+              color="bridgeed"
+              radius="md"
+              size={48}
+              variant="outline"
+            >
+              <IconSettings className="w-5 h-5" />
+            </ActionIcon>
+          </Group>
+        </Group>
+      </Paper>
 
-      <div className="grid grid-cols-2 gap-8">
-        <div>
-          <h2 className="text-[56px] leading-[64px] font-semibold text-[#121421] mb-5">My Classes</h2>
-          <div className="space-y-4">
-            {classes.map((classItem) => (
-              <Link
-                key={classItem.id}
-                className="rounded-3xl border border-[#d5d6dd] bg-white px-8 py-7 block hover:bg-[#f8f9fc] transition-colors shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
-                to={`/classes/${classItem.id}`}
-              >
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <p className="text-[42px] leading-[54px] font-semibold text-[#121421]">{classItem.name}</p>
-                  <p className="text-[22px] leading-[34px] text-[#6A6C7D]">{classItem.students} students</p>
-                </div>
-                <p className="text-[24px] leading-[34px] text-[#6A6C7D]">{classItem.subject}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
+      <Box className="px-4 py-8 lg:px-8">
+        <SimpleGrid cols={{ base: 1, sm: 2, xl: 4 }} mb={32} spacing="md">
+          {stats.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <Card key={stat.label} p={24} radius="md" withBorder style={{ borderColor }}>
+                <Group align="flex-start" gap="md" wrap="nowrap">
+                  <ThemeIcon color={stat.color} radius="md" size={40} variant="light">
+                    <Icon className="w-5 h-5" />
+                  </ThemeIcon>
+                  <Stack gap={2}>
+                    <Text c="bridgeed.9" fw={600} fz={28} lh="36px">
+                      {stat.value}
+                    </Text>
+                    <Text c="bridgeed.6" fz={14}>
+                      {stat.label}
+                    </Text>
+                  </Stack>
+                </Group>
+              </Card>
+            );
+          })}
+        </SimpleGrid>
 
-        <div>
-          <h2 className="text-[56px] leading-[64px] font-semibold text-[#121421] mb-5">Recent Activity</h2>
-          <div className="rounded-3xl border border-[#d5d6dd] bg-white overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-            {recentActivity.map((item, index) => (
-              <div
-                key={`${item.student}-${index}`}
-                className={`px-8 py-7 ${index < recentActivity.length - 1 ? "border-b border-[#d5d6dd]" : ""}`}
-              >
-                <p className="text-[48px] leading-[58px] font-semibold text-[#121421]">{item.student}</p>
-                <p className="text-[24px] leading-[34px] text-[#6A6C7D] mt-1">{item.action}</p>
-                <p className="text-[24px] leading-[34px] text-[#6A6C7D] mt-1">{item.time}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  </DashboardLayout>
-);
+        <SimpleGrid cols={{ base: 1, xl: 2 }} spacing={32}>
+          <Stack gap="md">
+            <Title c="bridgeed.9" order={2} size="h2">
+              My Classes
+            </Title>
+            <Stack gap="md">
+              {classes.map((classItem) => (
+                <Link
+                  key={classItem.id}
+                  style={{ textDecoration: "none" }}
+                  to={`/classes/${classItem.id}`}
+                >
+                  <Card p={20} radius="md" withBorder style={{ borderColor }}>
+                    <Group align="flex-start" justify="space-between" mb={8}>
+                      <Text c="bridgeed.9" fw={600} fz={16} lh="24px">
+                        {classItem.name}
+                      </Text>
+                      <Text c="bridgeed.6" fz={14} lh="20px">
+                        {classItem.students} students
+                      </Text>
+                    </Group>
+                    <Text c="bridgeed.6" fz={14} lh="20px">
+                      {classItem.subject}
+                    </Text>
+                  </Card>
+                </Link>
+              ))}
+            </Stack>
+          </Stack>
+
+          <Stack gap="md">
+            <Title c="bridgeed.9" order={2} size="h2">
+              Recent Activity
+            </Title>
+            <Card p={0} radius="md" withBorder style={{ borderColor }}>
+              {recentActivity.map((item, index) => (
+                <Box key={`${item.student}-${index}`}>
+                  <Box px={24} py={20}>
+                    <Text c="bridgeed.9" fw={600} fz={16} lh="24px">
+                      {item.student}
+                    </Text>
+                    <Text c="bridgeed.6" fz={14} lh="20px" mt={4}>
+                      {item.action}
+                    </Text>
+                    <Text c="bridgeed.6" fz={14} lh="20px" mt={4}>
+                      {item.time}
+                    </Text>
+                  </Box>
+                  {index < recentActivity.length - 1 && <Divider color="bridgeed.2" />}
+                </Box>
+              ))}
+            </Card>
+          </Stack>
+        </SimpleGrid>
+      </Box>
+    </DashboardLayout>
+  );
+};

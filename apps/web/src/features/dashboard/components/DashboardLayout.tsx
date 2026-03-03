@@ -3,7 +3,7 @@ import { Text } from "@mantine/core";
 import { Role } from "@bridgeed/shared";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-import { clearSession, readSession } from "../../../utils/session";
+import { clearSession } from "../../../utils/session";
 
 type DashboardLayoutProps = {
   children: ReactNode;
