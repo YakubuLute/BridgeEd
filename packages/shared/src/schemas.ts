@@ -237,6 +237,36 @@ export const LearnerProfileResponseSchema = z.object({
   masteryTrends: z.array(SkillMasteryTrendSchema)
 });
 
+export const AssessmentStatusSchema = z.enum(["at_risk", "support", "on_track"]);
+
+export const LearnerAssessmentSnapshotSchema = z.object({
+  learnerId: z.string().min(1),
+  name: z.string().min(1),
+  gradeLevel: GradeLevelSchema,
+  status: AssessmentStatusSchema,
+  literacyScore: z.number().min(0).max(100).nullable(),
+  numeracyScore: z.number().min(0).max(100).nullable(),
+  lastAssessedAt: z.string().datetime().nullable()
+});
+
+export const ClassAssessmentSummarySchema = z.object({
+  atRisk: z.number().int().nonnegative(),
+  support: z.number().int().nonnegative(),
+  onTrack: z.number().int().nonnegative(),
+  totalStudents: z.number().int().nonnegative()
+});
+
+export const ClassAssessmentOverviewResponseSchema = z.object({
+  class: z.object({
+    classId: z.string().min(1),
+    name: z.string().min(1),
+    subject: z.string().min(1).optional(),
+    gradeLevel: GradeLevelSchema
+  }),
+  summary: ClassAssessmentSummarySchema,
+  learners: z.array(LearnerAssessmentSnapshotSchema)
+});
+
 export type LearnerRecord = z.infer<typeof LearnerSchema>;
 export type CreateLearnerRequest = z.infer<typeof CreateLearnerRequestSchema>;
 export type BatchCreateLearnersRequest = z.infer<typeof BatchCreateLearnersRequestSchema>;
@@ -246,3 +276,7 @@ export type AssessmentTimelineItem = z.infer<typeof AssessmentTimelineItemSchema
 export type SkillTrendPoint = z.infer<typeof SkillTrendPointSchema>;
 export type SkillMasteryTrend = z.infer<typeof SkillMasteryTrendSchema>;
 export type LearnerProfileResponse = z.infer<typeof LearnerProfileResponseSchema>;
+export type AssessmentStatus = z.infer<typeof AssessmentStatusSchema>;
+export type LearnerAssessmentSnapshot = z.infer<typeof LearnerAssessmentSnapshotSchema>;
+export type ClassAssessmentSummary = z.infer<typeof ClassAssessmentSummarySchema>;
+export type ClassAssessmentOverviewResponse = z.infer<typeof ClassAssessmentOverviewResponseSchema>;
