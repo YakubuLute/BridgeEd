@@ -429,40 +429,91 @@ export const AssessmentsPage = (): JSX.Element => {
                     value={search}
                   />
                 </Box>
-                <Stack gap={0}>
-                  {filteredLearners.map((learner, index) => {
-                    const statusMeta = getStatusMeta(learner.status);
-                    return (
-                      <Box
-                        key={learner.learnerId}
-                        px={16}
-                        py={14}
-                        style={{
-                          borderTop:
-                            index === 0 ? "none" : `1px solid var(--mantine-color-bridgeed-2)`
-                        }}
-                      >
-                        <Group justify="space-between">
-                          <Text c="#121421" fw={600} fz={15}>
-                            {learner.name}
-                          </Text>
-                          <Text fz={14} style={{ color: statusMeta.color }}>
-                            {statusMeta.label}
-                          </Text>
-                          <Button
-                            component={Link}
-                            size="compact-xs"
-                            to={`/learners/${learner.learnerId}/profile`}
-                            variant="light"
-                          >
-                            View
-                          </Button>
-                        </Group>
-                      </Box>
-                    );
-                  })}
-                </Stack>
+                <Box px={16} pb={16}>
+                  <SimpleGrid cols={{ lg: 2, xl: 3 }} spacing={12}>
+                    {filteredLearners.map((learner) => {
+                      const statusMeta = getStatusMeta(learner.status);
+                      const StatusIcon = statusMeta.icon;
+
+                      return (
+                        <Card key={learner.learnerId} p={16} radius="md" style={{ borderColor }} withBorder>
+                          <Group align="flex-start" justify="space-between" mb={4}>
+                            <Text c="#121421" fw={700} fz={16} lh="24px">
+                              {learner.name}
+                            </Text>
+                            <Text c="#6A6C7D" fz={13} lh="20px">
+                              {formatRelativeDate(learner.lastAssessedAt)}
+                            </Text>
+                          </Group>
+
+                          <Group gap={6} mb={12}>
+                            <StatusIcon className="w-5 h-5" style={{ color: statusMeta.color }} />
+                            <Text fz={15} fw={600} style={{ color: statusMeta.color }}>
+                              {statusMeta.label}
+                            </Text>
+                          </Group>
+
+                          <SimpleGrid cols={2} spacing={12}>
+                            <Stack gap={4}>
+                              <Text c="#6A6C7D" fz={13}>
+                                Literacy
+                              </Text>
+                              <Group align="center" gap={8} wrap="nowrap">
+                                <Progress
+                                  color="green"
+                                  radius="xl"
+                                  size={8}
+                                  value={learner.literacyScore ?? 0}
+                                  w="100%"
+                                />
+                                <Text c="#121421" fz={14} fw={500}>
+                                  {learner.literacyScore ?? 0}%
+                                </Text>
+                              </Group>
+                            </Stack>
+                            <Stack gap={4}>
+                              <Text c="#6A6C7D" fz={13}>
+                                Numeracy
+                              </Text>
+                              <Group align="center" gap={8} wrap="nowrap">
+                                <Progress
+                                  color="green"
+                                  radius="xl"
+                                  size={8}
+                                  value={learner.numeracyScore ?? 0}
+                                  w="100%"
+                                />
+                                <Text c="#121421" fz={14} fw={500}>
+                                  {learner.numeracyScore ?? 0}%
+                                </Text>
+                              </Group>
+                            </Stack>
+                          </SimpleGrid>
+
+                          <Group justify="flex-end" mt={12}>
+                            <Button
+                              component={Link}
+                              size="compact-xs"
+                              to={`/learners/${learner.learnerId}/profile`}
+                              variant="light"
+                            >
+                              View
+                            </Button>
+                          </Group>
+                        </Card>
+                      );
+                    })}
+                  </SimpleGrid>
+                </Box>
               </Card>
+
+              {!assessmentQuery.isLoading && filteredLearners.length === 0 && (
+                <Card p={16} radius={12} withBorder>
+                  <Text c="#6A6C7D" fz={14}>
+                    No learners match your search.
+                  </Text>
+                </Card>
+              )}
             </Stack>
           )}
         </div>
