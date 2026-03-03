@@ -419,7 +419,7 @@ export const ClassLearnersPage = (): JSX.Element => {
 
   return (
     <DashboardLayout role={Role.Teacher}>
-      <Box className="lg:hidden max-w-[393px] mx-auto px-4 pt-4 pb-8">
+      <Box className="md:hidden max-w-[393px] mx-auto px-4 pt-4 pb-8">
         <Paper bg="green.6" p={16} radius="xl">
           <Stack gap={14}>
             <Group align="center" gap={8} wrap="nowrap">
@@ -595,7 +595,7 @@ export const ClassLearnersPage = (): JSX.Element => {
         </Stack>
       </Box>
 
-      <Box className="hidden lg:block p-4 lg:p-8">
+      <Box className="hidden md:block p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
           <Stack gap={4} mb={20}>
             <Title c="#121421" order={1} size="h1">
@@ -608,7 +608,7 @@ export const ClassLearnersPage = (): JSX.Element => {
             </Text>
           </Stack>
 
-          <div className="grid lg:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <Card p={18} radius={12} withBorder>
               <Stack gap={12}>
                 <Text c="#121421" fw={700} fz={18}>

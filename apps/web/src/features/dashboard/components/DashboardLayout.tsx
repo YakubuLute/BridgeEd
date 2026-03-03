@@ -151,9 +151,9 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps): JSX.E
 
   return (
     <>
-      <div className="lg:hidden min-h-screen bg-[#f3f3f5]">{children}</div>
+      <div className="md:hidden min-h-screen bg-[#f3f3f5]">{children}</div>
 
-      <div className="hidden lg:flex min-h-screen bg-[#f3f3f5]">
+      <div className="hidden md:flex min-h-screen bg-[#f3f3f5]">
         <aside className="w-60 border-r border-[#d5d6dd] bg-white flex flex-col sticky top-0 h-screen">
           <div className="p-8 border-b border-[#d5d6dd]">
             <div className="flex items-center gap-4">

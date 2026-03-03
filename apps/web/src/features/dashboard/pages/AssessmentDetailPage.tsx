@@ -404,8 +404,8 @@ export const AssessmentDetailPage = (): JSX.Element => {
 
   return (
     <DashboardLayout role={Role.Teacher}>
-      <Box className="max-w-[393px] mx-auto px-4 pt-4 pb-28 lg:pt-8">
-        <Paper bg="green.6" p={16} radius="xl">
+      <Box className="max-w-[393px] md:max-w-none mx-auto md:mx-0 px-4 md:px-8 pt-4 pb-28 md:pt-8 md:pb-12">
+        <Paper bg="green.6" p={{ base: 16, md: 20 }} radius="xl">
           <Stack gap={6}>
             <Group align="center" gap={8} wrap="nowrap">
               <ActionIcon
@@ -453,12 +453,12 @@ export const AssessmentDetailPage = (): JSX.Element => {
         )}
 
         {profile && assessmentStep === "select" && (
-          <Stack gap={18} mt={16}>
-            <Title c="#121421" order={2} size="h2">
-              Select Assessment Area
-            </Title>
-
+          <SimpleGrid cols={{ base: 1, md: 2 }} mt={16} spacing={{ base: 18, md: 24 }}>
             <Stack gap={14}>
+              <Title c="#121421" order={2} size="h2">
+                Select Assessment Area
+              </Title>
+
               <Card
                 component="button"
                 onClick={() => handleAreaSelect("literacy")}
@@ -508,49 +508,51 @@ export const AssessmentDetailPage = (): JSX.Element => {
               </Card>
             </Stack>
 
-            <Title c="#121421" mt={8} order={2} size="h2">
-              Previous Assessments
-            </Title>
+            <Stack gap={14}>
+              <Title c="#121421" order={2} size="h2">
+                Previous Assessments
+              </Title>
 
-            <Card p={0} radius="md" style={{ borderColor }} withBorder>
-              {[literacySummary, numeracySummary].map((summary, index) => {
-                const levelStyle = levelBadgeStyles(summary.level);
-                return (
-                  <Box
-                    key={summary.title}
-                    px={16}
-                    py={14}
-                    style={{
-                      borderTop: index === 0 ? "none" : `1px solid var(--mantine-color-bridgeed-2)`
-                    }}
-                  >
-                    <Group justify="space-between" mb={8}>
-                      <Text c="#121421" fz={16} fw={600}>
-                        {summary.title}
-                      </Text>
-                      <Text c="#6A6C7D" fz={14}>
-                        {formatRelativeDate(summary.assessedAt)}
-                      </Text>
-                    </Group>
-                    <Text
-                      component="span"
-                      fz={14}
-                      fw={500}
-                      px={10}
-                      py={4}
+              <Card p={0} radius="md" style={{ borderColor }} withBorder>
+                {[literacySummary, numeracySummary].map((summary, index) => {
+                  const levelStyle = levelBadgeStyles(summary.level);
+                  return (
+                    <Box
+                      key={summary.title}
+                      px={16}
+                      py={14}
                       style={{
-                        backgroundColor: levelStyle.backgroundColor,
-                        color: levelStyle.color,
-                        borderRadius: 6
+                        borderTop: index === 0 ? "none" : `1px solid var(--mantine-color-bridgeed-2)`
                       }}
                     >
-                      {summary.label}
-                    </Text>
-                  </Box>
-                );
-              })}
-            </Card>
-          </Stack>
+                      <Group justify="space-between" mb={8}>
+                        <Text c="#121421" fz={16} fw={600}>
+                          {summary.title}
+                        </Text>
+                        <Text c="#6A6C7D" fz={14}>
+                          {formatRelativeDate(summary.assessedAt)}
+                        </Text>
+                      </Group>
+                      <Text
+                        component="span"
+                        fz={14}
+                        fw={500}
+                        px={10}
+                        py={4}
+                        style={{
+                          backgroundColor: levelStyle.backgroundColor,
+                          color: levelStyle.color,
+                          borderRadius: 6
+                        }}
+                      >
+                        {summary.label}
+                      </Text>
+                    </Box>
+                  );
+                })}
+              </Card>
+            </Stack>
+          </SimpleGrid>
         )}
 
         {profile && assessmentStep === "assess" && selectedArea && (
@@ -564,7 +566,7 @@ export const AssessmentDetailPage = (): JSX.Element => {
               </Text>
             </Stack>
 
-            <Stack gap={14}>
+            <SimpleGrid cols={{ base: 1, md: 2 }} spacing={14}>
               {skillsData[selectedArea].map((skill) => (
                 <Card key={skill.id} p={16} radius="md" style={{ borderColor }} withBorder>
                   <Text c="#121421" fw={700} fz={16} mb={12}>
@@ -585,14 +587,20 @@ export const AssessmentDetailPage = (): JSX.Element => {
                   </SimpleGrid>
                 </Card>
               ))}
-            </Stack>
+            </SimpleGrid>
+
+            <Group justify="flex-end" visibleFrom="md">
+              <Button color="green" onClick={handleGenerateReport} size="md">
+                Generate Remediation Plan
+              </Button>
+            </Group>
           </Stack>
         )}
       </Box>
 
       {profile && assessmentStep === "assess" && selectedArea && (
         <Box
-          className="fixed bottom-0 left-0 right-0 p-4"
+          className="fixed bottom-0 left-0 right-0 p-4 md:hidden"
           style={{
             backgroundColor: "white",
             borderTop: "1px solid var(--mantine-color-bridgeed-2)"

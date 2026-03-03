@@ -99,7 +99,7 @@ export const ClassesPage = (): JSX.Element => {
 
   return (
     <DashboardLayout role={Role.Teacher}>
-      <div className="p-4 lg:p-8">
+      <div className="p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
           <Stack gap={4} mb={20}>
             <Title c="#121421" order={1} size="h1">

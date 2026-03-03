@@ -160,7 +160,7 @@ export const AssessmentsPage = (): JSX.Element => {
 
   return (
     <DashboardLayout role={Role.Teacher}>
-      <Box className="lg:hidden max-w-[393px] mx-auto px-4 pt-4 pb-8">
+      <Box className="md:hidden max-w-[393px] mx-auto px-4 pt-4 pb-8">
         <Paper bg="green.6" p={16} radius="xl">
           <Stack gap={14}>
             <Group align="center" gap={8} wrap="nowrap">
@@ -349,7 +349,7 @@ export const AssessmentsPage = (): JSX.Element => {
         </Stack>
       </Box>
 
-      <Box className="hidden lg:block p-8">
+      <Box className="hidden md:block p-8">
         <div className="max-w-6xl mx-auto">
           <Group justify="space-between" mb={20}>
             <Stack gap={4}>
@@ -430,7 +430,7 @@ export const AssessmentsPage = (): JSX.Element => {
                   />
                 </Box>
                 <Box px={16} pb={16}>
-                  <SimpleGrid cols={{ lg: 2, xl: 3 }} spacing={12}>
+                  <SimpleGrid cols={{ base: 1, md: 2, xl: 3 }} spacing={12}>
                     {filteredLearners.map((learner) => {
                       const statusMeta = getStatusMeta(learner.status);
                       const StatusIcon = statusMeta.icon;
