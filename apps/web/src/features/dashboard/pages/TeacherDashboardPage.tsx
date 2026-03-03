@@ -127,43 +127,174 @@ export const TeacherDashboardPage = (): JSX.Element => {
 
   return (
     <DashboardLayout role={Role.Teacher}>
-      <Paper bg="white" radius={0} style={{ borderBottom: `1px solid ${borderColor}` }}>
-        <Group className="px-4 py-6 lg:px-8" justify="space-between">
-          <Stack gap={2}>
-            <Title c="bridgeed.9" order={1} size="h1">
-              Dashboard
-            </Title>
-            <Text c="bridgeed.6" fz={14}>
-              Welcome back, Teacher Name
-            </Text>
+      <Box className="lg:hidden max-w-[390px] mx-auto px-4 pt-4 pb-8">
+        <Paper bg="green.6" p={16} radius="xl">
+          <Stack gap={12}>
+            <Group align="flex-start" justify="space-between" wrap="nowrap">
+              <Stack gap={0}>
+                <Title c="white" order={1} size="h1">
+                  Teacher Dashboard
+                </Title>
+                <Text c="green.1" fw={600} fz={14} mt={2}>
+                  BridgeEd
+                </Text>
+              </Stack>
+              <ActionIcon
+                aria-label="Open settings"
+                radius="md"
+                size={40}
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.2)", color: "white" }}
+                variant="filled"
+              >
+                <IconSettings className="w-4 h-4" />
+              </ActionIcon>
+            </Group>
+
+            <Group gap={10} wrap="nowrap">
+              <ThemeIcon
+                radius="xl"
+                size={32}
+                style={{ backgroundColor: "rgba(255, 255, 255, 0.2)", color: "white" }}
+              >
+                <Text c="white" fw={700} fz={16}>
+                  T
+                </Text>
+              </ThemeIcon>
+              <Stack gap={0}>
+                <Text c="white" fw={700} fz={16} lh="24px">
+                  Teacher Name
+                </Text>
+                <Text c="green.1" fw={600} fz={12} lh="16px">
+                  teacher@school.gh
+                </Text>
+              </Stack>
+            </Group>
           </Stack>
+        </Paper>
 
-          <Group gap="md">
-            <Button
-              color="green"
-              component={Link}
-              fw={600}
-              radius="md"
-              size="md"
-              to="/assessments"
-            >
-              New Assessment
-            </Button>
-            <ActionIcon
-              aria-label="Open settings"
-              color="bridgeed"
-              radius="md"
-              size={48}
-              variant="outline"
-            >
-              <IconSettings className="w-5 h-5" />
-            </ActionIcon>
+        <SimpleGrid cols={2} mt={16} spacing="md">
+          {stats.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <Card key={`mobile-${stat.label}`} p={16} radius="md" withBorder style={{ borderColor }}>
+                <Group align="flex-start" gap={10} wrap="nowrap">
+                  <ThemeIcon color={stat.color} radius="md" size={40} variant="light">
+                    <Icon className="w-5 h-5" />
+                  </ThemeIcon>
+                  <Stack gap={0}>
+                    <Text c="bridgeed.9" fw={700} fz={44} lh="1">
+                      {stat.value}
+                    </Text>
+                    <Text c="bridgeed.6" fz={14}>
+                      {stat.label}
+                    </Text>
+                  </Stack>
+                </Group>
+              </Card>
+            );
+          })}
+        </SimpleGrid>
+
+        <Stack gap="md" mt={24}>
+          <Title c="bridgeed.9" order={2} size="h2">
+            Quick Actions
+          </Title>
+          <SimpleGrid cols={2} spacing="md">
+            <Link style={{ textDecoration: "none" }} to="/assessments">
+              <Card p={20} radius="md" withBorder style={{ borderColor }}>
+                <Stack align="center" gap={10}>
+                  <ThemeIcon color="green" radius="xl" size={52} variant="light">
+                    <IconFile className="w-6 h-6" />
+                  </ThemeIcon>
+                  <Text c="bridgeed.9" fz={14} fw={600} ta="center">
+                    New Assessment
+                  </Text>
+                </Stack>
+              </Card>
+            </Link>
+            <Link style={{ textDecoration: "none" }} to="/classes">
+              <Card p={20} radius="md" withBorder style={{ borderColor }}>
+                <Stack align="center" gap={10}>
+                  <ThemeIcon color="bridgeed" radius="xl" size={52} variant="light">
+                    <IconBook className="w-6 h-6" />
+                  </ThemeIcon>
+                  <Text c="bridgeed.9" fz={14} fw={600} ta="center">
+                    View Classes
+                  </Text>
+                </Stack>
+              </Card>
+            </Link>
+          </SimpleGrid>
+        </Stack>
+
+        <Stack gap="md" mt={32}>
+          <Title c="bridgeed.9" order={2} size="h2">
+            My Classes
+          </Title>
+          <Stack gap="md">
+            {classes.map((classItem) => (
+              <Link
+                key={`mobile-class-${classItem.id}`}
+                style={{ textDecoration: "none" }}
+                to={`/classes/${classItem.id}`}
+              >
+                <Card p={18} radius="md" withBorder style={{ borderColor }}>
+                  <Group align="flex-start" justify="space-between" mb={8}>
+                    <Text c="bridgeed.9" fw={700} fz={16} lh="24px">
+                      {classItem.name}
+                    </Text>
+                    <Text c="bridgeed.6" fz={14} lh="20px">
+                      {classItem.students} students
+                    </Text>
+                  </Group>
+                  <Text c="bridgeed.6" fz={14} lh="20px">
+                    {classItem.subject}
+                  </Text>
+                </Card>
+              </Link>
+            ))}
+          </Stack>
+        </Stack>
+      </Box>
+
+      <Box className="hidden lg:block">
+        <Paper bg="white" radius={0} style={{ borderBottom: `1px solid ${borderColor}` }}>
+          <Group className="px-8 py-6" justify="space-between">
+            <Stack gap={2}>
+              <Title c="bridgeed.9" order={1} size="h1">
+                Dashboard
+              </Title>
+              <Text c="bridgeed.6" fz={14}>
+                Welcome back, Teacher Name
+              </Text>
+            </Stack>
+
+            <Group gap="md">
+              <Button
+                color="green"
+                component={Link}
+                fw={600}
+                radius="md"
+                size="md"
+                to="/assessments"
+              >
+                New Assessment
+              </Button>
+              <ActionIcon
+                aria-label="Open settings"
+                color="bridgeed"
+                radius="md"
+                size={48}
+                variant="outline"
+              >
+                <IconSettings className="w-5 h-5" />
+              </ActionIcon>
+            </Group>
           </Group>
-        </Group>
-      </Paper>
+        </Paper>
 
-      <Box className="px-4 py-8 lg:px-8">
-        <SimpleGrid cols={{ base: 1, sm: 2, xl: 4 }} mb={32} spacing="md">
+        <Box className="px-8 py-8">
+          <SimpleGrid cols={4} mb={32} spacing="md">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
@@ -184,62 +315,63 @@ export const TeacherDashboardPage = (): JSX.Element => {
               </Card>
             );
           })}
-        </SimpleGrid>
+          </SimpleGrid>
 
-        <SimpleGrid cols={{ base: 1, xl: 2 }} spacing={32}>
-          <Stack gap="md">
-            <Title c="bridgeed.9" order={2} size="h2">
-              My Classes
-            </Title>
+          <SimpleGrid cols={2} spacing={32}>
             <Stack gap="md">
-              {classes.map((classItem) => (
-                <Link
-                  key={classItem.id}
-                  style={{ textDecoration: "none" }}
-                  to={`/classes/${classItem.id}`}
-                >
-                  <Card p={20} radius="md" withBorder style={{ borderColor }}>
-                    <Group align="flex-start" justify="space-between" mb={8}>
-                      <Text c="bridgeed.9" fw={600} fz={16} lh="24px">
-                        {classItem.name}
-                      </Text>
+              <Title c="bridgeed.9" order={2} size="h2">
+                My Classes
+              </Title>
+              <Stack gap="md">
+                {classes.map((classItem) => (
+                  <Link
+                    key={classItem.id}
+                    style={{ textDecoration: "none" }}
+                    to={`/classes/${classItem.id}`}
+                  >
+                    <Card p={20} radius="md" withBorder style={{ borderColor }}>
+                      <Group align="flex-start" justify="space-between" mb={8}>
+                        <Text c="bridgeed.9" fw={600} fz={16} lh="24px">
+                          {classItem.name}
+                        </Text>
+                        <Text c="bridgeed.6" fz={14} lh="20px">
+                          {classItem.students} students
+                        </Text>
+                      </Group>
                       <Text c="bridgeed.6" fz={14} lh="20px">
-                        {classItem.students} students
+                        {classItem.subject}
                       </Text>
-                    </Group>
-                    <Text c="bridgeed.6" fz={14} lh="20px">
-                      {classItem.subject}
-                    </Text>
-                  </Card>
-                </Link>
-              ))}
+                    </Card>
+                  </Link>
+                ))}
+              </Stack>
             </Stack>
-          </Stack>
 
-          <Stack gap="md">
-            <Title c="bridgeed.9" order={2} size="h2">
-              Recent Activity
-            </Title>
-            <Card p={0} radius="md" withBorder style={{ borderColor }}>
-              {recentActivity.map((item, index) => (
-                <Box key={`${item.student}-${index}`}>
-                  <Box px={24} py={20}>
-                    <Text c="bridgeed.9" fw={600} fz={16} lh="24px">
-                      {item.student}
-                    </Text>
-                    <Text c="bridgeed.6" fz={14} lh="20px" mt={4}>
-                      {item.action}
-                    </Text>
-                    <Text c="bridgeed.6" fz={14} lh="20px" mt={4}>
-                      {item.time}
-                    </Text>
+            <Stack gap="md">
+              <Title c="bridgeed.9" order={2} size="h2">
+                Recent Activity
+              </Title>
+              <Card p={0} radius="md" withBorder style={{ borderColor }}>
+                {recentActivity.map((item, index) => (
+                  <Box key={`${item.student}-${index}`}>
+                    <Box px={24} py={20}>
+                      <Text c="bridgeed.9" fw={600} fz={16} lh="24px">
+                        {item.student}
+                      </Text>
+                      <Text c="bridgeed.6" fz={14} lh="20px" mt={4}>
+                        {item.action}
+                      </Text>
+                      <Text c="bridgeed.6" fz={14} lh="20px" mt={4}>
+                        {item.time}
+                      </Text>
+                    </Box>
+                    {index < recentActivity.length - 1 && <Divider color="bridgeed.2" />}
                   </Box>
-                  {index < recentActivity.length - 1 && <Divider color="bridgeed.2" />}
-                </Box>
-              ))}
-            </Card>
-          </Stack>
-        </SimpleGrid>
+                ))}
+              </Card>
+            </Stack>
+          </SimpleGrid>
+        </Box>
       </Box>
     </DashboardLayout>
   );
