@@ -1,17 +1,20 @@
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
   ActionIcon,
   Box,
+  Button,
   Card,
   Group,
   Loader,
   Paper,
+  SimpleGrid,
   Stack,
   Text,
   ThemeIcon,
   Title
 } from "@mantine/core";
-import { Role, type AssessmentTimelineItem } from "@bridgeed/shared";
-import { Link, useParams } from "react-router-dom";
+import { Role, type AssessmentTimelineItem, type SkillMasteryTrend } from "@bridgeed/shared";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { useClassesQuery } from "../../../api/hooks/useClassQueries";
 import { useLearnerProfileQuery } from "../../../api/hooks/useLearnerQueries";
@@ -21,7 +24,22 @@ type IconProps = {
   className?: string;
 };
 
-type AssessmentLevel = "emerging" | "basic" | "intermediate" | "mastery" | "not_assessed";
+type AssessmentArea = "literacy" | "numeracy";
+type AssessmentStep = "select" | "assess";
+type SkillLevel = "mastery" | "intermediate" | "basic" | "emerging";
+type AssessmentLevel = SkillLevel | "not_assessed";
+
+type SkillItem = {
+  assessed: boolean;
+  id: string;
+  level: SkillLevel;
+  name: string;
+};
+
+type SkillsData = {
+  literacy: SkillItem[];
+  numeracy: SkillItem[];
+};
 
 type AssessmentSummary = {
   assessedAt: string | null;
@@ -61,10 +79,7 @@ const IconCalculator = ({ className }: IconProps): JSX.Element => (
   </svg>
 );
 
-const levelFromScore = (score: number | null): AssessmentLevel => {
-  if (score === null) {
-    return "not_assessed";
-  }
+const toSkillLevelFromScore = (score: number): SkillLevel => {
   if (score < 55) {
     return "emerging";
   }
@@ -75,6 +90,13 @@ const levelFromScore = (score: number | null): AssessmentLevel => {
     return "intermediate";
   }
   return "mastery";
+};
+
+const levelFromScore = (score: number | null): AssessmentLevel => {
+  if (score === null) {
+    return "not_assessed";
+  }
+  return toSkillLevelFromScore(score);
 };
 
 const levelLabel = (level: AssessmentLevel): string => {
@@ -93,7 +115,7 @@ const levelLabel = (level: AssessmentLevel): string => {
   return "Not Assessed";
 };
 
-const levelStyles = (level: AssessmentLevel): { backgroundColor: string; color: string } => {
+const levelBadgeStyles = (level: AssessmentLevel): { backgroundColor: string; color: string } => {
   if (level === "emerging") {
     return { backgroundColor: "#FDE8EC", color: "#D32F45" };
   }
@@ -107,6 +129,46 @@ const levelStyles = (level: AssessmentLevel): { backgroundColor: string; color: 
     return { backgroundColor: "#D8F5E2", color: "#027A48" };
   }
   return { backgroundColor: "#ECEEF5", color: "#6A6C7D" };
+};
+
+const skillButtonStyles = (level: SkillLevel, active: boolean): CSSProperties => {
+  if (!active) {
+    return {
+      backgroundColor: "white",
+      border: "2px solid var(--mantine-color-bridgeed-2)",
+      color: "#121421"
+    };
+  }
+
+  if (level === "mastery") {
+    return {
+      backgroundColor: "#1FA54A",
+      border: "2px solid #1FA54A",
+      color: "white"
+    };
+  }
+
+  if (level === "intermediate") {
+    return {
+      backgroundColor: "#E6EEFF",
+      border: "2px solid #3855B3",
+      color: "#1E3A8A"
+    };
+  }
+
+  if (level === "basic") {
+    return {
+      backgroundColor: "#DDF4E6",
+      border: "2px solid #1FA54A",
+      color: "#1FA54A"
+    };
+  }
+
+  return {
+    backgroundColor: "#FDE8EC",
+    border: "2px solid #D32F45",
+    color: "#D32F45"
+  };
 };
 
 const formatRelativeDate = (value: string | null): string => {
@@ -135,7 +197,7 @@ const includesToken = (value: string, tokens: string[]): boolean =>
 
 const filterTimelineByDomain = (
   timeline: AssessmentTimelineItem[],
-  domain: "literacy" | "numeracy"
+  domain: AssessmentArea
 ): AssessmentTimelineItem[] => {
   const tokens =
     domain === "literacy"
@@ -150,7 +212,7 @@ const filterTimelineByDomain = (
 
 const buildAssessmentSummary = (
   timeline: AssessmentTimelineItem[],
-  domain: "literacy" | "numeracy",
+  domain: AssessmentArea,
   title: string
 ): AssessmentSummary => {
   const domainTimeline = filterTimelineByDomain(timeline, domain);
@@ -178,42 +240,188 @@ const buildAssessmentSummary = (
   };
 };
 
+const findLatestTrendScore = (trends: SkillMasteryTrend[], tokens: string[]): number | null => {
+  let latestMeasuredAt = Number.NEGATIVE_INFINITY;
+  let latestScore: number | null = null;
+
+  for (const trend of trends) {
+    const source = `${trend.skillCode} ${trend.skillName}`.toLowerCase();
+    if (!includesToken(source, tokens)) {
+      continue;
+    }
+
+    for (const point of trend.points) {
+      const measuredAt = new Date(point.measuredAt).getTime();
+      if (Number.isNaN(measuredAt)) {
+        continue;
+      }
+
+      if (measuredAt > latestMeasuredAt) {
+        latestMeasuredAt = measuredAt;
+        latestScore = point.masteryScore;
+      }
+    }
+  }
+
+  return latestScore;
+};
+
+const buildInitialSkillsData = (trends: SkillMasteryTrend[]): SkillsData => {
+  const literacyDefaults: Array<{ defaultLevel: SkillLevel; id: string; name: string; tokens: string[] }> = [
+    {
+      id: "phonics",
+      name: "Phonics & Decoding",
+      defaultLevel: "basic",
+      tokens: ["phonics", "decoding"]
+    },
+    {
+      id: "fluency",
+      name: "Reading Fluency",
+      defaultLevel: "intermediate",
+      tokens: ["fluency", "reading_fluency", "reading fluency"]
+    },
+    {
+      id: "comprehension",
+      name: "Comprehension",
+      defaultLevel: "basic",
+      tokens: ["comprehension"]
+    },
+    {
+      id: "vocabulary",
+      name: "Vocabulary",
+      defaultLevel: "emerging",
+      tokens: ["vocabulary"]
+    }
+  ];
+
+  const numeracyDefaults: Array<{ defaultLevel: SkillLevel; id: string; name: string; tokens: string[] }> = [
+    {
+      id: "counting",
+      name: "Counting & Number Sense",
+      defaultLevel: "intermediate",
+      tokens: ["counting", "number_sense", "number sense"]
+    },
+    {
+      id: "addition",
+      name: "Addition & Subtraction",
+      defaultLevel: "basic",
+      tokens: ["addition", "subtraction", "operations"]
+    },
+    {
+      id: "multiplication",
+      name: "Multiplication",
+      defaultLevel: "emerging",
+      tokens: ["multiplication"]
+    },
+    {
+      id: "fractions",
+      name: "Fractions",
+      defaultLevel: "emerging",
+      tokens: ["fractions"]
+    }
+  ];
+
+  return {
+    literacy: literacyDefaults.map((skill) => {
+      const score = findLatestTrendScore(trends, skill.tokens);
+      return {
+        id: skill.id,
+        name: skill.name,
+        level: score === null ? skill.defaultLevel : toSkillLevelFromScore(score),
+        assessed: score !== null
+      };
+    }),
+    numeracy: numeracyDefaults.map((skill) => {
+      const score = findLatestTrendScore(trends, skill.tokens);
+      return {
+        id: skill.id,
+        name: skill.name,
+        level: score === null ? skill.defaultLevel : toSkillLevelFromScore(score),
+        assessed: score !== null
+      };
+    })
+  };
+};
+
 export const AssessmentDetailPage = (): JSX.Element => {
   const params = useParams();
   const learnerId = params.learnerId ?? "";
+  const navigate = useNavigate();
+
+  const [selectedArea, setSelectedArea] = useState<AssessmentArea | null>(null);
+  const [assessmentStep, setAssessmentStep] = useState<AssessmentStep>("select");
+  const [skillsData, setSkillsData] = useState<SkillsData>({
+    literacy: [],
+    numeracy: []
+  });
+
   const profileQuery = useLearnerProfileQuery(learnerId);
   const classesQuery = useClassesQuery();
   const borderColor = "var(--mantine-color-bridgeed-2)";
-
   const profile = profileQuery.data;
+
+  useEffect(() => {
+    if (!profile) {
+      return;
+    }
+
+    setSkillsData(buildInitialSkillsData(profile.masteryTrends));
+  }, [profile]);
+
   const learnerClass = classesQuery.data?.find((classItem) => classItem.classId === profile?.learner.classId);
   const learnerClassName = learnerClass?.name ?? profile?.learner.gradeLevel ?? "Class";
 
-  const literacySummary = buildAssessmentSummary(
-    profile?.assessmentTimeline ?? [],
-    "literacy",
-    "Literacy Assessment"
+  const literacySummary = useMemo(
+    () => buildAssessmentSummary(profile?.assessmentTimeline ?? [], "literacy", "Literacy Assessment"),
+    [profile?.assessmentTimeline]
   );
-  const numeracySummary = buildAssessmentSummary(
-    profile?.assessmentTimeline ?? [],
-    "numeracy",
-    "Numeracy Assessment"
+  const numeracySummary = useMemo(
+    () => buildAssessmentSummary(profile?.assessmentTimeline ?? [], "numeracy", "Numeracy Assessment"),
+    [profile?.assessmentTimeline]
   );
+
+  const handleAreaSelect = (area: AssessmentArea): void => {
+    setSelectedArea(area);
+    setAssessmentStep("assess");
+  };
+
+  const handleSkillAssess = (skillId: string, level: SkillLevel): void => {
+    if (!selectedArea) {
+      return;
+    }
+
+    setSkillsData((current) => ({
+      ...current,
+      [selectedArea]: current[selectedArea].map((skill) =>
+        skill.id === skillId ? { ...skill, level, assessed: true } : skill
+      )
+    }));
+  };
+
+  const handleGenerateReport = (): void => {
+    navigate(`/learners/${learnerId}/profile`);
+  };
 
   return (
     <DashboardLayout role={Role.Teacher}>
-      <Box className="max-w-[393px] mx-auto px-4 pt-4 pb-8 lg:pt-8">
+      <Box className="max-w-[393px] mx-auto px-4 pt-4 pb-28 lg:pt-8">
         <Paper bg="green.6" p={16} radius="xl">
           <Stack gap={6}>
             <Group align="center" gap={8} wrap="nowrap">
               <ActionIcon
-                aria-label="Go back to assessments"
+                aria-label="Go back"
                 color="green"
-                component={Link}
+                onClick={() => {
+                  if (assessmentStep === "select") {
+                    navigate("/assessments");
+                    return;
+                  }
+                  setAssessmentStep("select");
+                  setSelectedArea(null);
+                }}
                 radius="xl"
                 size={32}
                 style={{ color: "white" }}
-                to="/assessments"
                 variant="subtle"
               >
                 <IconBack className="w-5 h-5" />
@@ -244,14 +452,22 @@ export const AssessmentDetailPage = (): JSX.Element => {
           </Card>
         )}
 
-        {profile && (
+        {profile && assessmentStep === "select" && (
           <Stack gap={18} mt={16}>
             <Title c="#121421" order={2} size="h2">
               Select Assessment Area
             </Title>
 
             <Stack gap={14}>
-              <Card p={20} radius="md" style={{ borderColor }} withBorder>
+              <Card
+                component="button"
+                onClick={() => handleAreaSelect("literacy")}
+                p={20}
+                radius="md"
+                style={{ borderColor, textAlign: "left", width: "100%" }}
+                type="button"
+                withBorder
+              >
                 <Group align="center" gap={14} wrap="nowrap">
                   <ThemeIcon color="green" radius="xl" size={56} variant="light">
                     <IconBook className="w-7 h-7" />
@@ -267,7 +483,15 @@ export const AssessmentDetailPage = (): JSX.Element => {
                 </Group>
               </Card>
 
-              <Card p={20} radius="md" style={{ borderColor }} withBorder>
+              <Card
+                component="button"
+                onClick={() => handleAreaSelect("numeracy")}
+                p={20}
+                radius="md"
+                style={{ borderColor, textAlign: "left", width: "100%" }}
+                type="button"
+                withBorder
+              >
                 <Group align="center" gap={14} wrap="nowrap">
                   <ThemeIcon color="green" radius="xl" size={56} variant="light">
                     <IconCalculator className="w-7 h-7" />
@@ -290,7 +514,7 @@ export const AssessmentDetailPage = (): JSX.Element => {
 
             <Card p={0} radius="md" style={{ borderColor }} withBorder>
               {[literacySummary, numeracySummary].map((summary, index) => {
-                const levelStyle = levelStyles(summary.level);
+                const levelStyle = levelBadgeStyles(summary.level);
                 return (
                   <Box
                     key={summary.title}
@@ -328,7 +552,59 @@ export const AssessmentDetailPage = (): JSX.Element => {
             </Card>
           </Stack>
         )}
+
+        {profile && assessmentStep === "assess" && selectedArea && (
+          <Stack gap={18} mt={16}>
+            <Stack gap={4}>
+              <Title c="#121421" order={2} size="h2">
+                {selectedArea === "literacy" ? "Literacy" : "Numeracy"} Skills Assessment
+              </Title>
+              <Text c="#6A6C7D" fz={14}>
+                Tap each skill to assess the learner&apos;s level.
+              </Text>
+            </Stack>
+
+            <Stack gap={14}>
+              {skillsData[selectedArea].map((skill) => (
+                <Card key={skill.id} p={16} radius="md" style={{ borderColor }} withBorder>
+                  <Text c="#121421" fw={700} fz={16} mb={12}>
+                    {skill.name}
+                  </Text>
+
+                  <SimpleGrid cols={2} spacing={8}>
+                    {(["mastery", "intermediate", "basic", "emerging"] as SkillLevel[]).map((level) => (
+                      <Button
+                        key={`${skill.id}-${level}`}
+                        onClick={() => handleSkillAssess(skill.id, level)}
+                        style={skillButtonStyles(level, skill.level === level)}
+                        variant="filled"
+                      >
+                        {levelLabel(level)}
+                      </Button>
+                    ))}
+                  </SimpleGrid>
+                </Card>
+              ))}
+            </Stack>
+          </Stack>
+        )}
       </Box>
+
+      {profile && assessmentStep === "assess" && selectedArea && (
+        <Box
+          className="fixed bottom-0 left-0 right-0 p-4"
+          style={{
+            backgroundColor: "white",
+            borderTop: "1px solid var(--mantine-color-bridgeed-2)"
+          }}
+        >
+          <Box className="max-w-[393px] mx-auto">
+            <Button color="green" fullWidth onClick={handleGenerateReport} size="lg">
+              Generate Remediation Plan
+            </Button>
+          </Box>
+        </Box>
+      )}
     </DashboardLayout>
   );
 };
