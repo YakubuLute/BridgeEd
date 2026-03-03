@@ -127,7 +127,7 @@ export const TeacherDashboardPage = (): JSX.Element => {
 
   return (
     <DashboardLayout role={Role.Teacher}>
-      <Box className="lg:hidden max-w-[390px] mx-auto px-4 pt-4 pb-8">
+      <Box className="max-w-[390px] mx-auto px-4 pt-4 pb-8" hiddenFrom="lg">
         <Paper bg="green.6" p={16} radius="xl">
           <Stack gap={12}>
             <Group align="flex-start" justify="space-between" wrap="nowrap">
@@ -257,7 +257,7 @@ export const TeacherDashboardPage = (): JSX.Element => {
         </Stack>
       </Box>
 
-      <Box className="hidden lg:block">
+      <Box visibleFrom="lg">
         <Paper bg="white" radius={0} style={{ borderBottom: `1px solid ${borderColor}` }}>
           <Group className="px-8 py-6" justify="space-between">
             <Stack gap={2}>

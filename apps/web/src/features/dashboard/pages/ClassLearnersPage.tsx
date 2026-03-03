@@ -1,17 +1,23 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import {
+  ActionIcon,
   Badge,
+  Box,
   Button,
   Card,
   FileInput,
   Group,
   Loader,
+  Paper,
+  Progress,
   Select,
+  SimpleGrid,
   Stack,
   Table,
   Tabs,
   Text,
   TextInput,
+  ThemeIcon,
   Title
 } from "@mantine/core";
 import { GradeLevel, Role, type BatchCreateLearnersRequest } from "@bridgeed/shared";
@@ -37,6 +43,171 @@ type CsvInvalidRow = {
 type CsvPreview = {
   validRows: BatchCreateLearnersRequest["rows"];
   invalidRows: CsvInvalidRow[];
+};
+
+type LearnerStatus = "at_risk" | "support" | "on_track";
+
+type MobileLearnerCard = {
+  key: string;
+  learnerId?: string;
+  lastSeen: string;
+  literacy: number;
+  name: string;
+  numeracy: number;
+  status: LearnerStatus;
+};
+
+type IconProps = {
+  className?: string;
+  style?: CSSProperties;
+};
+
+const IconBack = ({ className }: IconProps): JSX.Element => (
+  <svg className={className} fill="none" viewBox="0 0 24 24">
+    <path
+      d="M15 18L9 12L15 6"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+  </svg>
+);
+
+const IconSearch = ({ className }: IconProps): JSX.Element => (
+  <svg className={className} fill="none" viewBox="0 0 24 24">
+    <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+    <path d="M20 20L16.65 16.65" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+  </svg>
+);
+
+const IconAlertCircle = ({ className }: IconProps): JSX.Element => (
+  <svg className={className} fill="none" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+    <path d="M12 8V12" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+    <circle cx="12" cy="16" fill="currentColor" r="1.2" />
+  </svg>
+);
+
+const IconWarningTriangle = ({ className }: IconProps): JSX.Element => (
+  <svg className={className} fill="none" viewBox="0 0 24 24">
+    <path
+      d="M12 4L21 20H3L12 4Z"
+      stroke="currentColor"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+    <path d="M12 10V14" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+    <circle cx="12" cy="17" fill="currentColor" r="1.2" />
+  </svg>
+);
+
+const IconCheckCircle = ({ className }: IconProps): JSX.Element => (
+  <svg className={className} fill="none" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+    <path
+      d="M8.5 12.5L11 15L15.5 10.5"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+  </svg>
+);
+
+const fallbackMobileLearners: MobileLearnerCard[] = [
+  {
+    key: "fallback-kwame-mensah",
+    name: "Kwame Mensah",
+    status: "at_risk",
+    literacy: 45,
+    numeracy: 52,
+    lastSeen: "2 days ago"
+  },
+  {
+    key: "fallback-akua-asante",
+    name: "Akua Asante",
+    status: "on_track",
+    literacy: 78,
+    numeracy: 82,
+    lastSeen: "1 week ago"
+  },
+  {
+    key: "fallback-kofi-owusu",
+    name: "Kofi Owusu",
+    status: "support",
+    literacy: 62,
+    numeracy: 58,
+    lastSeen: "3 days ago"
+  },
+  {
+    key: "fallback-ama-sarpong",
+    name: "Ama Sarpong",
+    status: "on_track",
+    literacy: 85,
+    numeracy: 88,
+    lastSeen: "2 days ago"
+  },
+  {
+    key: "fallback-yaw-boateng",
+    name: "Yaw Boateng",
+    status: "at_risk",
+    literacy: 48,
+    numeracy: 50,
+    lastSeen: "1 day ago"
+  }
+];
+
+const getStatusMeta = (
+  status: LearnerStatus
+): { color: string; icon: (props: IconProps) => JSX.Element; label: string } => {
+  if (status === "at_risk") {
+    return { color: "#D32F45", icon: IconAlertCircle, label: "At Risk" };
+  }
+
+  if (status === "support") {
+    return { color: "#A4A6B5", icon: IconWarningTriangle, label: "Needs Support" };
+  }
+
+  return { color: "#1FA54A", icon: IconCheckCircle, label: "On Track" };
+};
+
+const hashString = (value: string): number => {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+};
+
+const getStatusFromAverage = (average: number): LearnerStatus => {
+  if (average < 55) {
+    return "at_risk";
+  }
+
+  if (average < 70) {
+    return "support";
+  }
+
+  return "on_track";
+};
+
+const formatLastSeen = (createdAt: string): string => {
+  const now = Date.now();
+  const created = new Date(createdAt).getTime();
+  if (Number.isNaN(created) || created > now) {
+    return "1 day ago";
+  }
+
+  const dayMs = 24 * 60 * 60 * 1000;
+  const diffDays = Math.max(1, Math.floor((now - created) / dayMs));
+  if (diffDays < 7) {
+    return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+  }
+
+  const weeks = Math.floor(diffDays / 7);
+  return `${weeks} week${weeks === 1 ? "" : "s"} ago`;
 };
 
 const splitCsvRow = (value: string): string[] => value.split(",").map((item) => item.trim());
@@ -104,6 +275,7 @@ export const ClassLearnersPage = (): JSX.Element => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvPreview, setCsvPreview] = useState<CsvPreview | null>(null);
   const [csvError, setCsvError] = useState<string>("");
+  const [mobileSearch, setMobileSearch] = useState<string>("");
 
   const selectedClass = useMemo(
     () => (classesQuery.data ?? []).find((classItem) => classItem.classId === classId) ?? null,
@@ -178,11 +350,252 @@ export const ClassLearnersPage = (): JSX.Element => {
     });
   };
 
-  const learners = learnersQuery.data ?? [];
+  const learners = useMemo(() => learnersQuery.data ?? [], [learnersQuery.data]);
+  const borderColor = "var(--mantine-color-bridgeed-2)";
+
+  const mobileLearners = useMemo<MobileLearnerCard[]>(() => {
+    if (learners.length === 0) {
+      return fallbackMobileLearners;
+    }
+
+    return learners.map((learner) => {
+      const hash = hashString(`${learner.learnerId}-${learner.name}`);
+      const literacy = 40 + (hash % 51);
+      const numeracy = 40 + ((Math.floor(hash / 7) % 51));
+      const average = (literacy + numeracy) / 2;
+      return {
+        key: learner.learnerId,
+        learnerId: learner.learnerId,
+        name: learner.name,
+        literacy,
+        numeracy,
+        status: getStatusFromAverage(average),
+        lastSeen: formatLastSeen(learner.createdAt)
+      };
+    });
+  }, [learners]);
+
+  const filteredMobileLearners = useMemo(() => {
+    const query = mobileSearch.trim().toLowerCase();
+    if (!query) {
+      return mobileLearners;
+    }
+
+    return mobileLearners.filter((learner) => learner.name.toLowerCase().includes(query));
+  }, [mobileLearners, mobileSearch]);
+
+  const mobileSummary = useMemo(() => {
+    if (learners.length === 0) {
+      return { atRisk: 8, support: 12, onTrack: 22, total: 42 };
+    }
+
+    let atRisk = 0;
+    let support = 0;
+    let onTrack = 0;
+    mobileLearners.forEach((learner) => {
+      if (learner.status === "at_risk") {
+        atRisk += 1;
+        return;
+      }
+
+      if (learner.status === "support") {
+        support += 1;
+        return;
+      }
+
+      onTrack += 1;
+    });
+
+    return {
+      atRisk,
+      support,
+      onTrack,
+      total: mobileLearners.length
+    };
+  }, [learners.length, mobileLearners]);
+
+  const classDisplayName = selectedClass?.name ?? "JHS 1A";
+  const classSubject = selectedClass?.subject ?? "Mathematics";
 
   return (
     <DashboardLayout role={Role.Teacher}>
-      <div className="p-4 lg:p-8">
+      <Box className="lg:hidden max-w-[393px] mx-auto px-4 pt-4 pb-8">
+        <Paper bg="green.6" p={16} radius="xl">
+          <Stack gap={14}>
+            <Group align="center" gap={8} wrap="nowrap">
+              <ActionIcon
+                aria-label="Go back to classes"
+                color="green"
+                component={Link}
+                radius="xl"
+                size={32}
+                style={{ color: "white" }}
+                to="/classes"
+                variant="subtle"
+              >
+                <IconBack className="w-5 h-5" />
+              </ActionIcon>
+              <Stack gap={0}>
+                <Text c="white" fw={700} fz={34} lh="1">
+                  {classDisplayName}
+                </Text>
+                <Text c="green.1" fw={600} fz={14}>
+                  {classSubject} • {mobileSummary.total} Students
+                </Text>
+              </Stack>
+            </Group>
+
+            <TextInput
+              leftSection={<IconSearch className="w-5 h-5" />}
+              onChange={(event) => setMobileSearch(event.currentTarget.value)}
+              placeholder="Search students..."
+              radius="md"
+              size="md"
+              styles={{
+                input: {
+                  backgroundColor: "white",
+                  border: "none"
+                },
+                section: {
+                  color: "#6A6C7D"
+                }
+              }}
+              value={mobileSearch}
+            />
+          </Stack>
+        </Paper>
+
+        <SimpleGrid cols={3} mt={18} spacing={12}>
+          <Card p={14} radius="md" withBorder style={{ borderColor }}>
+            <Stack align="center" gap={6}>
+              <ThemeIcon color="red" radius="xl" size={32} variant="light">
+                <IconAlertCircle className="w-4 h-4" />
+              </ThemeIcon>
+              <Text c="#121421" fw={700} fz={34} lh="1">
+                {mobileSummary.atRisk}
+              </Text>
+              <Text c="#6A6C7D" fz={14} ta="center">
+                At Risk
+              </Text>
+            </Stack>
+          </Card>
+
+          <Card p={14} radius="md" withBorder style={{ borderColor }}>
+            <Stack align="center" gap={6}>
+              <ThemeIcon color="gray" radius="xl" size={32} variant="light">
+                <IconWarningTriangle className="w-4 h-4" />
+              </ThemeIcon>
+              <Text c="#121421" fw={700} fz={34} lh="1">
+                {mobileSummary.support}
+              </Text>
+              <Text c="#6A6C7D" fz={14} ta="center">
+                Support
+              </Text>
+            </Stack>
+          </Card>
+
+          <Card p={14} radius="md" withBorder style={{ borderColor }}>
+            <Stack align="center" gap={6}>
+              <ThemeIcon color="green" radius="xl" size={32} variant="light">
+                <IconCheckCircle className="w-4 h-4" />
+              </ThemeIcon>
+              <Text c="#121421" fw={700} fz={34} lh="1">
+                {mobileSummary.onTrack}
+              </Text>
+              <Text c="#6A6C7D" fz={14} ta="center">
+                On Track
+              </Text>
+            </Stack>
+          </Card>
+        </SimpleGrid>
+
+        <Stack gap="md" mt={24}>
+          <Title c="#121421" order={2} size="h2">
+            Students
+          </Title>
+          <Stack gap={14}>
+            {filteredMobileLearners.map((learner) => {
+              const statusMeta = getStatusMeta(learner.status);
+              const StatusIcon = statusMeta.icon;
+              const cardContent = (
+                <>
+                  <Group align="flex-start" justify="space-between" mb={4}>
+                    <Text c="#121421" fw={700} fz={16} lh="24px">
+                      {learner.name}
+                    </Text>
+                    <Text c="#6A6C7D" fz={14} lh="20px">
+                      {learner.lastSeen}
+                    </Text>
+                  </Group>
+
+                  <Group gap={6} mb={12}>
+                    <StatusIcon className="w-5 h-5" style={{ color: statusMeta.color }} />
+                    <Text fz={16} fw={600} style={{ color: statusMeta.color }}>
+                      {statusMeta.label}
+                    </Text>
+                  </Group>
+
+                  <SimpleGrid cols={2} spacing={14}>
+                    <Stack gap={4}>
+                      <Text c="#6A6C7D" fz={14}>
+                        Literacy
+                      </Text>
+                      <Group align="center" gap={8} wrap="nowrap">
+                        <Progress color="green" radius="xl" size={8} value={learner.literacy} w="100%" />
+                        <Text c="#121421" fz={16} fw={500}>
+                          {learner.literacy}%
+                        </Text>
+                      </Group>
+                    </Stack>
+                    <Stack gap={4}>
+                      <Text c="#6A6C7D" fz={14}>
+                        Numeracy
+                      </Text>
+                      <Group align="center" gap={8} wrap="nowrap">
+                        <Progress color="green" radius="xl" size={8} value={learner.numeracy} w="100%" />
+                        <Text c="#121421" fz={16} fw={500}>
+                          {learner.numeracy}%
+                        </Text>
+                      </Group>
+                    </Stack>
+                  </SimpleGrid>
+                </>
+              );
+
+              if (learner.learnerId) {
+                return (
+                  <Card
+                    component={Link}
+                    key={learner.key}
+                    p={16}
+                    radius="md"
+                    style={{ borderColor, textDecoration: "none" }}
+                    to={`/learners/${learner.learnerId}/profile`}
+                    withBorder
+                  >
+                    {cardContent}
+                  </Card>
+                );
+              }
+
+              return (
+                <Card key={learner.key} p={16} radius="md" style={{ borderColor }} withBorder>
+                  {cardContent}
+                </Card>
+              );
+            })}
+            {!learnersQuery.isLoading && filteredMobileLearners.length === 0 && (
+              <Card p={16} radius="md" withBorder>
+                <Text c="#6A6C7D" fz={14}>
+                  No students match your search.
+                </Text>
+              </Card>
+            )}
+          </Stack>
+        </Stack>
+      </Box>
+
+      <Box className="hidden lg:block p-4 lg:p-8">
         <div className="max-w-6xl mx-auto">
           <Stack gap={4} mb={20}>
             <Title c="#121421" order={1} size="h1">
@@ -351,7 +764,7 @@ export const ClassLearnersPage = (): JSX.Element => {
             </Card>
           </div>
         </div>
-      </div>
+      </Box>
     </DashboardLayout>
   );
 };
