@@ -13,6 +13,7 @@ import {
 import { ClassesPage } from "./features/dashboard/pages/ClassesPage";
 import { ClassLearnersPage } from "./features/dashboard/pages/ClassLearnersPage";
 import { AssessmentsPage } from "./features/dashboard/pages/AssessmentsPage";
+import { AssessmentDetailPage } from "./features/dashboard/pages/AssessmentDetailPage";
 import { LearnerProfilePage } from "./features/dashboard/pages/LearnerProfilePage";
 import { RoleSelectionPage } from "./features/dashboard/pages/RoleSelectionPage";
 import { SchoolDetailsPage } from "./features/dashboard/pages/SchoolDetailsPage";
@@ -55,6 +56,14 @@ const App = (): JSX.Element => (
         </RequireAuth>
       }
       path="/assessments"
+    />
+    <Route
+      element={
+        <RequireAuth allowedRoles={[Role.Teacher]}>
+          <AssessmentDetailPage />
+        </RequireAuth>
+      }
+      path="/assessments/:learnerId"
     />
     <Route
       element={

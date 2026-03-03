@@ -278,7 +278,7 @@ export const AssessmentsPage = (): JSX.Element => {
                   p={16}
                   radius="md"
                   style={{ borderColor, textDecoration: "none" }}
-                  to={`/learners/${learner.learnerId}/profile`}
+                  to={`/assessments/${learner.learnerId}`}
                   withBorder
                 >
                   <Group align="flex-start" justify="space-between" mb={4}>
@@ -494,7 +494,7 @@ export const AssessmentsPage = (): JSX.Element => {
                             <Button
                               component={Link}
                               size="compact-xs"
-                              to={`/learners/${learner.learnerId}/profile`}
+                              to={`/assessments/${learner.learnerId}`}
                               variant="light"
                             >
                               View
