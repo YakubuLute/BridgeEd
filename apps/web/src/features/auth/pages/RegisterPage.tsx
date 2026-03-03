@@ -19,6 +19,7 @@ import {
   getActionButtonStyles,
   getAuthInputStyles
 } from "../auth.styles";
+import { getPostLoginPath } from "../../../utils/role-routing";
 
 export const RegisterPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ export const RegisterPage = (): JSX.Element => {
         })
       );
 
-      navigate("/role-selection", { replace: true });
+      navigate(getPostLoginPath(result.user), { replace: true });
     },
     onError: (mutationError) => {
       setError(mutationError instanceof Error ? mutationError.message : "Unable to create account right now.");

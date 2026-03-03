@@ -24,6 +24,7 @@ import {
   getActionButtonStyles,
   getOtpDigitStyles
 } from "../auth.styles";
+import { getPostLoginPath } from "../../../utils/role-routing";
 
 type Feedback = {
   tone: "error" | "success" | "info";
@@ -97,7 +98,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
         message: "Login successful. A secure session has been created."
       });
 
-      navigate("/role-selection", { replace: true });
+      navigate(getPostLoginPath(result.user), { replace: true });
     },
     onError: (error) => {
       setFeedback({

@@ -10,6 +10,7 @@ type UserDocument = {
   failedLoginAttempts: number;
   lockedUntilMs: number | null;
   role: Role;
+  roles?: Role[];
   scope?: {
     schoolId?: string;
     districtId?: string;
@@ -36,6 +37,7 @@ const UserSchema = new Schema<UserDocument>(
     failedLoginAttempts: { type: Number, required: true, default: 0 },
     lockedUntilMs: { type: Number, default: null },
     role: { type: String, required: true, enum: Object.values(Role), index: true },
+    roles: { type: [String], enum: Object.values(Role) },
     scope: { type: UserScopeSchema }
   },
   {

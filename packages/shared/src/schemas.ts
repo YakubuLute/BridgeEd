@@ -38,12 +38,17 @@ export const AuthScopeSchema = z
   })
   .strict();
 
-export const AuthUserSchema = z.object({
-  id: z.string().min(1),
-  role: z.nativeEnum(Role),
-  name: z.string().min(1),
-  scope: AuthScopeSchema.optional()
-});
+export const AuthUserSchema = z
+  .object({
+    id: z.string().min(1),
+    role: z.nativeEnum(Role),
+    roles: z.array(z.nativeEnum(Role)).min(1).optional(),
+    name: z.string().min(1),
+    scope: AuthScopeSchema.optional()
+  })
+  .refine((value) => !value.roles || value.roles.includes(value.role), {
+    message: "Primary role must be included in roles."
+  });
 
 export const LoginSessionResponseSchema = z.object({
   accessToken: z.string().min(1),

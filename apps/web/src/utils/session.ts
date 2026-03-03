@@ -28,6 +28,7 @@ export const readSession = (): SessionState | null => {
       user?: {
         id?: unknown;
         role?: unknown;
+        roles?: unknown;
         name?: unknown;
         scope?: unknown;
       };
@@ -38,6 +39,8 @@ export const readSession = (): SessionState | null => {
       !parsed.user ||
       typeof parsed.user.id !== "string" ||
       !isRole(parsed.user.role) ||
+      (parsed.user.roles !== undefined &&
+        (!Array.isArray(parsed.user.roles) || !parsed.user.roles.every((role) => isRole(role)))) ||
       typeof parsed.user.name !== "string"
     ) {
       return null;
@@ -50,6 +53,9 @@ export const readSession = (): SessionState | null => {
       user: {
         id: parsed.user.id,
         role: parsed.user.role,
+        roles: Array.isArray(parsed.user.roles)
+          ? (parsed.user.roles.filter((role): role is Role => isRole(role)) as Role[])
+          : undefined,
         name: parsed.user.name,
         scope:
           parsed.user.scope && typeof parsed.user.scope === "object"

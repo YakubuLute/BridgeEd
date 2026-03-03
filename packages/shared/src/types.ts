@@ -28,6 +28,7 @@ export type AuthScope = {
 export type AuthUser = {
   id: string;
   role: Role;
+  roles?: Role[];
   name: string;
   scope?: AuthScope;
 };

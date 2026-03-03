@@ -63,14 +63,21 @@ const normalizeScope = (scope?: AuthScope): AuthScope | undefined => {
   return Object.keys(normalizedScope).length > 0 ? normalizedScope : undefined;
 };
 
+const normalizeRoles = (primaryRole: Role, roles?: Role[]): Role[] | undefined => {
+  const normalizedRoles = Array.from(new Set([primaryRole, ...(roles ?? [])]));
+  return normalizedRoles.length > 1 ? normalizedRoles : undefined;
+};
+
 const mapUserToSessionUser = (user: {
   userId: string;
   role: Role;
+  roles?: Role[];
   name: string;
   scope?: AuthScope;
 }): SessionUser => ({
   id: user.userId,
   role: user.role,
+  roles: normalizeRoles(user.role, user.roles),
   name: user.name,
   scope: normalizeScope(user.scope)
 });

@@ -2,6 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import { Role } from "@bridgeed/shared";
 
+import { getPostLoginPath, hasAnyAllowedRole } from "../../../utils/role-routing";
 import { readSession } from "../../../utils/session";
 
 type RequireAuthProps = {
@@ -17,8 +18,8 @@ export const RequireAuth = ({ children, allowedRoles }: RequireAuthProps): JSX.E
     return <Navigate replace state={{ from: location.pathname }} to="/" />;
   }
 
-  if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(session.user.role)) {
-    return <Navigate replace to="/role-selection" />;
+  if (allowedRoles && allowedRoles.length > 0 && !hasAnyAllowedRole(session.user, allowedRoles)) {
+    return <Navigate replace to={getPostLoginPath(session.user)} />;
   }
 
   return <>{children}</>;

@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import { Alert, Button, Card, Group, Input, Stack, Text, Title } from "@mantine/core";
 import { Role } from "@bridgeed/shared";
+import { useLocation } from "react-router-dom";
 
 import { useSchoolDetailsQuery } from "../../../api/hooks/useSchoolQueries";
 import { isApiClientError } from "../../../api/api";
+import { getUserRoles } from "../../../utils/role-routing";
 import { readSession } from "../../../utils/session";
 import { DashboardLayout } from "../components/DashboardLayout";
 
@@ -15,8 +17,15 @@ const formatDate = (value: string): string =>
   });
 
 export const SchoolDetailsPage = (): JSX.Element => {
+  const location = useLocation();
   const session = readSession();
-  const role = session?.user.role ?? Role.SchoolAdmin;
+  const userRoles = session ? getUserRoles(session.user) : [];
+  const role =
+    location.pathname.startsWith("/admin/") && userRoles.includes(Role.NationalAdmin)
+      ? Role.NationalAdmin
+      : location.pathname.startsWith("/school-admin/") && userRoles.includes(Role.SchoolAdmin)
+        ? Role.SchoolAdmin
+        : session?.user.role ?? Role.SchoolAdmin;
   const scopedSchoolId = session?.user.scope?.schoolId?.trim() ?? "";
 
   const [lookupSchoolId, setLookupSchoolId] = useState<string>("");

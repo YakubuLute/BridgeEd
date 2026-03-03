@@ -24,6 +24,7 @@ import {
   getActionButtonStyles,
   getAuthInputStyles
 } from "../auth.styles";
+import { getPostLoginPath } from "../../../utils/role-routing";
 
 export const EmailLoginPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -61,7 +62,7 @@ export const EmailLoginPage = (): JSX.Element => {
         })
       );
 
-      navigate("/role-selection", { replace: true });
+      navigate(getPostLoginPath(result.user), { replace: true });
     },
     onError: (mutationError) => {
       const details = readEmailLoginErrorDetails(mutationError);
