@@ -198,6 +198,117 @@ describe("Class and learner routes", () => {
     expect(populatedProfileResponse.body.data.masteryTrends[0].skillCode).toBe("phonics_decoding");
   });
 
+  it("returns class assessment overview with learner status summary", async () => {
+    const { token } = await loginAsTeacher();
+    const classResponse = await request(app).post(`${API_PREFIX}/classes`).set("Authorization", `Bearer ${token}`).send({
+      name: "Assessment Cohort A",
+      gradeLevel: "JHS1",
+      academicYear: "2026/2027"
+    });
+    const classId = classResponse.body?.data?.classId as string;
+
+    const batchLearnersResponse = await request(app)
+      .post(`${API_PREFIX}/learners/batch`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        classId,
+        rows: [
+          { name: "Learner At Risk", gradeLevel: "JHS1" },
+          { name: "Learner Support", gradeLevel: "JHS1" },
+          { name: "Learner On Track", gradeLevel: "JHS1" }
+        ]
+      });
+
+    const learners = batchLearnersResponse.body?.data?.learners as Array<{ learnerId: string; name: string }>;
+    const learnerByName = new Map(learners.map((learner) => [learner.name, learner]));
+
+    const measuredAt = new Date("2026-02-28T09:00:00.000Z");
+    const learnerScoring = [
+      {
+        name: "Learner At Risk",
+        literacy: 42,
+        numeracy: 50
+      },
+      {
+        name: "Learner Support",
+        literacy: 62,
+        numeracy: 64
+      },
+      {
+        name: "Learner On Track",
+        literacy: 82,
+        numeracy: 88
+      }
+    ];
+
+    for (const scoreSeed of learnerScoring) {
+      const learner = learnerByName.get(scoreSeed.name);
+      expect(learner).toBeDefined();
+
+      const literacyAttemptId = createUuidV7();
+      const numeracyAttemptId = createUuidV7();
+      await AttemptModel.create({
+        attemptId: literacyAttemptId,
+        learnerId: learner?.learnerId,
+        classId,
+        assessmentName: "Literacy Screener",
+        domain: "Literacy",
+        score: scoreSeed.literacy,
+        assessedAt: measuredAt
+      });
+      await AttemptModel.create({
+        attemptId: numeracyAttemptId,
+        learnerId: learner?.learnerId,
+        classId,
+        assessmentName: "Numeracy Screener",
+        domain: "Numeracy",
+        score: scoreSeed.numeracy,
+        assessedAt: measuredAt
+      });
+      await DiagnosticResultModel.create({
+        diagnosticResultId: createUuidV7(),
+        learnerId: learner?.learnerId,
+        attemptId: literacyAttemptId,
+        skillCode: "literacy_phonics_decoding",
+        skillName: "Phonics & Decoding",
+        masteryScore: scoreSeed.literacy,
+        confidence: 0.8,
+        measuredAt,
+        modelVersion: "manual-v1"
+      });
+      await DiagnosticResultModel.create({
+        diagnosticResultId: createUuidV7(),
+        learnerId: learner?.learnerId,
+        attemptId: numeracyAttemptId,
+        skillCode: "numeracy_operations",
+        skillName: "Operations",
+        masteryScore: scoreSeed.numeracy,
+        confidence: 0.8,
+        measuredAt,
+        modelVersion: "manual-v1"
+      });
+    }
+
+    const overviewResponse = await request(app)
+      .get(`${API_PREFIX}/classes/${classId}/assessment-overview`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(overviewResponse.status).toBe(200);
+    expect(overviewResponse.body.data.summary.totalStudents).toBe(3);
+    expect(overviewResponse.body.data.summary.atRisk).toBe(1);
+    expect(overviewResponse.body.data.summary.support).toBe(1);
+    expect(overviewResponse.body.data.summary.onTrack).toBe(1);
+    expect(overviewResponse.body.data.learners).toHaveLength(3);
+    expect(overviewResponse.body.data.learners[0]).toEqual(
+      expect.objectContaining({
+        learnerId: expect.any(String),
+        literacyScore: expect.any(Number),
+        numeracyScore: expect.any(Number),
+        status: expect.stringMatching(/^(at_risk|support|on_track)$/)
+      })
+    );
+  });
+
   it("blocks cross-school access with 403", async () => {
     const { token } = await loginAsTeacher();
     const createClassResponse = await request(app).post(`${API_PREFIX}/classes`).set("Authorization", `Bearer ${token}`).send({
