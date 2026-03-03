@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseMutationOptions, UseMutationResult, UseQueryResult } from "@tanstack/react-query";
-import type { ClassRecord, LearnerRecord } from "@bridgeed/shared";
+import type { ClassAssessmentOverviewResponse, ClassRecord, LearnerRecord } from "@bridgeed/shared";
 
 import { queryKeys } from "../query-keys";
 import {
   createClass,
+  getClassAssessmentOverview,
   getClassLearners,
   getClasses,
   updateClass,
@@ -59,5 +60,14 @@ export const useClassLearnersQuery = (classId: string): UseQueryResult<LearnerRe
   useQuery({
     queryKey: queryKeys.classes.learners(classId),
     queryFn: () => getClassLearners(classId),
+    enabled: classId.length > 0
+  });
+
+export const useClassAssessmentOverviewQuery = (
+  classId: string
+): UseQueryResult<ClassAssessmentOverviewResponse, Error> =>
+  useQuery({
+    queryKey: queryKeys.classes.assessmentOverview(classId),
+    queryFn: () => getClassAssessmentOverview(classId),
     enabled: classId.length > 0
   });

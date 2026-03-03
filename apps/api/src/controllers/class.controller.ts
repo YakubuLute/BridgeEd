@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express";
 import {
+  ClassAssessmentOverviewResponseSchema,
   ClassListResponseSchema,
   ClassSchema,
   CreateClassRequestSchema,
@@ -82,6 +83,25 @@ export const listClassLearnersController: RequestHandler = async (req, res, next
     const validatedResult = parseWithSchema(
       "learner list response",
       LearnerListResponseSchema.safeParse({ learners: result })
+    );
+    res.status(200).json(successResponse(validatedResult));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getClassAssessmentOverviewController: RequestHandler = async (req, res, next) => {
+  try {
+    const classIdParam = req.params.classId;
+    const classId = Array.isArray(classIdParam) ? classIdParam[0] : classIdParam;
+    if (!classId) {
+      throw new AppError(400, "VALIDATION_ERROR", "Class identifier is required.");
+    }
+
+    const result = await classService.getClassAssessmentOverview(getAuthContext(req.auth), classId);
+    const validatedResult = parseWithSchema(
+      "class assessment overview response",
+      ClassAssessmentOverviewResponseSchema.safeParse(result)
     );
     res.status(200).json(successResponse(validatedResult));
   } catch (error) {

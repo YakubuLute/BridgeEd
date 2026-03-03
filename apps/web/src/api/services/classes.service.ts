@@ -1,9 +1,11 @@
 import {
+  ClassAssessmentOverviewResponseSchema,
   ClassListResponseSchema,
   ClassSchema,
   CreateClassRequestSchema,
   UpdateClassRequestSchema,
   LearnerListResponseSchema,
+  type ClassAssessmentOverviewResponse,
   type ClassRecord,
   type CreateClassRequest,
   type UpdateClassRequest,
@@ -68,4 +70,17 @@ export const getClassLearners = async (classId: string): Promise<LearnerRecord[]
   }
 
   return parseResult.data.learners;
+};
+
+export const getClassAssessmentOverview = async (
+  classId: string
+): Promise<ClassAssessmentOverviewResponse> => {
+  const response = await apiClient.get<ApiEnvelope>(`/classes/${classId}/assessment-overview`);
+  const data = readDataRecord(response.data);
+  const parseResult = ClassAssessmentOverviewResponseSchema.safeParse(data);
+  if (!parseResult.success) {
+    throw new Error("Invalid class assessment overview response.");
+  }
+
+  return parseResult.data;
 };

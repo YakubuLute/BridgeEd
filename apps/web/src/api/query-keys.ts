@@ -13,7 +13,8 @@ export const queryKeys = {
     list: () => ["classes", "list"] as const,
     create: () => ["classes", "create"] as const,
     update: () => ["classes", "update"] as const,
-    learners: (classId: string) => ["classes", classId, "learners"] as const
+    learners: (classId: string) => ["classes", classId, "learners"] as const,
+    assessmentOverview: (classId: string) => ["classes", classId, "assessment-overview"] as const
   },
   learners: {
     create: () => ["learners", "create"] as const,
