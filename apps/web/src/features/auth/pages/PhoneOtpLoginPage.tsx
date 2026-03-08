@@ -24,6 +24,7 @@ import {
   getActionButtonStyles,
   getOtpDigitStyles
 } from "../auth.styles";
+import { getPostLoginPath } from "../../../utils/role-routing";
 
 type Feedback = {
   tone: "error" | "success" | "info";
@@ -96,6 +97,8 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
         tone: "success",
         message: "Login successful. A secure session has been created."
       });
+
+      navigate(getPostLoginPath(result.user), { replace: true });
     },
     onError: (error) => {
       setFeedback({
@@ -301,6 +304,17 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                   type="button"
                 >
                   Login with Email
+                </Anchor>
+                <Anchor
+                  c="#1B1D2D"
+                  component="button"
+                  fw={600}
+                  fz={16}
+                  lh="24px"
+                  onClick={() => navigate("/register")}
+                  type="button"
+                >
+                  Create Account
                 </Anchor>
               </Group>
             </>

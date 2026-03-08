@@ -6,6 +6,8 @@ type SchoolDocument = {
   district: string;
   region: string;
   isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 const SchoolSchema = new Schema<SchoolDocument>(

@@ -4,6 +4,8 @@ import {
   ForgotPasswordResponseSchema,
   ForgotPasswordRequestSchema,
   LoginSessionResponseSchema,
+  RegisterEmailRequestSchema,
+  RegisterEmailResponseSchema,
   RequestOtpRequestSchema,
   RequestOtpResponseSchema,
   VerifyOtpRequestSchema
@@ -37,21 +39,44 @@ export const verifyOtpController: RequestHandler = (req, res) => {
   res.status(200).json(successResponse(validatedResult));
 };
 
-export const emailLoginController: RequestHandler = (req, res) => {
-  const payload = parseWithSchema("email login", EmailLoginRequestSchema.safeParse(req.body));
-  const result = authService.loginWithEmail(payload.email, payload.password);
-  const validatedResult = parseWithSchema("email login response", LoginSessionResponseSchema.safeParse(result));
+export const registerEmailController: RequestHandler = async (req, res, next) => {
+  try {
+    const payload = parseWithSchema("email registration", RegisterEmailRequestSchema.safeParse(req.body));
+    const result = await authService.registerWithEmail(payload);
+    const validatedResult = parseWithSchema(
+      "email registration response",
+      RegisterEmailResponseSchema.safeParse(result)
+    );
 
-  res.status(200).json(successResponse(validatedResult));
+    res.status(201).json(successResponse(validatedResult));
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const forgotPasswordController: RequestHandler = (req, res) => {
-  const payload = parseWithSchema("forgot password", ForgotPasswordRequestSchema.safeParse(req.body));
-  const result = authService.requestPasswordReset(payload);
-  const validatedResult = parseWithSchema(
-    "forgot password response",
-    ForgotPasswordResponseSchema.safeParse(result)
-  );
+export const emailLoginController: RequestHandler = async (req, res, next) => {
+  try {
+    const payload = parseWithSchema("email login", EmailLoginRequestSchema.safeParse(req.body));
+    const result = await authService.loginWithEmail(payload.email, payload.password);
+    const validatedResult = parseWithSchema("email login response", LoginSessionResponseSchema.safeParse(result));
 
-  res.status(200).json(successResponse(validatedResult));
+    res.status(200).json(successResponse(validatedResult));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const forgotPasswordController: RequestHandler = async (req, res, next) => {
+  try {
+    const payload = parseWithSchema("forgot password", ForgotPasswordRequestSchema.safeParse(req.body));
+    const result = await authService.requestPasswordReset(payload);
+    const validatedResult = parseWithSchema(
+      "forgot password response",
+      ForgotPasswordResponseSchema.safeParse(result)
+    );
+
+    res.status(200).json(successResponse(validatedResult));
+  } catch (error) {
+    next(error);
+  }
 };

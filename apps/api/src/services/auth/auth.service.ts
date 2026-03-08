@@ -5,14 +5,19 @@ import type {
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   LoginSessionResponse,
+  RegisterEmailRequest,
   RequestOtpRequest,
   RequestOtpResponse,
   VerifyOtpRequest
 } from "@bridgeed/shared";
 
 import { env } from "../../config/env";
+import { SchoolModel } from "../../models/school.model";
+import { UserModel } from "../../models/user.model";
 import { AppError } from "../../utils/app-error";
 import { createAccessToken } from "../../utils/jwt";
+import { hashPassword, verifyPassword } from "../../utils/password";
+import { createUuidV7 } from "../../utils/uuid";
 import { logAuditEvent, toAuditActor } from "../audit/audit.service";
 
 type OtpRecord = {
@@ -21,53 +26,63 @@ type OtpRecord = {
   expiresAt: number;
 };
 
-type AuthAccount = {
-  email: string;
-  password: string;
-  user: {
-    id: string;
-    role: Role;
-    name: string;
-    scope?: AuthScope;
-  };
-  failedAttempts: number;
-  lockedUntilMs: number | null;
-};
-
 type PasswordResetRecord = {
   token: string;
   expiresAt: number;
 };
 
+type SessionUser = LoginSessionResponse["user"];
+
 const otpRecords = new Map<string, OtpRecord>();
 const passwordResetRecords = new Map<string, PasswordResetRecord>();
 
-const accountsByEmail = new Map<string, AuthAccount>([
-  [
-    "teacher@bridgeed.gh",
-    {
-      email: "teacher@bridgeed.gh",
-      password: "Teacher123",
-      user: {
-        id: "teacher-1",
-        role: Role.Teacher,
-        name: "BridgeEd Teacher",
-        scope: {
-          schoolId: "school-demo-001",
-          districtId: "district-demo-001",
-          region: "Greater Accra"
-        }
-      },
-      failedAttempts: 0,
-      lockedUntilMs: null
-    }
-  ]
-]);
-
 const createToken = (): string => crypto.randomBytes(32).toString("hex");
 const createOtpCode = (): string => `${Math.floor(100000 + Math.random() * 900000)}`;
+const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+const normalizeSchoolId = (schoolId: string): string => schoolId.trim();
 
-const createSession = (user: AuthAccount["user"]): LoginSessionResponse => {
+const isStrongPassword = (password: string): boolean =>
+  password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
+
+const normalizeScope = (scope?: AuthScope): AuthScope | undefined => {
+  if (!scope) {
+    return undefined;
+  }
+
+  const normalizedScope: AuthScope = {};
+  if (scope.schoolId) {
+    normalizedScope.schoolId = scope.schoolId;
+  }
+  if (scope.districtId) {
+    normalizedScope.districtId = scope.districtId;
+  }
+  if (scope.region) {
+    normalizedScope.region = scope.region;
+  }
+
+  return Object.keys(normalizedScope).length > 0 ? normalizedScope : undefined;
+};
+
+const normalizeRoles = (primaryRole: Role, roles?: Role[]): Role[] | undefined => {
+  const normalizedRoles = Array.from(new Set([primaryRole, ...(roles ?? [])]));
+  return normalizedRoles.length > 1 ? normalizedRoles : undefined;
+};
+
+const mapUserToSessionUser = (user: {
+  userId: string;
+  role: Role;
+  roles?: Role[];
+  name: string;
+  scope?: AuthScope;
+}): SessionUser => ({
+  id: user.userId,
+  role: user.role,
+  roles: normalizeRoles(user.role, user.roles),
+  name: user.name,
+  scope: normalizeScope(user.scope)
+});
+
+const createSession = (user: SessionUser): LoginSessionResponse => {
   const expiresAt = new Date(Date.now() + env.AUTH_SESSION_TTL_MINUTES * 60_000).toISOString();
   return {
     accessToken: createAccessToken({
@@ -103,6 +118,15 @@ const clearExpiredPasswordResetRecords = (): void => {
     }
   }
 };
+
+const invalidCredentialsErrorDetails = {
+  attemptsRemaining: env.AUTH_MAX_LOGIN_ATTEMPTS - 1,
+  maxAttempts: env.AUTH_MAX_LOGIN_ATTEMPTS,
+  isLockedOut: false
+};
+
+const isMongoDuplicateError = (error: unknown): boolean =>
+  typeof error === "object" && error !== null && "code" in error && (error as { code?: number }).code === 11000;
 
 export const authService = {
   requestOtp(payload: RequestOtpRequest): RequestOtpResponse {
@@ -164,7 +188,7 @@ export const authService = {
 
     otpRecords.delete(payload.requestId);
 
-    const user = {
+    const user: SessionUser = {
       id: `teacher-${payload.phoneNumber.slice(-6)}`,
       role: Role.Teacher,
       name: "BridgeEd Teacher",
@@ -185,22 +209,83 @@ export const authService = {
     return createSession(user);
   },
 
-  loginWithEmail(email: string, password: string): LoginSessionResponse {
-    const normalizedEmail = email.trim().toLowerCase();
-    const account = accountsByEmail.get(normalizedEmail);
+  async registerWithEmail(payload: RegisterEmailRequest): Promise<LoginSessionResponse> {
+    const normalizedEmail = normalizeEmail(payload.email);
+    const normalizedSchoolId = normalizeSchoolId(payload.schoolId);
 
-    if (!account) {
+    if (!isStrongPassword(payload.password)) {
+      throw new AppError(
+        400,
+        "WEAK_PASSWORD",
+        "Password must be at least 8 characters and include uppercase, lowercase, and numeric characters."
+      );
+    }
+
+    const school = await SchoolModel.findOne({ schoolId: normalizedSchoolId }).exec();
+    if (!school) {
+      throw new AppError(400, "INVALID_SCHOOL_IDENTIFIER", "School identifier is invalid.");
+    }
+
+    if (!school.isActive) {
+      throw new AppError(
+        400,
+        "INVALID_SCHOOL_IDENTIFIER",
+        "School identifier is inactive. Contact your administrator."
+      );
+    }
+
+    const existingAccount = await UserModel.exists({ email: normalizedEmail });
+    if (existingAccount) {
+      throw new AppError(409, "EMAIL_ALREADY_REGISTERED", "Email is already registered.");
+    }
+
+    try {
+      const createdAccount = await UserModel.create({
+        userId: createUuidV7(),
+        name: payload.name.trim(),
+        email: normalizedEmail,
+        passwordHash: await hashPassword(payload.password),
+        failedLoginAttempts: 0,
+        lockedUntilMs: null,
+        role: Role.Teacher,
+        scope: {
+          schoolId: school.schoolId
+        }
+      });
+
+      logAuditEvent({
+        action: "auth.email.register",
+        actor: toAuditActor(normalizedEmail, "email"),
+        entity: "user",
+        entityId: createdAccount.userId,
+        result: "success",
+        metadata: {
+          role: createdAccount.role
+        }
+      });
+
+      return createSession(mapUserToSessionUser(createdAccount));
+    } catch (error) {
+      if (isMongoDuplicateError(error)) {
+        throw new AppError(409, "EMAIL_ALREADY_REGISTERED", "Email is already registered.");
+      }
+
+      throw error;
+    }
+  },
+
+  async loginWithEmail(email: string, password: string): Promise<LoginSessionResponse> {
+    const normalizedEmail = normalizeEmail(email);
+    const account = await UserModel.findOne({ email: normalizedEmail }).exec();
+
+    if (!account || !account.passwordHash) {
       logAuditEvent({
         action: "auth.email.login",
         actor: toAuditActor(normalizedEmail, "email"),
         entity: "session",
         result: "failure"
       });
-      throw new AppError(401, "INVALID_CREDENTIALS", "Invalid email or password.", {
-        attemptsRemaining: env.AUTH_MAX_LOGIN_ATTEMPTS - 1,
-        maxAttempts: env.AUTH_MAX_LOGIN_ATTEMPTS,
-        isLockedOut: false
-      });
+      throw new AppError(401, "INVALID_CREDENTIALS", "Invalid email or password.", invalidCredentialsErrorDetails);
     }
 
     if (account.lockedUntilMs && account.lockedUntilMs > Date.now()) {
@@ -213,14 +298,20 @@ export const authService = {
       });
     }
 
-    if (account.password !== password) {
-      account.failedAttempts += 1;
+    const passwordMatches = await verifyPassword(password, account.passwordHash);
+    if (!passwordMatches) {
+      account.failedLoginAttempts += 1;
 
-      const attemptsRemaining = Math.max(0, env.AUTH_MAX_LOGIN_ATTEMPTS - account.failedAttempts);
-      const shouldLock = account.failedAttempts >= env.AUTH_MAX_LOGIN_ATTEMPTS;
+      const attemptsRemaining = Math.max(0, env.AUTH_MAX_LOGIN_ATTEMPTS - account.failedLoginAttempts);
+      const shouldLock = account.failedLoginAttempts >= env.AUTH_MAX_LOGIN_ATTEMPTS;
 
       if (shouldLock) {
         account.lockedUntilMs = Date.now() + env.AUTH_LOCKOUT_MINUTES * 60_000;
+      }
+
+      await account.save();
+
+      if (shouldLock) {
         throw new AppError(
           423,
           "ACCOUNT_LOCKED",
@@ -241,8 +332,9 @@ export const authService = {
       });
     }
 
-    account.failedAttempts = 0;
+    account.failedLoginAttempts = 0;
     account.lockedUntilMs = null;
+    await account.save();
 
     logAuditEvent({
       action: "auth.email.login",
@@ -251,14 +343,14 @@ export const authService = {
       result: "success"
     });
 
-    return createSession(account.user);
+    return createSession(mapUserToSessionUser(account));
   },
 
-  requestPasswordReset(payload: ForgotPasswordRequest): ForgotPasswordResponse {
+  async requestPasswordReset(payload: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
     clearExpiredPasswordResetRecords();
 
-    const normalizedEmail = payload.email.trim().toLowerCase();
-    const accountExists = accountsByEmail.has(normalizedEmail);
+    const normalizedEmail = normalizeEmail(payload.email);
+    const accountExists = Boolean(await UserModel.exists({ email: normalizedEmail, passwordHash: { $exists: true } }));
     const expiresAt = Date.now() + env.PASSWORD_RESET_TOKEN_TTL_MINUTES * 60_000;
 
     if (accountExists) {

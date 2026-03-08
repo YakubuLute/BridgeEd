@@ -38,12 +38,17 @@ export const AuthScopeSchema = z
   })
   .strict();
 
-export const AuthUserSchema = z.object({
-  id: z.string().min(1),
-  role: z.nativeEnum(Role),
-  name: z.string().min(1),
-  scope: AuthScopeSchema.optional()
-});
+export const AuthUserSchema = z
+  .object({
+    id: z.string().min(1),
+    role: z.nativeEnum(Role),
+    roles: z.array(z.nativeEnum(Role)).min(1).optional(),
+    name: z.string().min(1),
+    scope: AuthScopeSchema.optional()
+  })
+  .refine((value) => !value.roles || value.roles.includes(value.role), {
+    message: "Primary role must be included in roles."
+  });
 
 export const LoginSessionResponseSchema = z.object({
   accessToken: z.string().min(1),
@@ -61,6 +66,23 @@ export const EmailLoginRequestSchema = z.object({
 });
 
 export type EmailLoginRequest = z.infer<typeof EmailLoginRequestSchema>;
+
+export const RegisterEmailRequestSchema = z.object({
+  name: z.string().trim().min(1, "Name is required."),
+  schoolId: z.string().trim().min(1, "School identifier is required."),
+  email: z.string().email(),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters.")
+    .regex(/[A-Z]/, "Password must include at least one uppercase letter.")
+    .regex(/[a-z]/, "Password must include at least one lowercase letter.")
+    .regex(/[0-9]/, "Password must include at least one number.")
+});
+
+export const RegisterEmailResponseSchema = LoginSessionResponseSchema;
+
+export type RegisterEmailRequest = z.infer<typeof RegisterEmailRequestSchema>;
+export type RegisterEmailResponse = z.infer<typeof RegisterEmailResponseSchema>;
 
 export const ForgotPasswordRequestSchema = z.object({
   email: z.string().email()
@@ -139,6 +161,19 @@ export type CreateClassRequest = z.infer<typeof CreateClassRequestSchema>;
 export type UpdateClassRequest = z.infer<typeof UpdateClassRequestSchema>;
 export type ClassListResponse = z.infer<typeof ClassListResponseSchema>;
 
+export const SchoolSchema = z.object({
+  id: z.string().min(1),
+  schoolId: z.string().min(1),
+  name: z.string().min(1),
+  district: z.string().min(1),
+  region: z.string().min(1),
+  isActive: z.boolean(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime()
+});
+
+export type SchoolRecord = z.infer<typeof SchoolSchema>;
+
 export const LearnerSchema = z.object({
   id: z.string().min(1),
   learnerId: z.string().min(1),
@@ -202,6 +237,36 @@ export const LearnerProfileResponseSchema = z.object({
   masteryTrends: z.array(SkillMasteryTrendSchema)
 });
 
+export const AssessmentStatusSchema = z.enum(["at_risk", "support", "on_track"]);
+
+export const LearnerAssessmentSnapshotSchema = z.object({
+  learnerId: z.string().min(1),
+  name: z.string().min(1),
+  gradeLevel: GradeLevelSchema,
+  status: AssessmentStatusSchema,
+  literacyScore: z.number().min(0).max(100).nullable(),
+  numeracyScore: z.number().min(0).max(100).nullable(),
+  lastAssessedAt: z.string().datetime().nullable()
+});
+
+export const ClassAssessmentSummarySchema = z.object({
+  atRisk: z.number().int().nonnegative(),
+  support: z.number().int().nonnegative(),
+  onTrack: z.number().int().nonnegative(),
+  totalStudents: z.number().int().nonnegative()
+});
+
+export const ClassAssessmentOverviewResponseSchema = z.object({
+  class: z.object({
+    classId: z.string().min(1),
+    name: z.string().min(1),
+    subject: z.string().min(1).optional(),
+    gradeLevel: GradeLevelSchema
+  }),
+  summary: ClassAssessmentSummarySchema,
+  learners: z.array(LearnerAssessmentSnapshotSchema)
+});
+
 export type LearnerRecord = z.infer<typeof LearnerSchema>;
 export type CreateLearnerRequest = z.infer<typeof CreateLearnerRequestSchema>;
 export type BatchCreateLearnersRequest = z.infer<typeof BatchCreateLearnersRequestSchema>;
@@ -211,3 +276,7 @@ export type AssessmentTimelineItem = z.infer<typeof AssessmentTimelineItemSchema
 export type SkillTrendPoint = z.infer<typeof SkillTrendPointSchema>;
 export type SkillMasteryTrend = z.infer<typeof SkillMasteryTrendSchema>;
 export type LearnerProfileResponse = z.infer<typeof LearnerProfileResponseSchema>;
+export type AssessmentStatus = z.infer<typeof AssessmentStatusSchema>;
+export type LearnerAssessmentSnapshot = z.infer<typeof LearnerAssessmentSnapshotSchema>;
+export type ClassAssessmentSummary = z.infer<typeof ClassAssessmentSummarySchema>;
+export type ClassAssessmentOverviewResponse = z.infer<typeof ClassAssessmentOverviewResponseSchema>;

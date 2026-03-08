@@ -39,6 +39,18 @@
 * Users only see permitted modules.
 * Data visibility is scoped by organization hierarchy.
 
+## US-1.4 Email Registration
+
+**As a Teacher**, I want to create an account with my school identifier so that I can securely access class and learner tools.
+
+**AC:**
+
+* Required fields: Full Name, Email, Password, School Identifier.
+* Email must be unique across users.
+* Password policy enforced (minimum 8 chars, uppercase, lowercase, number).
+* New account defaults to Teacher role and is scoped to the provided school.
+* Successful registration creates secure session.
+
 ---
 
 # EPIC 2 — School & Class Management
@@ -51,6 +63,17 @@
 
 * School name, district, region required.
 * Unique school identifier generated.
+
+## US-2.1a Share School Identifier
+
+**As an Admin (National Admin or School Admin)**, I want to view and share a school identifier so that teachers can register under the correct school scope.
+
+**AC:**
+
+* Generated school identifier is visible in school details.
+* Admin can copy/share the school identifier with teachers.
+* Teacher registration validates school identifier against an existing active school.
+* Invalid or inactive school identifier returns a clear error message.
 
 ## US-2.2 Create Class
 

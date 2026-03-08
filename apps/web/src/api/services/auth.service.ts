@@ -5,6 +5,7 @@ import {
   ForgotPasswordRequestSchema,
   ForgotPasswordResponseSchema,
   LoginSessionResponseSchema,
+  RegisterEmailRequestSchema,
   RequestOtpRequestSchema,
   RequestOtpResponseSchema,
   VerifyOtpRequestSchema,
@@ -12,6 +13,7 @@ import {
   type ForgotPasswordRequest,
   type ForgotPasswordResponse,
   type LoginSessionResponse,
+  type RegisterEmailRequest,
   type RequestOtpRequest,
   type RequestOtpResponse,
   type VerifyOtpRequest
@@ -25,6 +27,8 @@ export type RequestOtpInput = RequestOtpRequest;
 export type RequestOtpResult = RequestOtpResponse;
 export type VerifyOtpInput = VerifyOtpRequest;
 export type VerifyOtpResult = LoginSessionResponse;
+export type RegisterEmailInput = RegisterEmailRequest;
+export type RegisterEmailResult = LoginSessionResponse;
 export type EmailLoginInput = EmailLoginRequest;
 export type EmailLoginResult = LoginSessionResponse;
 export type ForgotPasswordInput = ForgotPasswordRequest;
@@ -152,6 +156,34 @@ export const loginWithEmail = async ({
     const parseResult = LoginSessionResponseSchema.safeParse(data);
     if (!parseResult.success) {
       throw new Error("Invalid email login response.");
+    }
+
+    return parseResult.data;
+  } catch (error: unknown) {
+    return throwNormalizedAuthError(error);
+  }
+};
+
+export const registerWithEmail = async ({
+  name,
+  schoolId,
+  email,
+  password
+}: RegisterEmailInput): Promise<RegisterEmailResult> => {
+  const requestParse = RegisterEmailRequestSchema.safeParse({ name, schoolId, email, password });
+  if (!requestParse.success) {
+    throw new Error("Invalid registration payload.");
+  }
+
+  try {
+    const response = await apiClient.post<ApiEnvelope>("/auth/email/register", requestParse.data, {
+      timeout: OTP_REQUEST_TIMEOUT_MS
+    });
+
+    const data = readDataRecord(response.data);
+    const parseResult = LoginSessionResponseSchema.safeParse(data);
+    if (!parseResult.success) {
+      throw new Error("Invalid email registration response.");
     }
 
     return parseResult.data;

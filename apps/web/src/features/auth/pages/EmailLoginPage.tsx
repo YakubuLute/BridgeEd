@@ -24,6 +24,7 @@ import {
   getActionButtonStyles,
   getAuthInputStyles
 } from "../auth.styles";
+import { getPostLoginPath } from "../../../utils/role-routing";
 
 export const EmailLoginPage = (): JSX.Element => {
   const navigate = useNavigate();
@@ -60,6 +61,8 @@ export const EmailLoginPage = (): JSX.Element => {
           loginAt: new Date().toISOString()
         })
       );
+
+      navigate(getPostLoginPath(result.user), { replace: true });
     },
     onError: (mutationError) => {
       const details = readEmailLoginErrorDetails(mutationError);
@@ -271,7 +274,17 @@ export const EmailLoginPage = (): JSX.Element => {
             </Stack>
           )}
 
-          <Group justify="flex-end">
+          <Group justify="space-between">
+            <Anchor
+              component="button"
+              fw={600}
+              fz={14}
+              lh="20px"
+              onClick={() => navigate("/register")}
+              type="button"
+            >
+              Create Account
+            </Anchor>
             <Anchor
               component="button"
               fw={600}

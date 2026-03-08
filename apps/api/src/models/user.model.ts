@@ -6,7 +6,11 @@ type UserDocument = {
   name: string;
   email?: string;
   phoneNumber?: string;
+  passwordHash?: string;
+  failedLoginAttempts: number;
+  lockedUntilMs: number | null;
   role: Role;
+  roles?: Role[];
   scope?: {
     schoolId?: string;
     districtId?: string;
@@ -27,9 +31,13 @@ const UserSchema = new Schema<UserDocument>(
   {
     userId: { type: String, required: true, unique: true, trim: true, index: true },
     name: { type: String, required: true, trim: true },
-    email: { type: String, trim: true, lowercase: true },
+    email: { type: String, trim: true, lowercase: true, unique: true, sparse: true, index: true },
     phoneNumber: { type: String, trim: true },
+    passwordHash: { type: String, trim: true },
+    failedLoginAttempts: { type: Number, required: true, default: 0 },
+    lockedUntilMs: { type: Number, default: null },
     role: { type: String, required: true, enum: Object.values(Role), index: true },
+    roles: { type: [String], enum: Object.values(Role) },
     scope: { type: UserScopeSchema }
   },
   {

@@ -4,6 +4,7 @@ import type { UseMutationOptions, UseMutationResult } from "@tanstack/react-quer
 import { queryKeys } from "../query-keys";
 import {
   loginWithEmail,
+  registerWithEmail,
   requestOtp,
   requestPasswordReset,
   readEmailLoginErrorDetails,
@@ -12,6 +13,8 @@ import {
   type EmailLoginResult,
   type ForgotPasswordInput,
   type ForgotPasswordResult,
+  type RegisterEmailInput,
+  type RegisterEmailResult,
   type RequestOtpInput,
   type RequestOtpResult,
   type VerifyOtpInput,
@@ -47,6 +50,15 @@ export const useEmailLoginMutation = (
   useMutation({
     mutationKey: queryKeys.auth.emailLogin(),
     mutationFn: loginWithEmail,
+    ...options
+  });
+
+export const useRegisterEmailMutation = (
+  options?: MutationOptions<RegisterEmailResult, RegisterEmailInput>
+): UseMutationResult<RegisterEmailResult, Error, RegisterEmailInput> =>
+  useMutation({
+    mutationKey: queryKeys.auth.emailRegister(),
+    mutationFn: registerWithEmail,
     ...options
   });
 
