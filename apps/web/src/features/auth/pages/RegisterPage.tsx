@@ -59,7 +59,11 @@ export const RegisterPage = (): JSX.Element => {
       navigate(getPostLoginPath(result.user), { replace: true });
     },
     onError: (mutationError) => {
-      setError(mutationError instanceof Error ? mutationError.message : "Unable to create account right now.");
+      setError(
+        mutationError instanceof Error
+          ? mutationError.message
+          : "Unable to create account right now."
+      );
     }
   });
 
@@ -102,9 +106,14 @@ export const RegisterPage = (): JSX.Element => {
   return (
     <AuthLayout
       footer={
-        <Text c="#6A6C7D" fz={14} fw={500} lh="20px" ta="center">
+        <Text c="#4B5563" fz={14} fw={500} lh="20px" ta="center">
           Already have an account?{" "}
-          <Anchor component="button" fw={600} onClick={() => navigate("/login/email")} type="button">
+          <Anchor
+            component="button"
+            fw={600}
+            onClick={() => navigate("/login/email")}
+            type="button"
+          >
             Sign in
           </Anchor>
         </Text>
@@ -116,7 +125,7 @@ export const RegisterPage = (): JSX.Element => {
             <Text c="#121421" fw={700} fz={22} lh="32px" ta="center">
               Create Teacher Account
             </Text>
-            <Text c="#696C7D" fw={500} fz={16} lh="24px" ta="center">
+            <Text c="#4B5563" fw={500} fz={16} lh="24px" ta="center">
               Register with your school identifier
             </Text>
           </Stack>
@@ -226,7 +235,7 @@ export const RegisterPage = (): JSX.Element => {
           {password.length > 0 && (
             <Stack gap={8}>
               {passwordStrength && (
-                <Text c="#6A6C7D" fz={14} fw={500} lh="20px">
+                <Text c="#4B5563" fz={14} fw={500} lh="20px">
                   Password strength:{" "}
                   <Text c={passwordStrength.color} component="span" fz={14} fw={600} lh="20px">
                     {passwordStrength.label}
@@ -260,7 +269,7 @@ export const RegisterPage = (): JSX.Element => {
             disabled={!isFormValid || registerMutation.isPending}
             fullWidth
             onClick={handleRegister}
-            radius={14}
+            radius={10}
             size="md"
             styles={getActionButtonStyles()}
           >
@@ -268,7 +277,14 @@ export const RegisterPage = (): JSX.Element => {
           </Button>
 
           <Group justify="center">
-            <Anchor component="button" fw={600} fz={14} lh="20px" onClick={() => navigate("/")} type="button">
+            <Anchor
+              component="button"
+              fw={600}
+              fz={14}
+              lh="20px"
+              onClick={() => navigate("/")}
+              type="button"
+            >
               Back to Phone Login
             </Anchor>
           </Group>

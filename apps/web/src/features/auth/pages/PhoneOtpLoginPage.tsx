@@ -43,7 +43,9 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
   const otpInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const configuredExpiry = useMemo(() => {
-    const parsedValue = Number(import.meta.env.VITE_OTP_EXPIRY_SECONDS ?? DEFAULT_OTP_EXPIRY_SECONDS);
+    const parsedValue = Number(
+      import.meta.env.VITE_OTP_EXPIRY_SECONDS ?? DEFAULT_OTP_EXPIRY_SECONDS
+    );
     if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
       return DEFAULT_OTP_EXPIRY_SECONDS;
     }
@@ -217,7 +219,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
   return (
     <AuthLayout
       footer={
-        <Text c="#6A6C7D" fz={14} fw={500} lh="20px" ta="center">
+        <Text c="#4B5563" fz={14} fw={500} lh="20px" ta="center">
           Secure login for authorized teachers only
         </Text>
       }
@@ -230,7 +232,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                 <Text c="#121421" fw={700} fz={22} lh="32px" ta="center">
                   Welcome Back
                 </Text>
-                <Text c="#696C7D" fw={500} fz={16} lh="24px" ta="center">
+                <Text c="#4B5563" fw={500} fz={16} lh="24px" ta="center">
                   Enter your phone number to receive a one-time password
                 </Text>
               </Stack>
@@ -275,7 +277,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                   </Group>
                 </Box>
 
-                <Text c="#696C7D" fz={14} fw={500} lh="20px">
+                <Text c="#4B5563" fz={14} fw={500} lh="20px">
                   Enter your 10-digit mobile number
                 </Text>
               </Stack>
@@ -326,7 +328,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                 <Text c="#121421" fw={700} fz={22} lh="32px" ta="center">
                   Verify Code
                 </Text>
-                <Text c="#696C7D" fw={500} fz={16} lh="24px" ta="center">
+                <Text c="#4B5563" fw={500} fz={16} lh="24px" ta="center">
                   Enter the 6-digit code sent to
                 </Text>
                 <Text c="#151721" fw={600} fz={16} lh="24px" ta="center">
@@ -379,7 +381,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                 disabled={!isOtpValid || verifyOtpMutation.isPending}
                 fullWidth
                 onClick={handleVerifyOtp}
-                radius={14}
+                radius={10}
                 size="md"
                 styles={getActionButtonStyles()}
               >
@@ -388,7 +390,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
 
               <Group justify="center">
                 <Anchor
-                  c="#696C7D"
+                  c="#4B5563"
                   component="button"
                   fw={500}
                   fz={14}

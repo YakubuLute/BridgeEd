@@ -129,7 +129,7 @@ export const EmailLoginPage = (): JSX.Element => {
     <AuthLayout
       footer={
         <Stack align="center" gap={4}>
-          <Text c="#6A6C7D" fz={14} fw={500} lh="20px" ta="center">
+          <Text c="#4B5563" fz={14} fw={500} lh="20px" ta="center">
             Secure login for authorized teachers only
           </Text>
           {isLockedOut && (
@@ -250,7 +250,7 @@ export const EmailLoginPage = (): JSX.Element => {
           {password.length > 0 && (
             <Stack gap={8}>
               {passwordStrength && (
-                <Text c="#6A6C7D" fz={14} fw={500} lh="20px">
+                <Text c="#4B5563" fz={14} fw={500} lh="20px">
                   Password strength:{" "}
                   <Text c={passwordStrength.color} component="span" fz={14} fw={600} lh="20px">
                     {passwordStrength.label}
@@ -317,7 +317,7 @@ export const EmailLoginPage = (): JSX.Element => {
 
           <Group justify="center">
             <Anchor
-              c="#6A6C7D"
+              c="#4B5563"
               component="button"
               fw={500}
               fz={14}

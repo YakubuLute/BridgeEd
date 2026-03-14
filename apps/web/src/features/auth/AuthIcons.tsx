@@ -7,7 +7,14 @@ export const BrandMark = (): JSX.Element => (
     width="28"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <text fill="white" fontFamily="Open Sans, sans-serif" fontSize="28" fontWeight="500" x="7" y="22">
+    <text
+      fill="white"
+      fontFamily="Open Sans, sans-serif"
+      fontSize="28"
+      fontWeight="500"
+      x="7"
+      y="22"
+    >
       B
     </text>
   </svg>

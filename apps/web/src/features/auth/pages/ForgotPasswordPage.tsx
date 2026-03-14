@@ -34,7 +34,9 @@ export const ForgotPasswordPage = (): JSX.Element => {
       setResetTokenExpiresInMinutes(result.resetTokenExpiresInMinutes);
     },
     onError: (mutationError) => {
-      setError(mutationError instanceof Error ? mutationError.message : "Unable to send reset email.");
+      setError(
+        mutationError instanceof Error ? mutationError.message : "Unable to send reset email."
+      );
     }
   });
 
@@ -73,17 +75,17 @@ export const ForgotPasswordPage = (): JSX.Element => {
                 backgroundColor: "rgba(15, 23, 42, 0.04)"
               }}
             >
-              <Text c="#6A6C7D" fz={12} lh="16px" ta="center">
-                For security reasons, we don&apos;t disclose whether an email exists in our system. If the
-                email is valid, you will receive reset instructions.
+              <Text c="#4B5563" fz={12} lh="16px" ta="center">
+                For security reasons, we don&apos;t disclose whether an email exists in our system.
+                If the email is valid, you will receive reset instructions.
               </Text>
             </Box>
-            <Text c="#6A6C7D" fz={12} lh="16px" ta="center">
+            <Text c="#4B5563" fz={12} lh="16px" ta="center">
               Need help? Contact your system administrator
             </Text>
           </Stack>
         ) : (
-          <Text c="#6A6C7D" fz={12} lh="16px" ta="center">
+          <Text c="#4B5563" fz={12} lh="16px" ta="center">
             Check your spam folder if you don&apos;t see the email
           </Text>
         )
@@ -115,8 +117,9 @@ export const ForgotPasswordPage = (): JSX.Element => {
                 <Text c="#121421" fw={700} fz={22} lh="32px" ta="center">
                   Reset Password
                 </Text>
-                <Text c="#696C7D" fw={500} fz={16} lh="24px" ta="center">
-                  Enter your email address and we&apos;ll send you instructions to reset your password
+                <Text c="#4B5563" fw={500} fz={16} lh="24px" ta="center">
+                  Enter your email address and we&apos;ll send you instructions to reset your
+                  password
                 </Text>
               </Stack>
 
@@ -133,7 +136,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
                   type="email"
                   value={email}
                 />
-                <Text c="#696C7D" fz={12} lh="16px">
+                <Text c="#4B5563" fz={12} lh="16px">
                   Enter the email associated with your account
                 </Text>
               </Stack>
@@ -144,7 +147,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
                 disabled={!isEmailValid || forgotPasswordMutation.isPending}
                 fullWidth
                 onClick={handleSubmit}
-                radius={14}
+                radius={10}
                 size="md"
                 styles={getActionButtonStyles()}
               >
@@ -153,7 +156,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
 
               <Group justify="center">
                 <Anchor
-                  c="#6A6C7D"
+                  c="#4B5563"
                   component="button"
                   fw={500}
                   fz={14}
@@ -186,7 +189,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
                 <Text c="#121421" fw={700} fz={22} lh="32px" ta="center">
                   Check Your Email
                 </Text>
-                <Text c="#696C7D" fw={500} fz={14} lh="20px" ta="center">
+                <Text c="#4B5563" fw={500} fz={14} lh="20px" ta="center">
                   We&apos;ve sent password reset instructions to:
                 </Text>
                 <Text c="#151721" fw={600} fz={14} lh="20px" ta="center">
@@ -206,23 +209,30 @@ export const ForgotPasswordPage = (): JSX.Element => {
                   <Text c="#151721" fw={600} fz={14} lh="20px">
                     Next Steps:
                   </Text>
-                  <Text c="#6A6C7D" fz={14} lh="20px">
+                  <Text c="#4B5563" fz={14} lh="20px">
                     1. Check your email inbox
                   </Text>
-                  <Text c="#6A6C7D" fz={14} lh="20px">
+                  <Text c="#4B5563" fz={14} lh="20px">
                     2. Click the reset link (valid for {resetTokenExpiresInMinutes} minutes)
                   </Text>
-                  <Text c="#6A6C7D" fz={14} lh="20px">
+                  <Text c="#4B5563" fz={14} lh="20px">
                     3. Create a new password
                   </Text>
                 </Stack>
               </Box>
 
               <Stack align="center" gap={8}>
-                <Text c="#6A6C7D" fz={14} lh="20px" ta="center">
+                <Text c="#4B5563" fz={14} lh="20px" ta="center">
                   Didn&apos;t receive the email?
                 </Text>
-                <Anchor component="button" fw={600} fz={14} lh="20px" onClick={handleResend} type="button">
+                <Anchor
+                  component="button"
+                  fw={600}
+                  fz={14}
+                  lh="20px"
+                  onClick={handleResend}
+                  type="button"
+                >
                   {forgotPasswordMutation.isPending ? "Sending..." : "Resend Email"}
                 </Anchor>
               </Stack>
@@ -232,7 +242,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
                 color="gray"
                 fullWidth
                 onClick={() => navigate("/login/email")}
-                radius={14}
+                radius={10}
                 size="md"
                 styles={getActionButtonStyles()}
               >

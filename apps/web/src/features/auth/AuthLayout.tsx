@@ -7,7 +7,11 @@ type AuthLayoutProps = {
   showTagline?: boolean;
 };
 
-export const AuthLayout = ({ children, footer, showTagline = true }: AuthLayoutProps): JSX.Element => (
+export const AuthLayout = ({
+  children,
+  footer,
+  showTagline = true
+}: AuthLayoutProps): JSX.Element => (
   <main
     style={{
       minHeight: "100vh",

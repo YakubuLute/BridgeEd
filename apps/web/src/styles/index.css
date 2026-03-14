@@ -14,49 +14,56 @@ body {
 }
 
 .auth-phone-field {
-  border: 2px solid #d5d6dd;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
-  background-color: #e8e8ed;
-  transition: border-color 120ms ease;
+  background-color: #ffffff;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .auth-phone-field:hover,
 .auth-phone-field:focus-within {
-  border-color: #000000;
+  border-color: #313880;
+  box-shadow: 0 0 0 2px rgba(49, 56, 128, 0.1);
 }
 
 .auth-input-control {
-  border-color: #d5d6dd !important;
+  border-color: #e2e8f0 !important;
 }
 
 .auth-input-control:hover,
 .auth-input-control:focus,
 .auth-input-control:focus-visible {
-  border-color: #000000 !important;
+  border-color: #313880 !important;
   outline: none !important;
-  box-shadow: none !important;
+  box-shadow: 0 0 0 2px rgba(49, 56, 128, 0.1) !important;
 }
 
 .auth-otp-control {
-  border-color: #d5d6dd !important;
+  border-color: #e2e8f0 !important;
 }
 
 .auth-otp-control:hover,
 .auth-otp-control:focus,
 .auth-otp-control:focus-visible {
-  border-color: #000000 !important;
+  border-color: #313880 !important;
   outline: none !important;
-  box-shadow: none !important;
+  box-shadow: 0 0 0 2px rgba(49, 56, 128, 0.1) !important;
 }
 
 .auth-btn-default {
-  background-color: #868791 !important;
+  background-color: #9ca3af !important;
 }
 
 .auth-btn-valid {
-  background-color: #000000 !important;
+  background-color: #313880 !important;
+  transition:
+    background-color 120ms ease,
+    transform 120ms ease;
 }
 
 .auth-btn-valid:hover {
-  background-color: #000000 !important;
+  background-color: #242a63 !important;
+  transform: translateY(-1px);
 }
