@@ -14,7 +14,8 @@ export const AuthLayout = ({ children, footer, showTagline = true }: AuthLayoutP
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      padding: "16px"
+      padding: "16px",
+      backgroundColor: "#F9FAFB"
     }}
   >
     <Box style={{ width: "100%", maxWidth: "390px" }}>
@@ -24,7 +25,8 @@ export const AuthLayout = ({ children, footer, showTagline = true }: AuthLayoutP
             h={72}
             style={{
               borderRadius: "50%",
-              backgroundColor: "#070A24"
+              background: "linear-gradient(135deg, #070A24 0%, #313880 100%)",
+              boxShadow: "0 4px 12px rgba(7, 10, 36, 0.15)"
             }}
             w={72}
           >
@@ -37,7 +39,7 @@ export const AuthLayout = ({ children, footer, showTagline = true }: AuthLayoutP
             BridgeEd
           </Text>
           {showTagline && (
-            <Text c="#6A6C7D" fw={500} fz={16} lh="24px" ta="center">
+            <Text c="#4B5563" fw={500} fz={16} lh="24px" ta="center">
               Bridging Foundational Learning Gaps.
             </Text>
           )}

@@ -146,7 +146,7 @@ export const EmailLoginPage = (): JSX.Element => {
             <Text c="#121421" fw={700} fz={22} lh="32px" ta="center">
               Email Login
             </Text>
-            <Text c="#696C7D" fw={500} fz={16} lh="24px" ta="center">
+            <Text c="#4B5563" fw={500} fz={16} lh="24px" ta="center">
               Enter your credentials to access your account
             </Text>
           </Stack>
@@ -180,7 +180,8 @@ export const EmailLoginPage = (): JSX.Element => {
               }}
               variant="light"
             >
-              Warning: {Math.max(0, maxAttemptsAllowed - failedAttempts)} attempt(s) remaining before lockout
+              Warning: {Math.max(0, maxAttemptsAllowed - failedAttempts)} attempt(s) remaining
+              before lockout
             </Alert>
           )}
 
@@ -303,11 +304,15 @@ export const EmailLoginPage = (): JSX.Element => {
             disabled={!isFormValid || emailLoginMutation.isPending}
             fullWidth
             onClick={handleLogin}
-            radius={14}
+            radius={10}
             size="md"
             styles={getActionButtonStyles()}
           >
-            {emailLoginMutation.isPending ? "Logging in..." : isLockedOut ? "Account Locked" : "Login"}
+            {emailLoginMutation.isPending
+              ? "Logging in..."
+              : isLockedOut
+                ? "Account Locked"
+                : "Login"}
           </Button>
 
           <Group justify="center">
