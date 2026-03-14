@@ -3,7 +3,13 @@ import { Role } from "@bridgeed/shared";
 
 import { readSession } from "../../../utils/session";
 import { hasAnyAllowedRole, getPostLoginPath } from "../../../utils/role-routing";
-import { DashboardLayout } from "../../dashboard/components/DashboardLayout";
+
+const DashboardLayout = ({ children, role }: { children: React.ReactNode; role: Role }) => (
+  <div>
+    <header>Dashboard Layout (Role: {role})</header>
+    <main>{children}</main>
+  </div>
+);
 
 type RequireAuthProps = {
   allowedRoles?: Role[];
