@@ -1,5 +1,4 @@
-import { Title, Text, SimpleGrid, Paper, Group, Box, Badge, Stack, Button, Progress } from "@mantine/core";
-import { useSchoolQueries } from "../../../api/hooks/useSchoolQueries";
+import { Title, Text, SimpleGrid, Paper, Group, Box, Badge, Stack, Button, Progress, Avatar } from "@mantine/core";
 
 // --- Icons ---
 const IconSchool = () => (
@@ -75,7 +74,7 @@ export const SchoolAdminDashboardPage = (): JSX.Element => {
               </Badge>
             </Group>
             <Stack gap={2}>
-              <Text c="#94a3b8" fz="xs" fw={800} tt="uppercase" tracking="wider">{stat.label}</Text>
+              <Text c="#94a3b8" fz="xs" fw={800} tt="uppercase" className="tracking-wider">{stat.label}</Text>
               <Text c="#1e293b" fz="28px" fw={900}>{stat.value}</Text>
             </Stack>
           </Paper>

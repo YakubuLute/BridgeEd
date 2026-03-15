@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Box, Container, Center, Stack, Text, Title } from "@mantine/core";
 
 type AuthLayoutProps = {

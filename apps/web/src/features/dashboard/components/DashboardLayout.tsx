@@ -314,7 +314,7 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps): JSX.E
           </div>
 
           <Group gap="lg">
-            <Indicator size={8} offset={4} color="amethyst" withBorder processing>
+            <Indicator size={8} offset={4} color="orange" withBorder processing>
               <ActionIcon variant="subtle" color="gray" size="lg" radius="md">
                 <IconBell className="w-5 h-5" />
               </ActionIcon>
@@ -326,14 +326,14 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps): JSX.E
                   gap="sm"
                   className="cursor-pointer hover:bg-[#F8FAFC] p-1.5 rounded-xl transition-colors"
                 >
-                  <Avatar radius="md" color="amethyst" size="sm">
+                  <Avatar radius="md" color="orange" size="sm">
                     {role === Role.Teacher ? "T" : role === Role.SchoolAdmin ? "S" : "N"}
                   </Avatar>
                   <Stack gap={0}>
                     <Text fw={700} fz="sm" lh={1.2}>
                       {role === Role.Teacher ? "Alex Teacher" : "Admin User"}
                     </Text>
-                    <Text c="#94A3B8" fz={11} fw={600} tt="uppercase" tracking="wider">
+                    <Text c="#94A3B8" fz={11} fw={600} tt="uppercase" className="tracking-wider">
                       {role}
                     </Text>
                   </Stack>

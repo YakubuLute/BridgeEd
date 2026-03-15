@@ -76,7 +76,7 @@ export const TeacherDashboardPage = (): JSX.Element => {
               </Badge>
             </Group>
             <Stack gap={2}>
-              <Text c="#94a3b8" fz="xs" fw={800} tt="uppercase" tracking="wider">{stat.label}</Text>
+              <Text c="#94a3b8" fz="xs" fw={800} tt="uppercase" className="tracking-wider">{stat.label}</Text>
               <Text c="#1e293b" fz="28px" fw={900}>{stat.value}</Text>
             </Stack>
           </Paper>
@@ -169,12 +169,12 @@ export const TeacherDashboardPage = (): JSX.Element => {
               </Group>
               <Group gap="xl">
                 <Stack gap={2}>
-                  <Text c="#94a3b8" fz="xs" fw={800}>STUDENTS</Text>
-                  <Text fw={900} fz="xl">{cls.learnerCount}</Text>
-                </Stack>
-                <Stack gap={2}>
                   <Text c="#94a3b8" fz="xs" fw={800}>GRADE</Text>
                   <Text fw={900} fz="xl">{cls.gradeLevel}</Text>
+                </Stack>
+                <Stack gap={2}>
+                  <Text c="#94a3b8" fz="xs" fw={800}>SUBJECT</Text>
+                  <Text fw={900} fz="xl" truncate>{cls.subject || "All"}</Text>
                 </Stack>
               </Group>
               <Box mt="xl">

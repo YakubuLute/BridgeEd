@@ -76,7 +76,7 @@ export const NationalAdminDashboardPage = (): JSX.Element => {
               </Badge>
             </Group>
             <Stack gap={2}>
-              <Text c="#94a3b8" fz="xs" fw={800} tt="uppercase" tracking="wider">{stat.label}</Text>
+              <Text c="#94a3b8" fz="xs" fw={800} tt="uppercase" className="tracking-wider">{stat.label}</Text>
               <Text c="#1e293b" fz="28px" fw={900}>{stat.value}</Text>
             </Stack>
           </Paper>
