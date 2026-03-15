@@ -2,7 +2,9 @@ import type {
   GenerateScreenerRequest, 
   GeneratedScreenerResponse, 
   CreateAssessmentRequest, 
-  Assessment 
+  Assessment,
+  AssessmentSession,
+  CreateAssessmentSessionRequest
 } from "@bridgeed/shared";
 import { apiClient } from "../api";
 
@@ -49,6 +51,25 @@ export const submitAssessmentResults = async (
   const response = await apiClient.post(
     `/assessments/${assessmentId}/results`,
     data
+  );
+  return response.data.data;
+};
+
+export const createAssessmentSession = async (
+  data: CreateAssessmentSessionRequest
+): Promise<AssessmentSession> => {
+  const response = await apiClient.post<{ data: AssessmentSession }>(
+    "/assessments/sessions",
+    data
+  );
+  return response.data.data;
+};
+
+export const joinAssessmentSession = async (
+  accessCode: string
+): Promise<{ session: AssessmentSession; assessment: Assessment }> => {
+  const response = await apiClient.get<{ data: { session: AssessmentSession; assessment: Assessment } }>(
+    `/assessments/sessions/join/${accessCode}`
   );
   return response.data.data;
 };

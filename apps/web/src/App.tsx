@@ -23,6 +23,8 @@ import { ActivityPage } from "./features/dashboard/pages/ActivityPage";
 import { ReportsPage } from "./features/dashboard/pages/ReportsPage";
 import { SettingsPage } from "./features/dashboard/pages/SettingsPage";
 import { AdministerAssessmentPage } from "./features/dashboard/pages/AdministerAssessmentPage";
+import { JoinAssessmentPage } from "./features/dashboard/pages/JoinAssessmentPage";
+import { LearnerAssessmentPage } from "./features/dashboard/pages/LearnerAssessmentPage";
 
 const RoleSelectionPage = (): JSX.Element => <div>Select Your Role</div>;
 
@@ -35,6 +37,9 @@ const App = (): JSX.Element => (
       <Route element={<RegisterPage />} path="/register" />
       <Route element={<ForgotPasswordPage />} path="/forgot-password" />
       <Route element={<EmailVerificationPage />} path="/verify-email" />
+      
+      <Route element={<JoinAssessmentPage />} path="/join" />
+      <Route element={<LearnerAssessmentPage />} path="/join/:code" />
     </Route>
 
     <Route element={<RequireAuth requireLayout={false} />}>

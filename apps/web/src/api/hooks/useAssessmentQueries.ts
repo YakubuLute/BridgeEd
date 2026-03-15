@@ -4,7 +4,9 @@ import type {
   GenerateScreenerRequest, 
   GeneratedScreenerResponse, 
   CreateAssessmentRequest, 
-  Assessment 
+  Assessment,
+  AssessmentSession,
+  CreateAssessmentSessionRequest
 } from "@bridgeed/shared";
 
 import { 
@@ -12,7 +14,9 @@ import {
   createAssessment, 
   getAssessments,
   getAssessment,
-  submitAssessmentResults 
+  submitAssessmentResults,
+  createAssessmentSession,
+  joinAssessmentSession
 } from "../services/assessments.service";
 
 export const useGenerateScreenerMutation = (
@@ -55,5 +59,22 @@ export const useSubmitResultsMutation = (
   return useMutation({
     mutationFn: (data) => submitAssessmentResults(assessmentId, data),
     ...options
+  });
+};
+
+export const useCreateSessionMutation = (
+  options?: Omit<UseMutationOptions<AssessmentSession, Error, CreateAssessmentSessionRequest>, "mutationFn" | "mutationKey">
+): UseMutationResult<AssessmentSession, Error, CreateAssessmentSessionRequest> => {
+  return useMutation({
+    mutationFn: createAssessmentSession,
+    ...options
+  });
+};
+
+export const useJoinSessionQuery = (accessCode: string): UseQueryResult<{ session: AssessmentSession; assessment: Assessment }, Error> => {
+  return useQuery({
+    queryKey: ["sessions", "join", accessCode],
+    queryFn: () => joinAssessmentSession(accessCode),
+    enabled: !!accessCode && accessCode.length === 6
   });
 };

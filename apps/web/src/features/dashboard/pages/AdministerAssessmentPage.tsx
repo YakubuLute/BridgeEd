@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
   Title, 
@@ -13,21 +13,27 @@ import {
   Table,
   Checkbox,
   Badge,
-  Box
+  Box,
+  Alert
 } from "@mantine/core";
 import { useClassLearnersQuery } from "../../../api/hooks/useClassQueries";
-import { useAssessmentQuery, useSubmitResultsMutation } from "../../../api/hooks/useAssessmentQueries";
+import { 
+  useAssessmentQuery, 
+  useSubmitResultsMutation,
+  useCreateSessionMutation 
+} from "../../../api/hooks/useAssessmentQueries";
+import { useSocket } from "../../../api/hooks/useSocket";
 
 // --- Icons ---
-const IconArrowLeft = () => (
+const IconZap = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
   </svg>
 );
 
-const IconCheck = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12" />
+const IconArrowLeft = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
   </svg>
 );
 
@@ -37,11 +43,33 @@ export const AdministerAssessmentPage = (): JSX.Element => {
   
   const { data: assessment, isLoading: assessmentLoading } = useAssessmentQuery(assessmentId || "");
   const { data: learners, isLoading: learnersLoading } = useClassLearnersQuery(assessment?.classId || "");
+  const { joinSession, onProgressUpdate } = useSocket();
+
+  const [session, setSession] = useState<any>(null);
+  const [liveProgress, setLiveProgress] = useState<Record<string, { progress: number, q: number }>>({});
+
+  const createSessionMutation = useCreateSessionMutation({
+    onSuccess: (data) => {
+      setSession(data);
+      joinSession(data.sessionId);
+    }
+  });
+
   const submitResultsMutation = useSubmitResultsMutation(assessmentId || "", {
     onSuccess: () => {
       navigate("/assessments");
     }
   });
+
+  // Listen for live updates
+  useEffect(() => {
+    onProgressUpdate((data) => {
+      setLiveProgress(prev => ({
+        ...prev,
+        [data.learnerId]: { progress: data.progress, q: data.currentQuestion }
+      }));
+    });
+  }, []);
 
   // State to track [learnerId][questionIndex] = isCorrect
   const [results, setResults] = useState<Record<string, boolean[]>>({});
@@ -107,7 +135,29 @@ export const AdministerAssessmentPage = (): JSX.Element => {
               Administering to Class: <Text span fw={800} c="#1e293b">{assessment.gradeLevel}</Text> • {assessment.subject}
             </Text>
           </Stack>
-          <Stack gap={4} align="flex-end">
+          
+          <Group gap="md">
+            {!session ? (
+              <Button
+                variant="light"
+                color="orange"
+                radius="md"
+                h={48}
+                leftSection={<IconZap />}
+                loading={createSessionMutation.isPending}
+                onClick={() => createSessionMutation.mutate({ assessmentId: assessmentId!, classId: assessment.classId! })}
+              >
+                Start Live Session
+              </Button>
+            ) : (
+              <Paper bg="#fff7ed" px="xl" h={48} radius="md" className="border border-orange-200 flex items-center shadow-sm">
+                <Group gap="xs">
+                  <Text fz="xs" fw={800} c="#c2410c">JOIN CODE:</Text>
+                  <Text fz="xl" fw={900} c="#ea580c" style={{ letterSpacing: '2px' }}>{session.accessCode}</Text>
+                </Group>
+              </Paper>
+            )}
+
             <Button
               onClick={handleSubmit}
               bg="#ea580c"
@@ -119,12 +169,19 @@ export const AdministerAssessmentPage = (): JSX.Element => {
             >
               Complete & Sync Results
             </Button>
-            {submitResultsMutation.isError && (
-              <Text c="red" fz="xs" fw={700}>Failed to sync results. Please try again.</Text>
-            )}
-          </Stack>
+          </Group>
         </Group>
+
+        {submitResultsMutation.isError && (
+          <Alert color="red" radius="md">Failed to sync results. Please try again.</Alert>
+        )}
       </Stack>
+
+      {session && (
+        <Alert icon={<IconZap />} title="Live Session Active" color="orange" radius="xl" variant="light">
+          Share the code <Text span fw={900}>{session.accessCode}</Text> with your students at <Text span fw={800} variant="link">bridgeed.app/join</Text>. You will see their progress in real-time below.
+        </Alert>
+      )}
 
       <Paper p="xl" radius="24px" className="border border-[#e2e8f0] bg-white overflow-hidden">
         <Box className="overflow-x-auto">
@@ -145,12 +202,22 @@ export const AdministerAssessmentPage = (): JSX.Element => {
                 const learnerScores = results[learner.learnerId] || [];
                 const correctCount = learnerScores.filter(Boolean).length;
                 const score = Math.round((correctCount / assessment.questions.length) * 100);
+                const live = liveProgress[learner.learnerId];
 
                 return (
                   <tr key={learner.learnerId} className="hover:bg-[#f8fafc] transition-colors border-b border-[#f8fafc] last:border-0">
                     <td className="py-4">
-                      <Text fw={800} c="#1e293b" fz="sm">{learner.name}</Text>
-                      <Text c="#94a3b8" fz="xs" fw={700}>{learner.learnerId.substring(0, 8)}...</Text>
+                      <Group gap="md">
+                        <Box>
+                          <Text fw={800} c="#1e293b" fz="sm">{learner.name}</Text>
+                          <Text c="#94a3b8" fz="xs" fw={700}>{learner.learnerId.substring(0, 8)}...</Text>
+                        </Box>
+                        {live && (
+                          <Badge color="orange" size="xs" variant="filled" className="animate-pulse">
+                            Live: Q{live.q}
+                          </Badge>
+                        )}
+                      </Group>
                     </td>
                     {assessment.questions.map((_, qIdx) => (
                       <td key={qIdx} className="text-center py-4">

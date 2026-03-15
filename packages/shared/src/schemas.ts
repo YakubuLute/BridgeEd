@@ -442,3 +442,28 @@ export const SubmitAssessmentResultsRequestSchema = z.object({
 
 export type LearnerAssessmentResult = z.infer<typeof LearnerAssessmentResultSchema>;
 export type SubmitAssessmentResultsRequest = z.infer<typeof SubmitAssessmentResultsRequestSchema>;
+
+export const AssessmentSessionSchema = z.object({
+  id: z.string().min(1),
+  sessionId: z.string().min(1),
+  assessmentId: z.string().min(1),
+  classId: z.string().min(1),
+  teacherId: z.string().min(1),
+  accessCode: z.string().length(6),
+  status: z.enum(["active", "closed"]),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime()
+});
+
+export const CreateAssessmentSessionRequestSchema = z.object({
+  assessmentId: z.string().min(1),
+  classId: z.string().min(1)
+});
+
+export const JoinSessionRequestSchema = z.object({
+  accessCode: z.string().length(6)
+});
+
+export type AssessmentSession = z.infer<typeof AssessmentSessionSchema>;
+export type CreateAssessmentSessionRequest = z.infer<typeof CreateAssessmentSessionRequestSchema>;
+export type JoinSessionRequest = z.infer<typeof JoinSessionRequestSchema>;

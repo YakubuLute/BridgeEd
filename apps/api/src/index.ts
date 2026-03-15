@@ -1,15 +1,20 @@
 import mongoose from "mongoose";
+import { createServer } from "http";
 
 import { app } from "./app";
 import { env } from "./config/env";
 import { connectToDatabase } from "./config/mongo";
 import { bootstrapSeedData } from "./services/bootstrap/bootstrap.service";
+import { initSocket } from "./services/socket.service";
 
 const start = async (): Promise<void> => {
   await connectToDatabase();
   await bootstrapSeedData();
 
-  app.listen(env.PORT, () => {
+  const httpServer = createServer(app);
+  initSocket(httpServer);
+
+  httpServer.listen(env.PORT, () => {
     console.info(`[api] BridgeEd API running on http://localhost:${env.PORT}`);
   });
 };

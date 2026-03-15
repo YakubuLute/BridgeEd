@@ -3,12 +3,15 @@ import {
   Role, 
   GenerateScreenerRequestSchema, 
   CreateAssessmentRequestSchema,
-  SubmitAssessmentResultsRequestSchema 
+  SubmitAssessmentResultsRequestSchema,
+  CreateAssessmentSessionRequestSchema,
+  JoinSessionRequestSchema 
 } from "@bridgeed/shared";
 import { requireAuth, requireRoles } from "../../middlewares/auth.middleware";
 import { successResponse, errorResponse } from "../../utils/api-response";
 import { GeminiService } from "../../services/gemini/gemini.service";
 import { AssessmentModel } from "../../models/assessment.model";
+import { AssessmentSessionModel } from "../../models/assessment-session.model";
 import { AttemptModel } from "../../models/attempt.model";
 import { DiagnosticResultModel } from "../../models/diagnostic-result.model";
 import { createUuidV7 } from "../../utils/uuid";
@@ -16,6 +19,66 @@ import { getAuthContext } from "../../controllers/class.controller";
 
 const router = Router();
 const geminiService = new GeminiService();
+
+const generateAccessCode = (): string => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // No 0, O, 1, I to avoid confusion
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
+router.post(
+  "/assessments/sessions",
+  requireAuth,
+  requireRoles(Role.Teacher, Role.SchoolAdmin),
+  async (req, res, next) => {
+    try {
+      const auth = getAuthContext(req.auth);
+      const { assessmentId, classId } = CreateAssessmentSessionRequestSchema.parse(req.body);
+
+      const session = await AssessmentSessionModel.create({
+        sessionId: createUuidV7(),
+        assessmentId,
+        classId,
+        teacherId: auth.userId,
+        accessCode: generateAccessCode(),
+        status: "active"
+      });
+
+      res.status(201).json(successResponse(session.toJSON()));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.get(
+  "/assessments/sessions/join/:accessCode",
+  async (req, res, next) => {
+    try {
+      const { accessCode } = req.params;
+      const session = await AssessmentSessionModel.findOne({ 
+        accessCode: accessCode.toUpperCase(),
+        status: "active" 
+      }).exec();
+
+      if (!session) {
+        return res.status(404).json(errorResponse("Session not found or closed", "NOT_FOUND"));
+      }
+
+      const assessment = await AssessmentModel.findOne({ assessmentId: session.assessmentId }).exec();
+      
+      res.status(200).json(successResponse({
+        session: session.toJSON(),
+        assessment: assessment?.toJSON()
+      }));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 router.post(
   "/assessments/generate",
