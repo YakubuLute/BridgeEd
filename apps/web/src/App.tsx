@@ -5,10 +5,13 @@ import { RequireAuth } from "./features/auth/components/RequireAuth";
 import { PublicRoute } from "./features/auth/components/PublicRoute";
 import { LandingPage } from "./features/landing/pages/LandingPage";
 
-const PhoneOtpLoginPage = (): JSX.Element => <div>Phone OTP Login Page</div>;
-const EmailLoginPage = (): JSX.Element => <div>Email Login Page</div>;
-const RegisterPage = (): JSX.Element => <div>Register Page</div>;
-const ForgotPasswordPage = (): JSX.Element => <div>Forgot Password Page</div>;
+// Auth Pages
+import { PhoneOtpLoginPage } from "./features/auth/pages/PhoneOtpLoginPage";
+import { EmailLoginPage } from "./features/auth/pages/EmailLoginPage";
+import { RegisterPage } from "./features/auth/pages/RegisterPage";
+import { ForgotPasswordPage } from "./features/auth/pages/ForgotPasswordPage";
+import { EmailVerificationPage } from "./features/auth/pages/EmailVerificationPage";
+
 const TeacherDashboard = (): JSX.Element => <div>Teacher Dashboard</div>;
 const SchoolAdminDashboard = (): JSX.Element => <div>School Admin Dashboard</div>;
 const RoleSelectionPage = (): JSX.Element => <div>Select Your Role</div>;
@@ -21,6 +24,7 @@ const App = (): JSX.Element => (
       <Route element={<EmailLoginPage />} path="/login/email" />
       <Route element={<RegisterPage />} path="/register" />
       <Route element={<ForgotPasswordPage />} path="/forgot-password" />
+      <Route element={<EmailVerificationPage />} path="/verify-email" />
     </Route>
 
     <Route element={<RequireAuth requireLayout={false} />}>

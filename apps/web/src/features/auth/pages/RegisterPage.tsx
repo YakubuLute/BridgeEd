@@ -1,0 +1,106 @@
+import { useState } from "react";
+import { Button, TextInput, PasswordInput, Stack, Text, Box } from "@mantine/core";
+import { useNavigate } from "react-router-dom";
+import { AuthLayout } from "../components/AuthLayout";
+
+export const RegisterPage = (): JSX.Element => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = () => {
+    setLoading(true);
+    // Simulate registration
+    setTimeout(() => {
+      setLoading(false);
+      navigate("/dashboard/teacher");
+    }, 1000);
+  };
+
+  const inputStyles = {
+    input: { border: "2px solid #E2E8F0", height: "56px", fontSize: "16px", fontWeight: 600 },
+    label: {
+      fontWeight: 700,
+      marginBottom: "8px",
+      fontSize: "13px",
+      color: "#64748b",
+      textTransform: "uppercase" as const,
+      letterSpacing: "0.05em"
+    }
+  };
+
+  return (
+    <AuthLayout title="Create Account" subtitle="Register your school to start tracking progress">
+      <Stack gap="lg">
+        <TextInput
+          label="School Identifier"
+          placeholder="SCH-123456"
+          size="lg"
+          radius="md"
+          styles={inputStyles}
+          description="Provided by your school administrator"
+        />
+
+        <TextInput
+          label="Full Name"
+          placeholder="Enter your full name"
+          size="lg"
+          radius="md"
+          styles={inputStyles}
+        />
+
+        <TextInput
+          label="Email Address"
+          placeholder="teacher@school.edu"
+          size="lg"
+          radius="md"
+          styles={inputStyles}
+        />
+
+        <PasswordInput
+          label="Password"
+          placeholder="Create a strong password"
+          size="lg"
+          radius="md"
+          styles={inputStyles}
+        />
+
+        <Button
+          fullWidth
+          size="xl"
+          radius="md"
+          bg="#ea580c"
+          className="hover:bg-[#c2410c] h-16 font-bold shadow-lg shadow-orange-100 mt-4"
+          loading={loading}
+          onClick={handleRegister}
+        >
+          Create Teacher Account
+        </Button>
+
+        <Text ta="center" fz="sm" fw={600} c="#64748b">
+          Already have an account?{" "}
+          <Button
+            variant="transparent"
+            p={0}
+            h="auto"
+            fw={700}
+            color="orange"
+            onClick={() => navigate("/login/phone")}
+          >
+            Sign In
+          </Button>
+        </Text>
+
+        <Box className="pt-4 border-t border-[#E2E8F0]">
+          <Text c="#94a3b8" fz="xs" ta="center" className="leading-relaxed">
+            By creating an account, you agree to BridgeEd&apos;s <br />
+            <span className="font-bold cursor-pointer hover:text-[#ea580c]">
+              Terms of Service
+            </span>{" "}
+            and{" "}
+            <span className="font-bold cursor-pointer hover:text-[#ea580c]">Privacy Policy</span>.
+          </Text>
+        </Box>
+      </Stack>
+    </AuthLayout>
+  );
+};
