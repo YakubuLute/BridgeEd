@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Modal, Button, Select, Stack, Group, Text, Loader, Center, Paper, Radio } from "@mantine/core";
 import { useClassesQuery } from "../../../api/hooks/useClassQueries";
-import { useGenerateScreenerMutation } from "../../../api/hooks/useAssessmentQueries";
+import { useGenerateScreenerMutation, useCreateAssessmentMutation } from "../../../api/hooks/useAssessmentQueries";
 
 type RunScreenerModalProps = {
   opened: boolean;
@@ -10,8 +11,15 @@ type RunScreenerModalProps = {
 };
 
 export const RunScreenerModal = ({ opened, onClose, defaultClassId }: RunScreenerModalProps): JSX.Element => {
+  const navigate = useNavigate();
   const { data: classes, isLoading: classesLoading } = useClassesQuery();
   const generateScreenerMutation = useGenerateScreenerMutation();
+  const createAssessmentMutation = useCreateAssessmentMutation({
+    onSuccess: (data) => {
+      resetAndClose();
+      navigate(`/assessments/${data.assessmentId}/administer`);
+    }
+  });
   
   const [classId, setClassId] = useState<string | null>(defaultClassId || null);
   const [subject, setSubject] = useState<string>("Foundational Literacy");
@@ -28,8 +36,22 @@ export const RunScreenerModal = ({ opened, onClose, defaultClassId }: RunScreene
     });
   };
 
+  const handleSaveAndAdminister = () => {
+    if (!classId || !selectedClass || !generateScreenerMutation.data) return;
+
+    createAssessmentMutation.mutate({
+      classId,
+      subject,
+      gradeLevel: selectedClass.gradeLevel,
+      title: generateScreenerMutation.data.title,
+      description: generateScreenerMutation.data.description,
+      questions: generateScreenerMutation.data.questions,
+    });
+  };
+
   const resetAndClose = () => {
     generateScreenerMutation.reset();
+    createAssessmentMutation.reset();
     onClose();
   };
 
@@ -141,7 +163,13 @@ export const RunScreenerModal = ({ opened, onClose, defaultClassId }: RunScreene
             <Button variant="subtle" color="gray" onClick={resetAndClose} fw={700}>
               Discard
             </Button>
-            <Button bg="#ea580c" className="hover:bg-[#c2410c]" fw={700} onClick={resetAndClose}>
+            <Button 
+              bg="#ea580c" 
+              className="hover:bg-[#c2410c]" 
+              fw={700} 
+              onClick={handleSaveAndAdminister}
+              loading={createAssessmentMutation.isPending}
+            >
               Save & Administer
             </Button>
           </Group>

@@ -396,6 +396,49 @@ export const GeneratedScreenerResponseSchema = z.object({
   questions: z.array(ScreenerQuestionSchema).min(1)
 });
 
+export const AssessmentSchema = z.object({
+  id: z.string().min(1),
+  assessmentId: z.string().min(1),
+  teacherId: z.string().min(1),
+  classId: z.string().min(1).optional(),
+  title: z.string().min(1),
+  description: z.string().min(1),
+  subject: z.string().min(1),
+  gradeLevel: z.string().min(1),
+  questions: z.array(ScreenerQuestionSchema).min(1),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime()
+});
+
+export const CreateAssessmentRequestSchema = z.object({
+  classId: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().min(1),
+  subject: z.string().min(1),
+  gradeLevel: z.string().min(1),
+  questions: z.array(ScreenerQuestionSchema).min(1)
+});
+
 export type GenerateScreenerRequest = z.infer<typeof GenerateScreenerRequestSchema>;
 export type ScreenerQuestion = z.infer<typeof ScreenerQuestionSchema>;
 export type GeneratedScreenerResponse = z.infer<typeof GeneratedScreenerResponseSchema>;
+export type Assessment = z.infer<typeof AssessmentSchema>;
+export type CreateAssessmentRequest = z.infer<typeof CreateAssessmentRequestSchema>;
+
+export const LearnerAssessmentResultSchema = z.object({
+  learnerId: z.string().min(1),
+  scores: z.array(z.object({
+    questionText: z.string().min(1),
+    isCorrect: z.boolean(),
+    skillTag: z.string().optional()
+  }))
+});
+
+export const SubmitAssessmentResultsRequestSchema = z.object({
+  assessmentId: z.string().min(1),
+  classId: z.string().min(1),
+  results: z.array(LearnerAssessmentResultSchema).min(1)
+});
+
+export type LearnerAssessmentResult = z.infer<typeof LearnerAssessmentResultSchema>;
+export type SubmitAssessmentResultsRequest = z.infer<typeof SubmitAssessmentResultsRequestSchema>;

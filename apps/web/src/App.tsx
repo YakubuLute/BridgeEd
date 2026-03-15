@@ -22,6 +22,7 @@ import { AssessmentsPage } from "./features/dashboard/pages/AssessmentsPage";
 import { ActivityPage } from "./features/dashboard/pages/ActivityPage";
 import { ReportsPage } from "./features/dashboard/pages/ReportsPage";
 import { SettingsPage } from "./features/dashboard/pages/SettingsPage";
+import { AdministerAssessmentPage } from "./features/dashboard/pages/AdministerAssessmentPage";
 
 const RoleSelectionPage = (): JSX.Element => <div>Select Your Role</div>;
 
@@ -44,6 +45,7 @@ const App = (): JSX.Element => (
       <Route element={<TeacherDashboardPage />} path="/dashboard/teacher" />
       <Route element={<ClassesPage />} path="/classes" />
       <Route element={<AssessmentsPage />} path="/assessments" />
+      <Route element={<AdministerAssessmentPage />} path="/assessments/:assessmentId/administer" />
       <Route element={<ActivityPage />} path="/activity" />
       <Route element={<ReportsPage />} path="/reports" />
     </Route>
