@@ -3,6 +3,7 @@ import { Role } from "@bridgeed/shared";
 
 import {
   createClassController,
+  getClassAssessmentHistoryController,
   getClassAssessmentOverviewController,
   listClassLearnersController,
   listClassesController,
@@ -21,6 +22,12 @@ router.get(
   requireAuth,
   requireRoles(Role.Teacher),
   getClassAssessmentOverviewController
+);
+router.get(
+  "/classes/:classId/assessment-history",
+  requireAuth,
+  requireRoles(Role.Teacher),
+  getClassAssessmentHistoryController
 );
 
 export default router;

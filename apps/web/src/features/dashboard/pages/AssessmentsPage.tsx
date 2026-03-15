@@ -154,7 +154,7 @@ export const AssessmentsPage = (): JSX.Element => {
               </Title>
               <Select
                 className="w-64"
-                data={classes?.map((c) => ({ value: c.id, label: c.name })) || []}
+                data={classes?.map(c => ({ value: c.classId, label: c.name })) || []}
                 onChange={setSelectedClassId}
                 placeholder="Select a class to start"
                 radius="md"
@@ -214,7 +214,7 @@ export const AssessmentsPage = (): JSX.Element => {
               </Title>
               <Select
                 className="w-64"
-                data={classes?.map((c) => ({ value: c.id, label: c.name })) || []}
+                data={classes?.map(c => ({ value: c.classId, label: c.name })) || []}
                 onChange={setSelectedClassId}
                 placeholder="Select Class"
                 radius="md"

@@ -108,3 +108,18 @@ export const getClassAssessmentOverviewController: RequestHandler = async (req, 
     next(error);
   }
 };
+
+export const getClassAssessmentHistoryController: RequestHandler = async (req, res, next) => {
+  try {
+    const classIdParam = req.params.classId;
+    const classId = Array.isArray(classIdParam) ? classIdParam[0] : classIdParam;
+    if (!classId) {
+      throw new AppError(400, "VALIDATION_ERROR", "Class identifier is required.");
+    }
+
+    const result = await classService.getClassAssessmentHistory(getAuthContext(req.auth), classId);
+    res.status(200).json(successResponse(result));
+  } catch (error) {
+    next(error);
+  }
+};

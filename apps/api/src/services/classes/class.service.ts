@@ -377,5 +377,42 @@ export const classService = {
       },
       learners: learnerSnapshots
     };
+  },
+
+  async getClassAssessmentHistory(auth: AuthContext, classId: string) {
+    const schoolId = getTeacherSchoolId(auth);
+    const classRecord = await ClassModel.findOne({ classId }).exec();
+    if (!classRecord) {
+      throw new AppError(404, "CLASS_NOT_FOUND", "Class was not found.");
+    }
+
+    if (classRecord.schoolId !== schoolId || classRecord.teacherId !== auth.userId) {
+      throw new AppError(403, "FORBIDDEN", "You do not have access to this class.");
+    }
+
+    const attempts = await AttemptModel.find({
+      classId: classRecord.classId
+    })
+      .sort({ assessedAt: -1 })
+      .limit(50)
+      .exec();
+
+    const learnerIds = attempts.map((a) => a.learnerId);
+    const learners = await LearnerModel.find({
+      learnerId: { $in: learnerIds }
+    }).exec();
+
+    const learnerNameMap = new Map(learners.map((l) => [l.learnerId, l.name]));
+
+    return {
+      attempts: attempts.map((a) => ({
+        attemptId: a.attemptId,
+        learnerId: a.learnerId,
+        learnerName: learnerNameMap.get(a.learnerId) || "Unknown Learner",
+        assessmentName: a.assessmentName,
+        score: a.score,
+        assessedAt: a.assessedAt.toISOString()
+      }))
+    };
   }
 };

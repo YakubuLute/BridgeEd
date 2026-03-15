@@ -267,6 +267,19 @@ export const ClassAssessmentOverviewResponseSchema = z.object({
   learners: z.array(LearnerAssessmentSnapshotSchema)
 });
 
+export const ClassAssessmentHistoryItemSchema = z.object({
+  attemptId: z.string().min(1),
+  learnerId: z.string().min(1),
+  learnerName: z.string().min(1),
+  assessmentName: z.string().min(1),
+  score: z.number().min(0).max(100).nullable(),
+  assessedAt: z.string().datetime()
+});
+
+export const ClassAssessmentHistoryResponseSchema = z.object({
+  attempts: z.array(ClassAssessmentHistoryItemSchema)
+});
+
 export type LearnerRecord = z.infer<typeof LearnerSchema>;
 export type CreateLearnerRequest = z.infer<typeof CreateLearnerRequestSchema>;
 export type BatchCreateLearnersRequest = z.infer<typeof BatchCreateLearnersRequestSchema>;
@@ -280,3 +293,5 @@ export type AssessmentStatus = z.infer<typeof AssessmentStatusSchema>;
 export type LearnerAssessmentSnapshot = z.infer<typeof LearnerAssessmentSnapshotSchema>;
 export type ClassAssessmentSummary = z.infer<typeof ClassAssessmentSummarySchema>;
 export type ClassAssessmentOverviewResponse = z.infer<typeof ClassAssessmentOverviewResponseSchema>;
+export type ClassAssessmentHistoryItem = z.infer<typeof ClassAssessmentHistoryItemSchema>;
+export type ClassAssessmentHistoryResponse = z.infer<typeof ClassAssessmentHistoryResponseSchema>;
