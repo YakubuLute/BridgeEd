@@ -1,42 +1,90 @@
 import { useState } from "react";
-import { Button, TextInput, Stack, Text, Group, Box, PinInput } from "@mantine/core";
+import { Button, TextInput, Stack, Text, Group, Box, PinInput, Alert } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
+import { useRequestOtpMutation, useVerifyOtpMutation } from "../../../api/hooks/useAuthMutations";
+import { SESSION_STORAGE_KEY, sanitizePhoneDigits, toE164Phone } from "../auth.constants";
+import { getPostLoginPath } from "../../../utils/role-routing";
 
 export const PhoneOtpLoginPage = (): JSX.Element => {
   const navigate = useNavigate();
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [requestId, setRequestId] = useState("");
+  const [otp, setOtp] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const requestOtpMutation = useRequestOtpMutation({
+    onSuccess: (result) => {
+      setRequestId(result.requestId);
+      setStep("otp");
+      setError(null);
+    },
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : "Failed to send OTP");
+    }
+  });
+
+  const verifyOtpMutation = useVerifyOtpMutation({
+    onSuccess: (result) => {
+      sessionStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify({
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          expiresAt: result.expiresAt,
+          user: result.user,
+          loginAt: new Date().toISOString()
+        })
+      );
+      navigate(getPostLoginPath(result.user), { replace: true });
+    },
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : "Invalid verification code");
+    }
+  });
 
   const handleSendOtp = () => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      setStep("otp");
-    }, 1000);
+    setError(null);
+    const sanitized = sanitizePhoneDigits(phoneNumber);
+    if (sanitized.length < 10) {
+      setError("Please enter a valid 10-digit phone number");
+      return;
+    }
+    requestOtpMutation.mutate({ phoneNumber: toE164Phone(sanitized) });
   };
 
-  const handleVerifyOtp = () => {
-    setLoading(true);
-    // Simulate verification
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/dashboard/teacher");
-    }, 1000);
+  const handleVerifyOtp = (value?: string) => {
+    setError(null);
+    const code = value ?? otp;
+    if (code.length < 6) {
+      setError("Please enter the 6-digit code");
+      return;
+    }
+    const sanitized = sanitizePhoneDigits(phoneNumber);
+    verifyOtpMutation.mutate({
+      phoneNumber: toE164Phone(sanitized),
+      requestId,
+      otp: code
+    });
   };
 
   return (
     <AuthLayout
-      title={step === "phone" ? "Welcome back" : "Verify Code"}
       subtitle={
         step === "phone"
           ? "Enter your phone number to sign in"
           : "Enter the 6-digit code sent to your phone"
       }
+      title={step === "phone" ? "Welcome back" : "Verify Code"}
     >
       <Stack gap="xl">
+        {error && (
+          <Alert color="red" variant="light" radius="md">
+            {error}
+          </Alert>
+        )}
+
         {step === "phone" ? (
           <>
             <TextInput
@@ -45,7 +93,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
               size="lg"
               radius="md"
               value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
+              onChange={(e) => setPhoneNumber(sanitizePhoneDigits(e.target.value))}
               styles={{
                 input: {
                   border: "2px solid #E2E8F0",
@@ -62,6 +110,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                   letterSpacing: "0.05em"
                 }
               }}
+              error={!!error}
             />
             <Button
               fullWidth
@@ -69,7 +118,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
               radius="md"
               bg="#ea580c"
               className="hover:bg-[#c2410c] h-16 font-bold shadow-lg shadow-orange-100"
-              loading={loading}
+              loading={requestOtpMutation.isPending}
               onClick={handleSendOtp}
             >
               Send OTP Code
@@ -84,6 +133,9 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                 placeholder=""
                 radius="md"
                 type="number"
+                value={otp}
+                onChange={setOtp}
+                onComplete={handleVerifyOtp}
                 styles={{
                   input: {
                     border: "2px solid #E2E8F0",
@@ -93,6 +145,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                     fontWeight: 800
                   }
                 }}
+                autoFocus
               />
             </Box>
             <Button
@@ -101,13 +154,13 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
               radius="md"
               bg="#ea580c"
               className="hover:bg-[#c2410c] h-16 font-bold shadow-lg shadow-orange-100"
-              loading={loading}
-              onClick={handleVerifyOtp}
+              loading={verifyOtpMutation.isPending}
+              onClick={() => handleVerifyOtp()}
             >
               Verify & Sign In
             </Button>
             <Group justify="center">
-              <Text fz="sm" fw={600} c="#64748b">
+              <Text c="#64748b" fz="sm" fw={600}>
                 Didn&apos;t receive a code?
               </Text>
               <Button
@@ -117,6 +170,7 @@ export const PhoneOtpLoginPage = (): JSX.Element => {
                 fw={700}
                 color="orange"
                 onClick={() => setStep("phone")}
+                disabled={requestOtpMutation.isPending}
               >
                 Resend
               </Button>

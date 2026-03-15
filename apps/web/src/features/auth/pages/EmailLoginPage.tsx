@@ -1,19 +1,50 @@
 import { useState } from "react";
-import { Button, TextInput, PasswordInput, Stack, Text, Anchor } from "@mantine/core";
+import { Button, TextInput, PasswordInput, Stack, Text, Anchor, Alert } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
+import { useEmailLoginMutation } from "../../../api/hooks/useAuthMutations";
+import { validateEmail, SESSION_STORAGE_KEY } from "../auth.constants";
+import { getPostLoginPath } from "../../../utils/role-routing";
 
 export const EmailLoginPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const loginMutation = useEmailLoginMutation({
+    onSuccess: (result) => {
+      sessionStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify({
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          expiresAt: result.expiresAt,
+          user: result.user,
+          loginAt: new Date().toISOString()
+        })
+      );
+      navigate(getPostLoginPath(result.user), { replace: true });
+    },
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : "Invalid email or password");
+    }
+  });
 
   const handleLogin = () => {
-    setLoading(true);
-    // Simulate login
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/dashboard/teacher");
-    }, 1000);
+    setError(null);
+
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    if (!password) {
+      setError("Please enter your password");
+      return;
+    }
+
+    loginMutation.mutate({ email: email.trim(), password });
   };
 
   const inputStyles = {
@@ -31,12 +62,21 @@ export const EmailLoginPage = (): JSX.Element => {
   return (
     <AuthLayout title="Email Login" subtitle="Enter your credentials to access your account">
       <Stack gap="xl">
+        {error && (
+          <Alert color="red" variant="light" radius="md">
+            {error}
+          </Alert>
+        )}
+
         <TextInput
           label="Email Address"
           placeholder="teacher@school.edu"
           size="lg"
           radius="md"
           styles={inputStyles}
+          value={email}
+          onChange={(e) => setEmail(e.currentTarget.value)}
+          error={error?.includes("email")}
         />
 
         <Stack gap={8}>
@@ -46,6 +86,9 @@ export const EmailLoginPage = (): JSX.Element => {
             size="lg"
             radius="md"
             styles={inputStyles}
+            value={password}
+            onChange={(e) => setPassword(e.currentTarget.value)}
+            error={error?.includes("password")}
           />
           <Anchor
             component="button"
@@ -65,7 +108,7 @@ export const EmailLoginPage = (): JSX.Element => {
           radius="md"
           bg="#ea580c"
           className="hover:bg-[#c2410c] h-16 font-bold shadow-lg shadow-orange-100"
-          loading={loading}
+          loading={loginMutation.isPending}
           onClick={handleLogin}
         >
           Sign In

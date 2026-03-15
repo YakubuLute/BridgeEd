@@ -1,20 +1,35 @@
 import { useState } from "react";
-import { Button, TextInput, Stack, Text, Box } from "@mantine/core";
+import { Button, TextInput, Stack, Text, Box, Alert } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
+import { useForgotPasswordMutation } from "../../../api/hooks/useAuthMutations";
+import { validateEmail } from "../auth.constants";
 
 export const ForgotPasswordPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const forgotPasswordMutation = useForgotPasswordMutation({
+    onSuccess: () => {
+      setSubmitted(true);
+      setError(null);
+    },
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : "Failed to process request");
+    }
+  });
 
   const handleSubmit = () => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      setSubmitted(true);
-    }, 1000);
+    setError(null);
+
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    forgotPasswordMutation.mutate({ email: email.trim() });
   };
 
   const inputStyles = {
@@ -39,6 +54,12 @@ export const ForgotPasswordPage = (): JSX.Element => {
       }
     >
       <Stack gap="xl">
+        {error && (
+          <Alert color="red" variant="light" radius="md">
+            {error}
+          </Alert>
+        )}
+
         {!submitted ? (
           <>
             <TextInput
@@ -47,6 +68,9 @@ export const ForgotPasswordPage = (): JSX.Element => {
               size="lg"
               radius="md"
               styles={inputStyles}
+              value={email}
+              onChange={(e) => setEmail(e.currentTarget.value)}
+              error={!!error}
             />
 
             <Button
@@ -55,7 +79,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
               radius="md"
               bg="#ea580c"
               className="hover:bg-[#c2410c] h-16 font-bold shadow-lg shadow-orange-100"
-              loading={loading}
+              loading={forgotPasswordMutation.isPending}
               onClick={handleSubmit}
             >
               Send Reset Link
@@ -64,7 +88,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
         ) : (
           <Box className="bg-orange-50 p-6 rounded-2xl border border-orange-100">
             <Text c="#ea580c" fw={600} fz="sm" className="leading-relaxed">
-              If an account exists for that email, you will receive a link to reset your password
+              If an account exists for {email}, you will receive a link to reset your password
               shortly. Please check your spam folder if you don&apos;t see it.
             </Text>
           </Box>

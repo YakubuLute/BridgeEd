@@ -1,19 +1,70 @@
 import { useState } from "react";
-import { Button, TextInput, PasswordInput, Stack, Text, Box } from "@mantine/core";
+import { Button, TextInput, PasswordInput, Stack, Text, Box, Alert } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { AuthLayout } from "../components/AuthLayout";
+import { useRegisterEmailMutation } from "../../../api/hooks/useAuthMutations";
+import { SESSION_STORAGE_KEY, validateEmail, validatePassword } from "../auth.constants";
+import { getPostLoginPath } from "../../../utils/role-routing";
 
 export const RegisterPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [schoolId, setSchoolId] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const registerMutation = useRegisterEmailMutation({
+    onSuccess: (result) => {
+      sessionStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify({
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          expiresAt: result.expiresAt,
+          user: result.user,
+          loginAt: new Date().toISOString()
+        })
+      );
+      navigate(getPostLoginPath(result.user), { replace: true });
+    },
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : "Registration failed");
+    }
+  });
 
   const handleRegister = () => {
-    setLoading(true);
-    // Simulate registration
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/dashboard/teacher");
-    }, 1000);
+    setError(null);
+
+    if (!schoolId.trim()) {
+      setError("Please enter your School Identifier");
+      return;
+    }
+
+    if (!name.trim()) {
+      setError("Please enter your full name");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      setError(
+        "Password must be at least 8 characters and include uppercase, lowercase, and a number"
+      );
+      return;
+    }
+
+    registerMutation.mutate({
+      name: name.trim(),
+      schoolId: schoolId.trim(),
+      email: email.trim(),
+      password
+    });
   };
 
   const inputStyles = {
@@ -31,6 +82,12 @@ export const RegisterPage = (): JSX.Element => {
   return (
     <AuthLayout title="Create Account" subtitle="Register your school to start tracking progress">
       <Stack gap="lg">
+        {error && (
+          <Alert color="red" variant="light" radius="md">
+            {error}
+          </Alert>
+        )}
+
         <TextInput
           label="School Identifier"
           placeholder="SCH-123456"
@@ -38,6 +95,8 @@ export const RegisterPage = (): JSX.Element => {
           radius="md"
           styles={inputStyles}
           description="Provided by your school administrator"
+          value={schoolId}
+          onChange={(e) => setSchoolId(e.currentTarget.value)}
         />
 
         <TextInput
@@ -46,6 +105,8 @@ export const RegisterPage = (): JSX.Element => {
           size="lg"
           radius="md"
           styles={inputStyles}
+          value={name}
+          onChange={(e) => setName(e.currentTarget.value)}
         />
 
         <TextInput
@@ -54,6 +115,8 @@ export const RegisterPage = (): JSX.Element => {
           size="lg"
           radius="md"
           styles={inputStyles}
+          value={email}
+          onChange={(e) => setEmail(e.currentTarget.value)}
         />
 
         <PasswordInput
@@ -62,6 +125,8 @@ export const RegisterPage = (): JSX.Element => {
           size="lg"
           radius="md"
           styles={inputStyles}
+          value={password}
+          onChange={(e) => setPassword(e.currentTarget.value)}
         />
 
         <Button
@@ -70,7 +135,7 @@ export const RegisterPage = (): JSX.Element => {
           radius="md"
           bg="#ea580c"
           className="hover:bg-[#c2410c] h-16 font-bold shadow-lg shadow-orange-100 mt-4"
-          loading={loading}
+          loading={registerMutation.isPending}
           onClick={handleRegister}
         >
           Create Teacher Account

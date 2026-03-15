@@ -12,8 +12,11 @@ import { RegisterPage } from "./features/auth/pages/RegisterPage";
 import { ForgotPasswordPage } from "./features/auth/pages/ForgotPasswordPage";
 import { EmailVerificationPage } from "./features/auth/pages/EmailVerificationPage";
 
-const TeacherDashboard = (): JSX.Element => <div>Teacher Dashboard</div>;
-const SchoolAdminDashboard = (): JSX.Element => <div>School Admin Dashboard</div>;
+// Dashboard Pages
+import { TeacherDashboardPage } from "./features/dashboard/pages/TeacherDashboardPage";
+import { SchoolAdminDashboardPage } from "./features/dashboard/pages/SchoolAdminDashboardPage";
+import { NationalAdminDashboardPage } from "./features/dashboard/pages/NationalAdminDashboardPage";
+
 const RoleSelectionPage = (): JSX.Element => <div>Select Your Role</div>;
 
 const App = (): JSX.Element => (
@@ -32,14 +35,20 @@ const App = (): JSX.Element => (
     </Route>
 
     <Route element={<RequireAuth allowedRoles={[Role.Teacher]} />}>
-      <Route element={<TeacherDashboard />} path="/dashboard/teacher" />
+      <Route element={<TeacherDashboardPage />} path="/dashboard/teacher" />
       <Route element={<div>Classes</div>} path="/classes" />
       <Route element={<div>Assessments</div>} path="/assessments" />
     </Route>
 
     <Route element={<RequireAuth allowedRoles={[Role.SchoolAdmin]} />}>
-      <Route element={<SchoolAdminDashboard />} path="/dashboard/school-admin" />
+      <Route element={<SchoolAdminDashboardPage />} path="/dashboard/school-admin" />
       <Route element={<div>Manage Teachers</div>} path="/school-admin/teachers" />
+    </Route>
+
+    <Route
+      element={<RequireAuth allowedRoles={[Role.NationalAdmin]} />}
+    >
+      <Route element={<NationalAdminDashboardPage />} path="/dashboard/national-admin" />
     </Route>
 
     <Route
