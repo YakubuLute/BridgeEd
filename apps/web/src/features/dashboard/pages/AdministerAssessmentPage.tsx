@@ -107,17 +107,22 @@ export const AdministerAssessmentPage = (): JSX.Element => {
               Administering to Class: <Text span fw={800} c="#1e293b">{assessment.gradeLevel}</Text> • {assessment.subject}
             </Text>
           </Stack>
-          <Button
-            onClick={handleSubmit}
-            bg="#ea580c"
-            radius="md"
-            h={48}
-            px="xl"
-            loading={submitResultsMutation.isPending}
-            className="hover:bg-[#c2410c] font-bold shadow-lg shadow-orange-100"
-          >
-            Complete & Sync Results
-          </Button>
+          <Stack gap={4} align="flex-end">
+            <Button
+              onClick={handleSubmit}
+              bg="#ea580c"
+              radius="md"
+              h={48}
+              px="xl"
+              loading={submitResultsMutation.isPending}
+              className="hover:bg-[#c2410c] font-bold shadow-lg shadow-orange-100"
+            >
+              Complete & Sync Results
+            </Button>
+            {submitResultsMutation.isError && (
+              <Text c="red" fz="xs" fw={700}>Failed to sync results. Please try again.</Text>
+            )}
+          </Stack>
         </Group>
       </Stack>
 

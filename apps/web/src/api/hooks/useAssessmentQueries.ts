@@ -10,6 +10,7 @@ import type {
 import { 
   generateScreener, 
   createAssessment, 
+  getAssessments,
   getAssessment,
   submitAssessmentResults 
 } from "../services/assessments.service";
@@ -29,6 +30,13 @@ export const useCreateAssessmentMutation = (
   return useMutation({
     mutationFn: createAssessment,
     ...options
+  });
+};
+
+export const useAssessmentsQuery = (): UseQueryResult<Assessment[], Error> => {
+  return useQuery({
+    queryKey: ["assessments", "list"],
+    queryFn: getAssessments
   });
 };
 

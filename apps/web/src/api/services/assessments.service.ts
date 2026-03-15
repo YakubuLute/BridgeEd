@@ -26,6 +26,13 @@ export const createAssessment = async (
   return response.data.data;
 };
 
+export const getAssessments = async (): Promise<Assessment[]> => {
+  const response = await apiClient.get<{ data: Assessment[] }>(
+    "/assessments"
+  );
+  return response.data.data;
+};
+
 export const getAssessment = async (
   assessmentId: string
 ): Promise<Assessment> => {

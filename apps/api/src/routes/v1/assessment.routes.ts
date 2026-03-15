@@ -55,6 +55,21 @@ router.post(
 );
 
 router.get(
+  "/assessments",
+  requireAuth,
+  requireRoles(Role.Teacher, Role.SchoolAdmin),
+  async (req, res, next) => {
+    try {
+      const auth = getAuthContext(req.auth);
+      const assessments = await AssessmentModel.find({ teacherId: auth.userId }).sort({ createdAt: -1 }).exec();
+      res.status(200).json(successResponse(assessments.map(a => a.toJSON())));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.get(
   "/assessments/:assessmentId",
   requireAuth,
   async (req, res, next) => {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Title,
   Text,
@@ -22,9 +23,16 @@ import {
   useClassAssessmentOverviewQuery,
   useClassAssessmentHistoryQuery
 } from "../../../api/hooks/useClassQueries";
+import { useAssessmentsQuery } from "../../../api/hooks/useAssessmentQueries";
 import { RunScreenerModal } from "../components/RunScreenerModal";
 
 // --- Icons ---
+const IconZap = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+  </svg>
+);
+
 const IconClipboard = () => (
   <svg
     width="20"
@@ -92,8 +100,10 @@ const IconSparkles = () => (
 );
 
 export const AssessmentsPage = (): JSX.Element => {
+  const navigate = useNavigate();
   const [screenerModalOpened, { open: openScreenerModal, close: closeScreenerModal }] = useDisclosure(false);
   const { data: classes } = useClassesQuery();
+  const { data: savedAssessments, isLoading: savedLoading } = useAssessmentsQuery();
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
   const { data: overview, isLoading: overviewLoading } = useClassAssessmentOverviewQuery(
@@ -144,6 +154,9 @@ export const AssessmentsPage = (): JSX.Element => {
         <Tabs.List mb="xl">
           <Tabs.Tab leftSection={<IconClipboard />} value="available">
             Library
+          </Tabs.Tab>
+          <Tabs.Tab leftSection={<IconZap />} value="saved">
+            Saved Screeners
           </Tabs.Tab>
           <Tabs.Tab leftSection={<IconSparkles />} value="tracking">
             Status & Insights
@@ -211,6 +224,86 @@ export const AssessmentsPage = (): JSX.Element => {
                 </Paper>
               ))}
             </SimpleGrid>
+          </Stack>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="saved">
+          <Stack gap="xl">
+            <Group justify="space-between">
+              <Title className="text-2xl font-black text-[#1e293b]" order={2}>
+                Your Generated Screeners
+              </Title>
+              <Button 
+                variant="light" 
+                color="orange" 
+                radius="md" 
+                leftSection={<IconSparkles />}
+                onClick={openScreenerModal}
+              >
+                Generate New
+              </Button>
+            </Group>
+
+            {savedLoading ? (
+              <Center py={100}><Loader color="orange" /></Center>
+            ) : savedAssessments && savedAssessments.length > 0 ? (
+              <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="xl">
+                {savedAssessments.map((assessment) => (
+                  <Paper
+                    className="border border-[#e2e8f0] shadow-sm flex flex-col justify-between hover:border-[#ea580c] transition-colors bg-white"
+                    key={assessment.assessmentId}
+                    p="xl"
+                    radius="24px"
+                  >
+                    <Box>
+                      <Group justify="space-between" mb="md">
+                        <Badge color="orange" size="sm" variant="light">
+                          {assessment.subject}
+                        </Badge>
+                        <Text c="#94a3b8" fw={800} fz="xs">
+                          {assessment.gradeLevel}
+                        </Text>
+                      </Group>
+                      <Title className="text-xl font-black text-[#1e293b] mb-2" order={3}>
+                        {assessment.title}
+                      </Title>
+                      <Text c="#64748b" fw={500} fz="sm" lh="1.6" mb="xl">
+                        {assessment.description}
+                      </Text>
+                    </Box>
+
+                    <Button
+                      variant="outline"
+                      color="orange"
+                      className="h-12 border-2"
+                      fullWidth
+                      radius="md"
+                      onClick={() => navigate(`/assessments/${assessment.assessmentId}/administer`)}
+                    >
+                      Administer Now
+                    </Button>
+                  </Paper>
+                ))}
+              </SimpleGrid>
+            ) : (
+              <Paper
+                className="border-2 border-dashed border-[#e2e8f0] bg-[#f8fafc]"
+                p={80}
+                radius="24px"
+              >
+                <Center>
+                  <Stack align="center" gap="md">
+                    <Box className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#94a3b8]">
+                      <IconZap />
+                    </Box>
+                    <Text c="#64748b" fw={700}>
+                      No saved screeners yet. Use the AI generator to get started!
+                    </Text>
+                    <Button bg="#ea580c" onClick={openScreenerModal} mt="sm">Generate First Screener</Button>
+                  </Stack>
+                </Center>
+              </Paper>
+            )}
           </Stack>
         </Tabs.Panel>
 
