@@ -173,8 +173,8 @@ export const TeacherDashboardPage = (): JSX.Element => {
                   <Text fw={900} fz="xl">{cls.gradeLevel}</Text>
                 </Stack>
                 <Stack gap={2}>
-                  <Text c="#94a3b8" fz="xs" fw={800}>SUBJECT</Text>
-                  <Text fw={900} fz="xl" truncate>{cls.subject || "All"}</Text>
+                  <Text c="#94a3b8" fz="xs" fw={800}>STATUS</Text>
+                  <Text fw={900} fz="xl">{cls.isActive ? "Active" : "Inactive"}</Text>
                 </Stack>
               </Group>
               <Box mt="xl">
