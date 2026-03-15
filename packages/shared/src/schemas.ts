@@ -280,6 +280,23 @@ export const ClassAssessmentHistoryResponseSchema = z.object({
   attempts: z.array(ClassAssessmentHistoryItemSchema)
 });
 
+export const ActivityItemSchema = z.object({
+  id: z.string().min(1),
+  action: z.string().min(1),
+  entity: z.string().min(1),
+  entityId: z.string().min(1).optional(),
+  result: z.enum(["success", "failure"]),
+  metadata: z.record(z.unknown()).optional(),
+  occurredAt: z.string().datetime()
+});
+
+export const ActivityResponseSchema = z.object({
+  activities: z.array(ActivityItemSchema)
+});
+
+export type ActivityItem = z.infer<typeof ActivityItemSchema>;
+export type ActivityResponse = z.infer<typeof ActivityResponseSchema>;
+
 export type LearnerRecord = z.infer<typeof LearnerSchema>;
 export type CreateLearnerRequest = z.infer<typeof CreateLearnerRequestSchema>;
 export type BatchCreateLearnersRequest = z.infer<typeof BatchCreateLearnersRequestSchema>;

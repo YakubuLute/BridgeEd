@@ -9,6 +9,9 @@ export const queryKeys = {
     emailLogin: () => ["auth", "email", "login"] as const,
     forgotPassword: () => ["auth", "email", "forgot-password"] as const
   },
+  activity: {
+    list: () => ["activity", "list"] as const
+  },
   classes: {
     list: () => ["classes", "list"] as const,
     create: () => ["classes", "create"] as const,
