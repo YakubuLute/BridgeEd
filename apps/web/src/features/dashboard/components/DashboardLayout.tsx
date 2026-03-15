@@ -229,13 +229,13 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps): JSX.E
             onClick={() => setMobileMenuOpen(false)}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold group relative ${
               active
-                ? "bg-[#F5F3FF] text-[#7C3AED]"
+                ? "bg-[#F5F3FF] text-[#EF4444]"
                 : "text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#111827]"
             }`}
           >
-            {active && <Box className="absolute left-0 w-1 h-6 bg-[#7C3AED] rounded-r-full" />}
+            {active && <Box className="absolute left-0 w-1 h-6 bg-[#EF4444] rounded-r-full" />}
             <Icon
-              className={`w-5 h-5 transition-colors ${active ? "text-[#7C3AED]" : "group-hover:text-[#7C3AED]"}`}
+              className={`w-5 h-5 transition-colors ${active ? "text-[#EF4444]" : "group-hover:text-[#EF4444]"}`}
             />
             <span className="text-[14px] leading-tight">{item.label}</span>
           </Link>
@@ -249,7 +249,7 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps): JSX.E
       {/* --- Mobile Header --- */}
       <header className="md:hidden flex items-center justify-between px-6 h-16 bg-white border-b border-[#E5E7EB] sticky top-0 z-40">
         <Group gap="xs">
-          <div className="w-8 h-8 rounded-lg bg-[#7C3AED] flex items-center justify-center shadow-md shadow-purple-100">
+          <div className="w-8 h-8 rounded-lg bg-[#EF4444] flex items-center justify-center shadow-md shadow-purple-100">
             <Text c="white" fw={800} fz={16} lh="1">
               B
             </Text>
@@ -270,7 +270,7 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps): JSX.E
       <aside className="hidden md:flex w-[260px] bg-white border-r border-[#E5E7EB] flex-col sticky top-0 h-screen z-30">
         <div className="h-20 flex items-center px-8">
           <Group gap="xs">
-            <div className="w-9 h-9 rounded-xl bg-[#7C3AED] flex items-center justify-center shadow-lg shadow-purple-100 transform -rotate-3">
+            <div className="w-9 h-9 rounded-xl bg-[#EF4444] flex items-center justify-center shadow-lg shadow-purple-100 transform -rotate-3">
               <Text c="white" fw={800} fz={18} lh="1">
                 B
               </Text>
@@ -304,8 +304,8 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps): JSX.E
       <div className="flex-1 flex flex-col min-w-0">
         {/* --- Top Navbar --- */}
         <header className="hidden md:flex h-20 bg-white border-b border-[#E5E7EB] items-center justify-between px-10 sticky top-0 z-20">
-          <div className="flex items-center bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-4 py-2 w-full max-w-md group focus-within:border-[#7C3AED] transition-colors">
-            <IconSearch className="w-4 h-4 text-[#94A3B8] group-focus-within:text-[#7C3AED]" />
+          <div className="flex items-center bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-4 py-2 w-full max-w-md group focus-within:border-[#EF4444] transition-colors">
+            <IconSearch className="w-4 h-4 text-[#94A3B8] group-focus-within:text-[#EF4444]" />
             <input
               type="text"
               placeholder="Search students, classes, results..."
@@ -369,7 +369,7 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps): JSX.E
         padding="md"
         title={
           <Group gap="xs">
-            <div className="w-8 h-8 rounded-lg bg-[#7C3AED] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#EF4444] flex items-center justify-center">
               <Text c="white" fw={800} fz={16} lh="1">
                 B
               </Text>
