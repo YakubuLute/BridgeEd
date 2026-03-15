@@ -480,10 +480,12 @@ export const LandingPage = (): JSX.Element => {
                   key={i}
                   p={32}
                   radius="20px"
-                  className="bg-white border border-[#e2e8f0] flex flex-col items-center justify-center text-center shadow-sm"
+                  className="bg-white border border-[#e2e8f0] flex flex-col items-center justify-center text-center shadow-sm min-h-[200px]"
                 >
-                  <Box mb={24}>{tech.icon}</Box>
-                  <Text fw={600} fz="md" c="#334155" className="max-w-[160px]">
+                  <Box mb={24} className="flex items-center justify-center">
+                    {tech.icon}
+                  </Box>
+                  <Text fw={800} fz="md" c="#334155" className="max-w-[160px] leading-snug">
                     {tech.title}
                   </Text>
                 </Paper>
@@ -520,23 +522,57 @@ export const LandingPage = (): JSX.Element => {
                 Empowering educational institutions with AI-driven tools to streamline operations
                 and enhance learning environments.
               </Text>
-              <Group gap="md" mt="sm">
-                {["twitter", "linkedin", "facebook"].map((social) => (
-                  <Box
-                    key={social}
-                    className="w-4 h-4 text-[#94a3b8] hover:text-[#ea580c] cursor-pointer"
+              <Group gap="lg" mt={24}>
+                <Box className="text-[#94a3b8] hover:text-[#ea580c] cursor-pointer transition-colors">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2z" />
-                    </svg>
-                  </Box>
-                ))}
+                    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
+                  </svg>
+                </Box>
+                <Box className="text-[#94a3b8] hover:text-[#ea580c] cursor-pointer transition-colors">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                    <rect width="4" height="12" x="2" y="9" />
+                    <circle cx="4" cy="4" r="2" />
+                  </svg>
+                </Box>
+                <Box className="text-[#94a3b8] hover:text-[#ea580c] cursor-pointer transition-colors">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                  </svg>
+                </Box>
               </Group>
             </Stack>
 
             {["Product", "Resources", "Company"].map((title, i) => (
               <Stack key={title} gap="lg">
-                <Text fw={900} fz="sm" c="#1e293b">
+                <Text fw={900} fz="md" c="#1e293b">
                   {title}
                 </Text>
                 <Stack gap="xs">
