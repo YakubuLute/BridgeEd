@@ -2,6 +2,8 @@ import { API_VERSION, type ApiErrorPayload } from "@bridgeed/shared";
 import axios from "axios";
 import type { AxiosError, AxiosInstance } from "axios";
 
+import { clearSession } from "../utils/session";
+
 const DEFAULT_REQUEST_TIMEOUT_MS = 10_000;
 const SESSION_STORAGE_KEY = "bridgeed.session";
 
@@ -81,6 +83,13 @@ const toApiClientError = (error: unknown): ApiClientError => {
     const status = axiosError.response?.status;
     const responseError = axiosError.response?.data?.error;
     const isNetworkError = !axiosError.response;
+
+    if (status === 401) {
+      clearSession();
+      if (typeof window !== "undefined" && window.location.pathname !== "/") {
+        window.location.href = "/";
+      }
+    }
 
     if (axiosError.code === "ECONNABORTED") {
       return new ApiClientError({
