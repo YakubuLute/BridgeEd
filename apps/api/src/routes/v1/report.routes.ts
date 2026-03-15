@@ -29,6 +29,43 @@ router.get("/reports/teacher", requireAuth, requireRoles(Role.Teacher), async (r
     const assessedCount = new Set(diagnostics.map(d => d.learnerId)).size;
     const coverage = learners.length > 0 ? Math.round((assessedCount / learners.length) * 100) : 0;
 
+    const skillPerformanceMap = new Map<string, { total: number, count: number }>();
+    const trendMap = new Map<string, { total: number, count: number, date: Date }>();
+
+    diagnostics.forEach(d => {
+      // Skill performance
+      const skillCurrent = skillPerformanceMap.get(d.skillName) || { total: 0, count: 0 };
+      skillPerformanceMap.set(d.skillName, { total: skillCurrent.total + d.masteryScore, count: skillCurrent.count + 1 });
+      
+      // Mastery trend
+      const monthKey = `${d.measuredAt.getFullYear()}-${d.measuredAt.getMonth()}`;
+      const trendCurrent = trendMap.get(monthKey) || { total: 0, count: 0, date: d.measuredAt };
+      trendMap.set(monthKey, { total: trendCurrent.total + d.masteryScore, count: trendCurrent.count + 1, date: trendCurrent.date });
+    });
+
+    const skillPerformance = Array.from(skillPerformanceMap.entries())
+      .map(([skill, data]) => ({
+        skill,
+        mastery: Math.round(data.total / data.count)
+      }))
+      .slice(0, 5); // Display top 5 skills
+
+    let masteryTrend = Array.from(trendMap.values())
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .map(data => ({
+        label: data.date.toLocaleString('default', { month: 'short' }),
+        value: Math.round(data.total / data.count),
+        timestamp: data.date.toISOString()
+      }));
+
+    if (masteryTrend.length === 0) {
+      masteryTrend = [
+        { label: "Jan", value: 0, timestamp: new Date(2026, 0, 1).toISOString() },
+        { label: "Feb", value: 0, timestamp: new Date(2026, 1, 1).toISOString() },
+        { label: "Mar", value: 0, timestamp: new Date(2026, 2, 1).toISOString() }
+      ];
+    }
+
     const response = {
       summary: {
         totalClasses: classes.length,
@@ -36,17 +73,8 @@ router.get("/reports/teacher", requireAuth, requireRoles(Role.Teacher), async (r
         avgMastery,
         diagnosticCoverage: coverage
       },
-      skillPerformance: [
-        { skill: "Phonological Awareness", mastery: 82 },
-        { skill: "Word Recognition", mastery: 64 },
-        { skill: "Number Sense", mastery: 75 },
-        { skill: "Operations", mastery: 48 }
-      ],
-      masteryTrend: [
-        { label: "Jan", value: 45, timestamp: new Date(2026, 0, 1).toISOString() },
-        { label: "Feb", value: 52, timestamp: new Date(2026, 1, 1).toISOString() },
-        { label: "Mar", value: avgMastery || 58, timestamp: new Date().toISOString() }
-      ]
+      skillPerformance,
+      masteryTrend
     };
 
     res.status(200).json(successResponse(TeacherReportResponseSchema.parse(response)));

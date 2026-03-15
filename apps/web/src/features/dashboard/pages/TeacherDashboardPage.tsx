@@ -1,5 +1,6 @@
-import { Title, Text, SimpleGrid, Paper, Group, Box, Badge, Stack, Button, Progress } from "@mantine/core";
+import { Title, Text, SimpleGrid, Paper, Group, Box, Badge, Stack, Button, Progress, Loader, Center } from "@mantine/core";
 import { useClassesQuery } from "../../../api/hooks/useClassQueries";
+import { useTeacherReportQuery } from "../../../api/hooks/useReportQueries";
 
 // --- Icons ---
 const IconUsers = () => (
@@ -27,14 +28,29 @@ const IconArrowUpRight = () => (
 );
 
 export const TeacherDashboardPage = (): JSX.Element => {
-  const { data: classes, isLoading } = useClassesQuery();
+  const { data: classes, isLoading: classesLoading } = useClassesQuery();
+  const { data: report, isLoading: reportLoading } = useTeacherReportQuery();
 
   const stats = [
-    { label: "Total Students", value: "84", icon: <IconUsers />, trend: "+12%", color: "blue" },
-    { label: "Avg. Mastery", value: "72%", icon: <IconArrowUpRight />, trend: "+5.4%", color: "teal" },
-    { label: "Pending Screeners", value: "18", icon: <IconClipboard />, trend: "-2", color: "orange" },
-    { label: "At-Risk Students", value: "7", icon: <IconAlertCircle />, trend: "High Priority", color: "red" },
+    { label: "Total Students", value: report?.summary?.totalStudents?.toString() || "-", icon: <IconUsers />, trend: "Active", color: "blue" },
+    { label: "Avg. Mastery", value: `${report?.summary?.avgMastery || 0}%`, icon: <IconArrowUpRight />, trend: "Current", color: "teal" },
+    { label: "Diagnostic Coverage", value: `${report?.summary?.diagnosticCoverage || 0}%`, icon: <IconClipboard />, trend: "Completion", color: "orange" },
+    { label: "Total Classes", value: report?.summary?.totalClasses?.toString() || "-", icon: <IconUsers />, trend: "Managed", color: "indigo" },
   ];
+
+  if (classesLoading || reportLoading) {
+    return (
+      <Center py={100}>
+        <Loader color="orange" size="xl" />
+      </Center>
+    );
+  }
+
+  const getMasteryColor = (mastery: number) => {
+    if (mastery >= 75) return "teal";
+    if (mastery >= 50) return "orange";
+    return "red";
+  };
 
   return (
     <Stack gap={32}>
@@ -95,19 +111,13 @@ export const TeacherDashboardPage = (): JSX.Element => {
           </Group>
 
           <Stack gap="lg">
-            {[
-              { skill: "Phonological Awareness", mastery: 82, color: "teal" },
-              { skill: "Word Recognition", mastery: 64, color: "orange" },
-              { skill: "Number Sense", mastery: 75, color: "blue" },
-              { skill: "Addition & Subtraction", mastery: 42, color: "red" },
-              { skill: "Oral Reading Fluency", mastery: 58, color: "indigo" },
-            ].map((skill, i) => (
+            {report?.skillPerformance?.map((skill, i) => (
               <Stack key={i} gap={8}>
                 <Group justify="space-between">
                   <Text fz="sm" fw={700} c="#475569">{skill.skill}</Text>
                   <Text fz="sm" fw={800} c={skill.mastery < 50 ? "red" : "#1e293b"}>{skill.mastery}%</Text>
                 </Group>
-                <Progress value={skill.mastery} color={skill.color} size="md" radius="xl" />
+                <Progress value={skill.mastery} color={getMasteryColor(skill.mastery)} size="md" radius="xl" />
               </Stack>
             ))}
           </Stack>
@@ -159,7 +169,7 @@ export const TeacherDashboardPage = (): JSX.Element => {
       <Paper p="xl" radius="24px" className="border border-[#e2e8f0] shadow-sm">
         <Title order={3} className="text-xl font-black text-[#1e293b] mb-xl">Your Classes</Title>
         <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
-          {isLoading ? (
+          {classesLoading ? (
             <Text>Loading classes...</Text>
           ) : classes?.map((cls) => (
             <Paper key={cls.id} p="xl" radius="20px" className="bg-[#f8fafc] border border-[#e2e8f0] hover:border-[#ea580c] transition-colors cursor-pointer group">
