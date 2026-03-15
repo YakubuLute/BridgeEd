@@ -10,6 +10,7 @@ import type {
 import { queryKeys } from "../query-keys";
 import {
   createClass,
+  getClassById,
   getClassAssessmentHistory,
   getClassAssessmentOverview,
   getClassLearners,
@@ -28,6 +29,13 @@ export const useClassesQuery = (): UseQueryResult<ClassRecord[], Error> =>
   useQuery({
     queryKey: queryKeys.classes.list(),
     queryFn: getClasses
+  });
+
+export const useClassDetailQuery = (classId: string): UseQueryResult<ClassRecord, Error> =>
+  useQuery({
+    queryKey: queryKeys.classes.detail(classId),
+    queryFn: () => getClassById(classId),
+    enabled: classId.length > 0
   });
 
 export const useCreateClassMutation = (

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Title,
   Text,
@@ -44,6 +45,7 @@ const IconFilter = () => (
 );
 
 export const ClassesPage = (): JSX.Element => {
+  const navigate = useNavigate();
   const { data: classes, isLoading } = useClassesQuery();
   const [opened, { open, close }] = useDisclosure(false);
   const [search, setSearch] = useState("");
@@ -122,6 +124,7 @@ export const ClassesPage = (): JSX.Element => {
               p={0}
               radius="24px"
               className="border border-[#e2e8f0] shadow-sm hover:shadow-md hover:border-[#ea580c] transition-all cursor-pointer group overflow-hidden bg-white"
+              onClick={() => navigate(`/classes/${cls.classId}/learners`)}
             >
               <Box className="p-8">
                 <Group justify="space-between" mb="xl">

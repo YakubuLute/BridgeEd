@@ -5,6 +5,7 @@ import {
   createClassController,
   getClassAssessmentHistoryController,
   getClassAssessmentOverviewController,
+  getClassByIdController,
   listClassLearnersController,
   listClassesController,
   updateClassController
@@ -15,6 +16,7 @@ const router = Router();
 
 router.post("/classes", requireAuth, requireRoles(Role.Teacher), createClassController);
 router.get("/classes", requireAuth, requireRoles(Role.Teacher), listClassesController);
+router.get("/classes/:classId", requireAuth, requireRoles(Role.Teacher), getClassByIdController);
 router.patch("/classes/:classId", requireAuth, requireRoles(Role.Teacher), updateClassController);
 router.get("/classes/:classId/learners", requireAuth, requireRoles(Role.Teacher), listClassLearnersController);
 router.get(

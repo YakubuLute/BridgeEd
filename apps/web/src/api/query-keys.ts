@@ -14,6 +14,7 @@ export const queryKeys = {
   },
   classes: {
     list: () => ["classes", "list"] as const,
+    detail: (classId: string) => ["classes", "detail", classId] as const,
     create: () => ["classes", "create"] as const,
     update: () => ["classes", "update"] as const,
     learners: (classId: string) => ["classes", classId, "learners"] as const,

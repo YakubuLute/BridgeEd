@@ -17,6 +17,7 @@ import { TeacherDashboardPage } from "./features/dashboard/pages/TeacherDashboar
 import { SchoolAdminDashboardPage } from "./features/dashboard/pages/SchoolAdminDashboardPage";
 import { NationalAdminDashboardPage } from "./features/dashboard/pages/NationalAdminDashboardPage";
 import { ClassesPage } from "./features/dashboard/pages/ClassesPage";
+import { ClassLearnersPage } from "./features/dashboard/pages/ClassLearnersPage";
 import { AssessmentsPage } from "./features/dashboard/pages/AssessmentsPage";
 import { ActivityPage } from "./features/dashboard/pages/ActivityPage";
 import { ReportsPage } from "./features/dashboard/pages/ReportsPage";

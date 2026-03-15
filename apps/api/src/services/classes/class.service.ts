@@ -177,6 +177,21 @@ export const classService = {
     return classes.map((item) => mapClassRecord(item));
   },
 
+  async getClassById(auth: AuthContext, classId: string): Promise<ClassRecord> {
+    const schoolId = getTeacherSchoolId(auth);
+    const classRecord = await ClassModel.findOne({ classId }).exec();
+
+    if (!classRecord) {
+      throw new AppError(404, "CLASS_NOT_FOUND", "Class was not found.");
+    }
+
+    if (classRecord.schoolId !== schoolId || classRecord.teacherId !== auth.userId) {
+      throw new AppError(403, "FORBIDDEN", "You do not have access to this class.");
+    }
+
+    return mapClassRecord(classRecord);
+  },
+
   async updateClass(auth: AuthContext, classId: string, payload: UpdateClassRequest): Promise<ClassRecord> {
     const schoolId = getTeacherSchoolId(auth);
 

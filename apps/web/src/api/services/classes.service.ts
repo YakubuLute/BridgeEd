@@ -31,6 +31,17 @@ export const getClasses = async (): Promise<ClassRecord[]> => {
   return parseResult.data.classes;
 };
 
+export const getClassById = async (classId: string): Promise<ClassRecord> => {
+  const response = await apiClient.get<ApiEnvelope>(`/classes/${classId}`);
+  const data = readDataRecord(response.data);
+  const parseResult = ClassSchema.safeParse(data);
+  if (!parseResult.success) {
+    throw new Error("Invalid class response.");
+  }
+
+  return parseResult.data;
+};
+
 export const createClass = async (payload: CreateClassInput): Promise<ClassRecord> => {
   const requestParse = CreateClassRequestSchema.safeParse(payload);
   if (!requestParse.success) {

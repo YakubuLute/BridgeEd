@@ -54,6 +54,22 @@ export const listClassesController: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const getClassByIdController: RequestHandler = async (req, res, next) => {
+  try {
+    const classIdParam = req.params.classId;
+    const classId = Array.isArray(classIdParam) ? classIdParam[0] : classIdParam;
+    if (!classId) {
+      throw new AppError(400, "VALIDATION_ERROR", "Class identifier is required.");
+    }
+
+    const result = await classService.getClassById(getAuthContext(req.auth), classId);
+    const validatedResult = parseWithSchema("class response", ClassSchema.safeParse(result));
+    res.status(200).json(successResponse(validatedResult));
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateClassController: RequestHandler = async (req, res, next) => {
   try {
     const payload = parseWithSchema("update class", UpdateClassRequestSchema.safeParse(req.body));
