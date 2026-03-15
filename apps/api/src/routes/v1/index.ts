@@ -9,6 +9,7 @@ import learnerRoutes from "./learner.routes";
 import schoolRoutes from "./school.routes";
 import systemRoutes from "./system.routes";
 import assessmentRoutes from "./assessment.routes";
+import notificationRoutes from "./notification.routes";
 
 const router = Router();
 
@@ -21,5 +22,6 @@ router.use(classRoutes);
 router.use(learnerRoutes);
 router.use(schoolRoutes);
 router.use(assessmentRoutes);
+router.use(notificationRoutes);
 
 export default router;

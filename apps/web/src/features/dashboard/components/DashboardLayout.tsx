@@ -16,6 +16,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { clearSession } from "../../../utils/session";
 import { useProfileQuery } from "../../../api/hooks/useUserQueries";
+import { NotificationCenter } from "./NotificationCenter";
 
 type DashboardLayoutProps = {
   children: ReactNode;
@@ -316,11 +317,7 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps): JSX.E
           </div>
 
           <Group gap="lg">
-            <Indicator size={8} offset={4} color="orange" withBorder processing>
-              <ActionIcon variant="subtle" color="gray" size="lg" radius="md">
-                <IconBell className="w-5 h-5" />
-              </ActionIcon>
-            </Indicator>
+            <NotificationCenter />
 
             <Menu position="bottom-end" shadow="md" width={200} radius="md">
               <Menu.Target>

@@ -467,3 +467,17 @@ export const JoinSessionRequestSchema = z.object({
 export type AssessmentSession = z.infer<typeof AssessmentSessionSchema>;
 export type CreateAssessmentSessionRequest = z.infer<typeof CreateAssessmentSessionRequestSchema>;
 export type JoinSessionRequest = z.infer<typeof JoinSessionRequestSchema>;
+
+export const NotificationSchema = z.object({
+  id: z.string().min(1),
+  notificationId: z.string().min(1),
+  userId: z.string().min(1),
+  title: z.string().min(1),
+  message: z.string().min(1),
+  type: z.enum(["info", "success", "warning", "error"]),
+  isRead: z.boolean(),
+  metadata: z.record(z.unknown()).optional(),
+  createdAt: z.string().datetime()
+});
+
+export type Notification = z.infer<typeof NotificationSchema>;
