@@ -18,7 +18,8 @@ import {
 } from "@mantine/core";
 import {
   useClassesQuery,
-  useClassAssessmentOverviewQuery
+  useClassAssessmentOverviewQuery,
+  useClassAssessmentHistoryQuery
 } from "../../../api/hooks/useClassQueries";
 
 // --- Icons ---
@@ -95,6 +96,9 @@ export const AssessmentsPage = (): JSX.Element => {
   const { data: overview, isLoading: overviewLoading } = useClassAssessmentOverviewQuery(
     selectedClassId || ""
   );
+  const { data: history, isLoading: historyLoading } = useClassAssessmentHistoryQuery(
+    selectedClassId || ""
+  );
 
   const assessmentTypes = [
     {
@@ -122,9 +126,9 @@ export const AssessmentsPage = (): JSX.Element => {
 
   return (
     <Stack gap={32}>
-      <Group justify="space-between" align="flex-end">
+      <Group align="flex-end" justify="space-between">
         <Stack gap={4}>
-          <Title order={1} className="text-3xl font-black text-[#1e293b] tracking-tight">
+          <Title className="text-3xl font-black text-[#1e293b] tracking-tight" order={1}>
             Assessments
           </Title>
           <Text c="#64748b" fw={500}>
@@ -149,12 +153,12 @@ export const AssessmentsPage = (): JSX.Element => {
         <Tabs.Panel value="available">
           <Stack gap="xl">
             <Group justify="space-between">
-              <Title order={2} className="text-2xl font-black text-[#1e293b]">
+              <Title className="text-2xl font-black text-[#1e293b]" order={2}>
                 Available Diagnostics
               </Title>
               <Select
                 className="w-64"
-                data={classes?.map(c => ({ value: c.classId, label: c.name })) || []}
+                data={classes?.map((c) => ({ value: c.classId, label: c.name })) || []}
                 onChange={setSelectedClassId}
                 placeholder="Select a class to start"
                 radius="md"
@@ -165,8 +169,8 @@ export const AssessmentsPage = (): JSX.Element => {
             <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="xl">
               {assessmentTypes.map((type, i) => (
                 <Paper
-                  key={i}
                   className="border border-[#e2e8f0] shadow-sm flex flex-col justify-between hover:border-[#ea580c] transition-colors bg-white"
+                  key={i}
                   p="xl"
                   radius="24px"
                 >
@@ -174,19 +178,19 @@ export const AssessmentsPage = (): JSX.Element => {
                     <Group justify="space-between" mb="xl">
                       <Group gap={8}>
                         {type.tags.map((tag) => (
-                          <Badge key={tag} color={type.color} size="sm" variant="light">
+                          <Badge color={type.color} key={tag} size="sm" variant="light">
                             {tag}
                           </Badge>
                         ))}
                       </Group>
-                      <Text c="#94a3b8" fz="xs" fw={800}>
+                      <Text c="#94a3b8" fw={800} fz="xs">
                         {type.duration}
                       </Text>
                     </Group>
                     <Title className="text-xl font-black text-[#1e293b] mb-4" order={3}>
                       {type.title}
                     </Title>
-                    <Text c="#64748b" fz="sm" fw={500} lh="1.6" mb="xl">
+                    <Text c="#64748b" fw={500} fz="sm" lh="1.6" mb="xl">
                       {type.desc}
                     </Text>
                   </Box>
@@ -209,12 +213,12 @@ export const AssessmentsPage = (): JSX.Element => {
         <Tabs.Panel value="tracking">
           <Stack gap="xl">
             <Group justify="space-between">
-              <Title order={2} className="text-2xl font-black text-[#1e293b]">
+              <Title className="text-2xl font-black text-[#1e293b]" order={2}>
                 Class Insights
               </Title>
               <Select
                 className="w-64"
-                data={classes?.map(c => ({ value: c.classId, label: c.name })) || []}
+                data={classes?.map((c) => ({ value: c.classId, label: c.name })) || []}
                 onChange={setSelectedClassId}
                 placeholder="Select Class"
                 radius="md"
@@ -247,7 +251,7 @@ export const AssessmentsPage = (): JSX.Element => {
               <Stack gap="xl">
                 <SimpleGrid cols={{ base: 1, md: 4 }} spacing="lg">
                   <Paper className="border border-[#e2e8f0] bg-white" p="lg" radius="xl">
-                    <Text c="#94a3b8" fz="xs" fw={800} mb="xs">
+                    <Text c="#94a3b8" fw={800} fz="xs" mb="xs">
                       ASSESSED
                     </Text>
                     <Text fz="24px" fw={900}>
@@ -259,7 +263,7 @@ export const AssessmentsPage = (): JSX.Element => {
                     </Text>
                   </Paper>
                   <Paper className="border border-[#e2e8f0] bg-white" p="lg" radius="xl">
-                    <Text c="red" fz="xs" fw={800} mb="xs">
+                    <Text c="red" fw={800} fz="xs" mb="xs">
                       AT RISK
                     </Text>
                     <Text c="red" fz="24px" fw={900}>
@@ -267,7 +271,7 @@ export const AssessmentsPage = (): JSX.Element => {
                     </Text>
                   </Paper>
                   <Paper className="border border-[#e2e8f0] bg-white" p="lg" radius="xl">
-                    <Text c="orange" fz="xs" fw={800} mb="xs">
+                    <Text c="orange" fw={800} fz="xs" mb="xs">
                       NEEDS SUPPORT
                     </Text>
                     <Text c="orange" fz="24px" fw={900}>
@@ -275,7 +279,7 @@ export const AssessmentsPage = (): JSX.Element => {
                     </Text>
                   </Paper>
                   <Paper className="border border-[#e2e8f0] bg-white" p="lg" radius="xl">
-                    <Text c="green" fz="xs" fw={800} mb="xs">
+                    <Text c="green" fw={800} fz="xs" mb="xs">
                       ON TRACK
                     </Text>
                     <Text c="green" fz="24px" fw={900}>
@@ -323,8 +327,8 @@ export const AssessmentsPage = (): JSX.Element => {
                       <tbody>
                         {overview.learners.map((learner) => (
                           <tr
-                            key={learner.learnerId}
                             className="border-b border-[#f1f5f9] last:border-0 hover:bg-[#f8fafc] transition-colors"
+                            key={learner.learnerId}
                           >
                             <td className="py-4 font-bold text-[#1e293b]">{learner.name}</td>
                             <td className="py-4">
@@ -344,7 +348,7 @@ export const AssessmentsPage = (): JSX.Element => {
                               </Badge>
                             </td>
                             <td className="py-4">
-                              <Group className="w-32" gap="xs">
+                              <Group gap="xs" className="w-32">
                                 <Progress
                                   className="flex-1"
                                   color="blue"
@@ -352,13 +356,13 @@ export const AssessmentsPage = (): JSX.Element => {
                                   size="xs"
                                   value={learner.literacyScore || 0}
                                 />
-                                <Text c="#1e293b" fz="xs" fw={800}>
+                                <Text c="#1e293b" fw={800} fz="xs">
                                   {learner.literacyScore || 0}%
                                 </Text>
                               </Group>
                             </td>
                             <td className="py-4">
-                              <Group className="w-32" gap="xs">
+                              <Group gap="xs" className="w-32">
                                 <Progress
                                   className="flex-1"
                                   color="teal"
@@ -366,7 +370,7 @@ export const AssessmentsPage = (): JSX.Element => {
                                   size="xs"
                                   value={learner.numeracyScore || 0}
                                 />
-                                <Text c="#1e293b" fz="xs" fw={800}>
+                                <Text c="#1e293b" fw={800} fz="xs">
                                   {learner.numeracyScore || 0}%
                                 </Text>
                               </Group>
@@ -395,20 +399,121 @@ export const AssessmentsPage = (): JSX.Element => {
         </Tabs.Panel>
 
         <Tabs.Panel value="history">
-          <Paper
-            className="border-2 border-dashed border-[#e2e8f0] bg-[#f8fafc]"
-            p={80}
-            radius="24px"
-          >
-            <Center>
-              <Stack align="center" gap="md">
-                <IconHistory />
-                <Text c="#64748b" fw={700}>
-                  Assessment history logs will appear here.
-                </Text>
-              </Stack>
-            </Center>
-          </Paper>
+          <Stack gap="xl">
+            <Group justify="space-between">
+              <Title className="text-2xl font-black text-[#1e293b]" order={2}>
+                Assessment History
+              </Title>
+              <Select
+                className="w-64"
+                data={classes?.map((c) => ({ value: c.classId, label: c.name })) || []}
+                onChange={setSelectedClassId}
+                placeholder="Select Class"
+                radius="md"
+                value={selectedClassId}
+              />
+            </Group>
+
+            {!selectedClassId ? (
+              <Paper
+                className="border-2 border-dashed border-[#e2e8f0] bg-[#f8fafc]"
+                p={80}
+                radius="24px"
+              >
+                <Center>
+                  <Stack align="center" gap="md">
+                    <Box className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#94a3b8]">
+                      <IconHistory />
+                    </Box>
+                    <Text c="#64748b" fw={700}>
+                      Select a class to view assessment history
+                    </Text>
+                  </Stack>
+                </Center>
+              </Paper>
+            ) : historyLoading ? (
+              <Center py={100}>
+                <Loader color="orange" />
+              </Center>
+            ) : history && history.attempts.length > 0 ? (
+              <Paper
+                className="border border-[#e2e8f0] bg-white overflow-hidden"
+                p="xl"
+                radius="24px"
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#f1f5f9]">
+                        <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                          Learner
+                        </th>
+                        <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                          Assessment
+                        </th>
+                        <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                          Score
+                        </th>
+                        <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="pb-4"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.attempts.map((attempt) => (
+                        <tr
+                          className="border-b border-[#f1f5f9] last:border-0 hover:bg-[#f8fafc] transition-colors"
+                          key={attempt.attemptId}
+                        >
+                          <td className="py-4 font-bold text-[#1e293b]">{attempt.learnerName}</td>
+                          <td className="py-4 text-sm font-semibold text-[#475569]">
+                            {attempt.assessmentName}
+                          </td>
+                          <td className="py-4">
+                            <Badge
+                              color={
+                                attempt.score !== null && attempt.score > 70
+                                  ? "green"
+                                  : attempt.score !== null && attempt.score > 50
+                                    ? "orange"
+                                    : "red"
+                              }
+                              variant="light"
+                            >
+                              {attempt.score !== null ? `${attempt.score}%` : "N/A"}
+                            </Badge>
+                          </td>
+                          <td className="py-4 text-xs font-bold text-[#64748b]">
+                            {new Date(attempt.assessedAt).toLocaleString()}
+                          </td>
+                          <td className="py-4 text-right">
+                            <Button color="orange" fw={700} size="xs" variant="subtle">
+                              View Details
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Paper>
+            ) : (
+              <Paper
+                className="border-2 border-dashed border-[#e2e8f0] bg-[#f8fafc]"
+                p={80}
+                radius="24px"
+              >
+                <Center>
+                  <Stack align="center" gap="md">
+                    <Text c="#64748b" fw={700}>
+                      No assessment attempts found for this class yet.
+                    </Text>
+                  </Stack>
+                </Center>
+              </Paper>
+            )}
+          </Stack>
         </Tabs.Panel>
       </Tabs>
     </Stack>
