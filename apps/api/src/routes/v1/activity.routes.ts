@@ -3,7 +3,7 @@ import { Role } from "@bridgeed/shared";
 import { AuditLogModel } from "../../models/audit-log.model";
 import { requireAuth } from "../../middlewares/auth.middleware";
 import { successResponse } from "../../utils/api-response";
-import { getAuthContext } from "../../controllers/auth.controller";
+import { getAuthContext } from "../../controllers/class.controller";
 
 const router = Router();
 

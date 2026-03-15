@@ -22,7 +22,7 @@ const parseWithSchema = <T>(schemaName: string, parseResult: { success: boolean;
   return parseResult.data as T;
 };
 
-const getAuthContext = (auth: AuthContext | undefined): AuthContext => {
+export const getAuthContext = (auth: AuthContext | undefined): AuthContext => {
   if (!auth) {
     throw new AppError(401, "UNAUTHORIZED", "Authentication is required.");
   }

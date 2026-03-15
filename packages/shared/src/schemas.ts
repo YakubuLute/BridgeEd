@@ -294,8 +294,46 @@ export const ActivityResponseSchema = z.object({
   activities: z.array(ActivityItemSchema)
 });
 
+export const ReportTrendPointSchema = z.object({
+  label: z.string().min(1),
+  value: z.number().min(0).max(100),
+  timestamp: z.string().datetime()
+});
+
+export const TeacherReportResponseSchema = z.object({
+  summary: z.object({
+    totalClasses: z.number().int().nonnegative(),
+    totalStudents: z.number().int().nonnegative(),
+    avgMastery: z.number().min(0).max(100),
+    diagnosticCoverage: z.number().min(0).max(100)
+  }),
+  skillPerformance: z.array(z.object({
+    skill: z.string().min(1),
+    mastery: z.number().min(0).max(100)
+  })),
+  masteryTrend: z.array(ReportTrendPointSchema)
+});
+
+export const SchoolReportResponseSchema = z.object({
+  summary: z.object({
+    totalTeachers: z.number().int().nonnegative(),
+    totalStudents: z.number().int().nonnegative(),
+    coveragePercent: z.number().min(0).max(100),
+    atRiskPercent: z.number().min(0).max(100)
+  }),
+  gradePerformance: z.array(z.object({
+    grade: z.string().min(1),
+    literacy: z.number().min(0).max(100),
+    numeracy: z.number().min(0).max(100)
+  })),
+  regionalRank: z.number().int().positive().optional()
+});
+
 export type ActivityItem = z.infer<typeof ActivityItemSchema>;
 export type ActivityResponse = z.infer<typeof ActivityResponseSchema>;
+export type TeacherReportResponse = z.infer<typeof TeacherReportResponseSchema>;
+export type SchoolReportResponse = z.infer<typeof SchoolReportResponseSchema>;
+export type ReportTrendPoint = z.infer<typeof ReportTrendPointSchema>;
 
 export type LearnerRecord = z.infer<typeof LearnerSchema>;
 export type CreateLearnerRequest = z.infer<typeof CreateLearnerRequestSchema>;
