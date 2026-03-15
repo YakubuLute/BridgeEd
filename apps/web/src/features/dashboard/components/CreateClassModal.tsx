@@ -1,5 +1,5 @@
+import { useState } from "react";
 import { Modal, Button, TextInput, Select, Stack, Group } from "@mantine/core";
-import { useForm } from "@mantine/form";
 import { GradeLevel } from "@bridgeed/shared";
 import { useCreateClassMutation } from "../../../api/hooks/useClassQueries";
 
@@ -9,46 +9,67 @@ type CreateClassModalProps = {
 };
 
 export const CreateClassModal = ({ opened, onClose }: CreateClassModalProps) => {
+  const [name, setName] = useState("");
+  const [gradeLevel, setGradeLevel] = useState<GradeLevel | "">("");
+  const [subject, setSubject] = useState("");
+  const [academicYear, setAcademicYear] = useState(new Date().getFullYear().toString());
+  const [error, setError] = useState<string | null>(null);
+
   const createClassMutation = useCreateClassMutation({
     onSuccess: () => {
-      onClose();
-      form.reset();
+      handleClose();
     }
   });
 
-  const form = useForm({
-    initialValues: {
-      name: "",
-      gradeLevel: "" as GradeLevel,
-      subject: "",
-      academicYear: new Date().getFullYear().toString()
-    },
-    validate: {
-      name: (value: string) => (value.length < 2 ? "Name must have at least 2 characters" : null),
-      gradeLevel: (value: GradeLevel | "") => (!value ? "Grade level is required" : null)
-    }
-  });
+  const handleClose = () => {
+    setName("");
+    setGradeLevel("");
+    setSubject("");
+    setAcademicYear(new Date().getFullYear().toString());
+    setError(null);
+    onClose();
+  };
 
-  const handleSubmit = (values: typeof form.values) => {
-    createClassMutation.mutate(values);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (name.length < 2) {
+      setError("Name must have at least 2 characters");
+      return;
+    }
+
+    if (!gradeLevel) {
+      setError("Grade level is required");
+      return;
+    }
+
+    createClassMutation.mutate({
+      name,
+      gradeLevel: gradeLevel as GradeLevel,
+      subject: subject || undefined,
+      academicYear: academicYear || undefined
+    });
   };
 
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      onClose={handleClose}
       title={<span className="font-black text-xl text-[#1e293b]">Create New Class</span>}
       centered
       radius="lg"
       padding="xl"
     >
-      <form onSubmit={form.onSubmit(handleSubmit)}>
+      <form onSubmit={handleSubmit}>
         <Stack gap="md">
           <TextInput
             label="Class Name"
             placeholder="e.g. JHS 1A, Grade 4 Blue"
             required
-            {...form.getInputProps("name")}
+            value={name}
+            onChange={(e) => setName(e.currentTarget.value)}
+            error={error === "Name must have at least 2 characters"}
             styles={{
               input: { height: "50px", border: "2px solid #E2E8F0" },
               label: { fontWeight: 700, marginBottom: "4px", fontSize: "14px", color: "#64748b" }
@@ -60,7 +81,9 @@ export const CreateClassModal = ({ opened, onClose }: CreateClassModalProps) => 
             placeholder="Select grade level"
             required
             data={Object.values(GradeLevel).map((v) => ({ value: v, label: v }))}
-            {...form.getInputProps("gradeLevel")}
+            value={gradeLevel}
+            onChange={(value) => setGradeLevel(value as GradeLevel)}
+            error={error === "Grade level is required"}
             styles={{
               input: { height: "50px", border: "2px solid #E2E8F0" },
               label: { fontWeight: 700, marginBottom: "4px", fontSize: "14px", color: "#64748b" }
@@ -70,7 +93,8 @@ export const CreateClassModal = ({ opened, onClose }: CreateClassModalProps) => 
           <TextInput
             label="Subject (Optional)"
             placeholder="e.g. Mathematics, English"
-            {...form.getInputProps("subject")}
+            value={subject}
+            onChange={(e) => setSubject(e.currentTarget.value)}
             styles={{
               input: { height: "50px", border: "2px solid #E2E8F0" },
               label: { fontWeight: 700, marginBottom: "4px", fontSize: "14px", color: "#64748b" }
@@ -80,7 +104,8 @@ export const CreateClassModal = ({ opened, onClose }: CreateClassModalProps) => 
           <TextInput
             label="Academic Year"
             placeholder="e.g. 2026"
-            {...form.getInputProps("academicYear")}
+            value={academicYear}
+            onChange={(e) => setAcademicYear(e.currentTarget.value)}
             styles={{
               input: { height: "50px", border: "2px solid #E2E8F0" },
               label: { fontWeight: 700, marginBottom: "4px", fontSize: "14px", color: "#64748b" }
@@ -88,7 +113,7 @@ export const CreateClassModal = ({ opened, onClose }: CreateClassModalProps) => 
           />
 
           <Group justify="flex-end" mt="xl">
-            <Button variant="subtle" color="gray" onClick={onClose} fw={700}>
+            <Button variant="subtle" color="gray" onClick={handleClose} fw={700}>
               Cancel
             </Button>
             <Button
