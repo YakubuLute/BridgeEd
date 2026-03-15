@@ -9,7 +9,9 @@ export const HealthResponseSchema = z.object({
 
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;
 
-export const OtpPhoneNumberSchema = z.string().regex(/^\+233\d{9}$/, "Phone number must be +233XXXXXXXXX");
+export const OtpPhoneNumberSchema = z
+  .string()
+  .regex(/^\+233\d{9}$/, "Phone number must be +233XXXXXXXXX");
 export const OtpCodeSchema = z.string().regex(/^\d{6}$/, "OTP must be a 6-digit code");
 
 export const RequestOtpRequestSchema = z.object({
@@ -307,10 +309,12 @@ export const TeacherReportResponseSchema = z.object({
     avgMastery: z.number().min(0).max(100),
     diagnosticCoverage: z.number().min(0).max(100)
   }),
-  skillPerformance: z.array(z.object({
-    skill: z.string().min(1),
-    mastery: z.number().min(0).max(100)
-  })),
+  skillPerformance: z.array(
+    z.object({
+      skill: z.string().min(1),
+      mastery: z.number().min(0).max(100)
+    })
+  ),
   masteryTrend: z.array(ReportTrendPointSchema)
 });
 
@@ -321,13 +325,35 @@ export const SchoolReportResponseSchema = z.object({
     coveragePercent: z.number().min(0).max(100),
     atRiskPercent: z.number().min(0).max(100)
   }),
-  gradePerformance: z.array(z.object({
-    grade: z.string().min(1),
-    literacy: z.number().min(0).max(100),
-    numeracy: z.number().min(0).max(100)
-  })),
+  gradePerformance: z.array(
+    z.object({
+      grade: z.string().min(1),
+      literacy: z.number().min(0).max(100),
+      numeracy: z.number().min(0).max(100)
+    })
+  ),
   regionalRank: z.number().int().positive().optional()
 });
+
+export const UpdateProfileRequestSchema = z.object({
+  name: z.string().trim().min(1).optional(),
+  email: z.string().email().optional(),
+  phoneNumber: z.string().trim().optional(),
+  language: z.string().optional()
+});
+
+export const UserProfileSchema = z.object({
+  userId: z.string().min(1),
+  name: z.string().min(1),
+  email: z.string().email().optional(),
+  phoneNumber: z.string().optional(),
+  role: z.nativeEnum(Role),
+  scope: AuthScopeSchema.optional(),
+  language: z.string().optional()
+});
+
+export type UpdateProfileRequest = z.infer<typeof UpdateProfileRequestSchema>;
+export type UserProfile = z.infer<typeof UserProfileSchema>;
 
 export type ActivityItem = z.infer<typeof ActivityItemSchema>;
 export type ActivityResponse = z.infer<typeof ActivityResponseSchema>;

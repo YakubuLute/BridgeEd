@@ -20,6 +20,7 @@ import { ClassesPage } from "./features/dashboard/pages/ClassesPage";
 import { AssessmentsPage } from "./features/dashboard/pages/AssessmentsPage";
 import { ActivityPage } from "./features/dashboard/pages/ActivityPage";
 import { ReportsPage } from "./features/dashboard/pages/ReportsPage";
+import { SettingsPage } from "./features/dashboard/pages/SettingsPage";
 
 const RoleSelectionPage = (): JSX.Element => <div>Select Your Role</div>;
 
@@ -59,7 +60,7 @@ const App = (): JSX.Element => (
     <Route
       element={<RequireAuth allowedRoles={[Role.Teacher, Role.SchoolAdmin, Role.NationalAdmin]} />}
     >
-      <Route element={<div>Global Settings</div>} path="/settings" />
+      <Route element={<SettingsPage />} path="/settings" />
     </Route>
 
     <Route element={<Navigate replace to="/" />} path="*" />
