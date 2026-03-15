@@ -15,6 +15,7 @@ import { Role } from "@bridgeed/shared";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { clearSession } from "../../../utils/session";
+import { useProfileQuery } from "../../../api/hooks/useUserQueries";
 
 type DashboardLayoutProps = {
   children: ReactNode;
@@ -209,6 +210,7 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps): JSX.E
   const location = useLocation();
   const navigate = useNavigate();
   const navItems = getNavItems(role);
+  const { data: userProfile } = useProfileQuery();
 
   const handleLogout = (): void => {
     clearSession();
@@ -327,11 +329,11 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps): JSX.E
                   className="cursor-pointer hover:bg-[#F8FAFC] p-1.5 rounded-xl transition-colors"
                 >
                   <Avatar radius="md" color="orange" size="sm">
-                    {role === Role.Teacher ? "T" : role === Role.SchoolAdmin ? "S" : "N"}
+                    {userProfile?.name ? userProfile.name.charAt(0).toUpperCase() : (role === Role.Teacher ? "T" : role === Role.SchoolAdmin ? "S" : "N")}
                   </Avatar>
                   <Stack gap={0}>
                     <Text fw={700} fz="sm" lh={1.2}>
-                      {role === Role.Teacher ? "Alex Teacher" : "Admin User"}
+                      {userProfile?.name || (role === Role.Teacher ? "Alex Teacher" : "Admin User")}
                     </Text>
                     <Text c="#94A3B8" fz={11} fw={600} tt="uppercase" className="tracking-wider">
                       {role}
