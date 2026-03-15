@@ -1,6 +1,8 @@
 import { Title, Text, SimpleGrid, Paper, Group, Box, Badge, Stack, Button, Progress, Loader, Center } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { useClassesQuery } from "../../../api/hooks/useClassQueries";
 import { useTeacherReportQuery } from "../../../api/hooks/useReportQueries";
+import { RunScreenerModal } from "../components/RunScreenerModal";
 
 // --- Icons ---
 const IconUsers = () => (
@@ -28,6 +30,7 @@ const IconArrowUpRight = () => (
 );
 
 export const TeacherDashboardPage = (): JSX.Element => {
+  const [screenerModalOpened, { open: openScreenerModal, close: closeScreenerModal }] = useDisclosure(false);
   const { data: classes, isLoading: classesLoading } = useClassesQuery();
   const { data: report, isLoading: reportLoading } = useTeacherReportQuery();
 
@@ -67,6 +70,7 @@ export const TeacherDashboardPage = (): JSX.Element => {
           radius="md" 
           size="md" 
           className="hover:bg-[#c2410c] font-bold shadow-lg shadow-orange-100"
+          onClick={openScreenerModal}
         >
           Run New Screener
         </Button>
@@ -197,6 +201,8 @@ export const TeacherDashboardPage = (): JSX.Element => {
           )}
         </SimpleGrid>
       </Paper>
+
+      <RunScreenerModal opened={screenerModalOpened} onClose={closeScreenerModal} />
     </Stack>
   );
 };

@@ -16,11 +16,13 @@ import {
   Loader,
   Center
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   useClassesQuery,
   useClassAssessmentOverviewQuery,
   useClassAssessmentHistoryQuery
 } from "../../../api/hooks/useClassQueries";
+import { RunScreenerModal } from "../components/RunScreenerModal";
 
 // --- Icons ---
 const IconClipboard = () => (
@@ -90,6 +92,7 @@ const IconSparkles = () => (
 );
 
 export const AssessmentsPage = (): JSX.Element => {
+  const [screenerModalOpened, { open: openScreenerModal, close: closeScreenerModal }] = useDisclosure(false);
   const { data: classes } = useClassesQuery();
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
@@ -201,6 +204,7 @@ export const AssessmentsPage = (): JSX.Element => {
                     disabled={!selectedClassId}
                     fullWidth
                     radius="md"
+                    onClick={openScreenerModal}
                   >
                     Start Assessment
                   </Button>
@@ -516,6 +520,7 @@ export const AssessmentsPage = (): JSX.Element => {
           </Stack>
         </Tabs.Panel>
       </Tabs>
+      <RunScreenerModal opened={screenerModalOpened} onClose={closeScreenerModal} defaultClassId={selectedClassId} />
     </Stack>
   );
 };

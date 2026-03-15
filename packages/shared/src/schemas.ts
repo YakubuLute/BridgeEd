@@ -376,3 +376,26 @@ export type ClassAssessmentSummary = z.infer<typeof ClassAssessmentSummarySchema
 export type ClassAssessmentOverviewResponse = z.infer<typeof ClassAssessmentOverviewResponseSchema>;
 export type ClassAssessmentHistoryItem = z.infer<typeof ClassAssessmentHistoryItemSchema>;
 export type ClassAssessmentHistoryResponse = z.infer<typeof ClassAssessmentHistoryResponseSchema>;
+
+export const GenerateScreenerRequestSchema = z.object({
+  classId: z.string().min(1),
+  subject: z.string().min(1),
+  gradeLevel: z.string().min(1)
+});
+
+export const ScreenerQuestionSchema = z.object({
+  questionText: z.string().min(1),
+  options: z.array(z.string()).min(2),
+  correctAnswer: z.string().min(1),
+  skillTag: z.string().optional()
+});
+
+export const GeneratedScreenerResponseSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  questions: z.array(ScreenerQuestionSchema).min(1)
+});
+
+export type GenerateScreenerRequest = z.infer<typeof GenerateScreenerRequestSchema>;
+export type ScreenerQuestion = z.infer<typeof ScreenerQuestionSchema>;
+export type GeneratedScreenerResponse = z.infer<typeof GeneratedScreenerResponseSchema>;
