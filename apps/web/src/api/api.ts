@@ -86,7 +86,23 @@ const toApiClientError = (error: unknown): ApiClientError => {
 
     if (status === 401) {
       clearSession();
-      if (typeof window !== "undefined" && window.location.pathname !== "/") {
+
+      const authPaths = [
+        "/",
+        "/login/phone",
+        "/login/email",
+        "/register",
+        "/forgot-password",
+        "/verify-email",
+        "/join"
+      ];
+
+      if (
+        typeof window !== "undefined" &&
+        !authPaths.includes(window.location.pathname) &&
+        !window.location.pathname.startsWith("/login") &&
+        !window.location.pathname.startsWith("/join")
+      ) {
         window.location.href = "/";
       }
     }
