@@ -6,9 +6,11 @@
 
 ## Visual Inspirations
 ![Screen 1](inspirations/screen-1.png)
-![Screen 2](inspirations/screen-2.png)
-![Screen 3](inspirations/screen-3.png)
-![Screen 4](inspirations/screen-4.png)
+![Screen 2](screens/landing-2.png)
+![Screen 3](inspirations/screen-4.png)
+![Screen 4](screens/login.png)
+![Screen 5](screens/registeration.png)
+![Screen 5](screens/dashboard.png)
 
 ## Stack
 - Monorepo: `pnpm` + `Turborepo`
