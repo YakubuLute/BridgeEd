@@ -4,6 +4,12 @@
 - Foundational scaffolding for all epics.
 - Specifically enables future work for `US-1.3` (RBAC foundation), `US-4.3` (offline-ready client architecture), and `US-5.2` (server-only AI scoring path).
 
+## Visual Inspirations
+![Screen 1](inspirations/screen-1.png)
+![Screen 2](inspirations/screen-2.png)
+![Screen 3](inspirations/screen-3.png)
+![Screen 4](inspirations/screen-4.png)
+
 ## Stack
 - Monorepo: `pnpm` + `Turborepo`
 - Web: React + TypeScript + Vite + Mantine + Tailwind + TanStack React Query
