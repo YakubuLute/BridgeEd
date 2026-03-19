@@ -1,10 +1,12 @@
 import {
+  ClassAssessmentHistoryResponseSchema,
   ClassAssessmentOverviewResponseSchema,
   ClassListResponseSchema,
   ClassSchema,
   CreateClassRequestSchema,
   UpdateClassRequestSchema,
   LearnerListResponseSchema,
+  type ClassAssessmentHistoryResponse,
   type ClassAssessmentOverviewResponse,
   type ClassRecord,
   type CreateClassRequest,
@@ -27,6 +29,17 @@ export const getClasses = async (): Promise<ClassRecord[]> => {
   }
 
   return parseResult.data.classes;
+};
+
+export const getClassById = async (classId: string): Promise<ClassRecord> => {
+  const response = await apiClient.get<ApiEnvelope>(`/classes/${classId}`);
+  const data = readDataRecord(response.data);
+  const parseResult = ClassSchema.safeParse(data);
+  if (!parseResult.success) {
+    throw new Error("Invalid class response.");
+  }
+
+  return parseResult.data;
 };
 
 export const createClass = async (payload: CreateClassInput): Promise<ClassRecord> => {
@@ -80,6 +93,19 @@ export const getClassAssessmentOverview = async (
   const parseResult = ClassAssessmentOverviewResponseSchema.safeParse(data);
   if (!parseResult.success) {
     throw new Error("Invalid class assessment overview response.");
+  }
+
+  return parseResult.data;
+};
+
+export const getClassAssessmentHistory = async (
+  classId: string
+): Promise<ClassAssessmentHistoryResponse> => {
+  const response = await apiClient.get<ApiEnvelope>(`/classes/${classId}/assessment-history`);
+  const data = readDataRecord(response.data);
+  const parseResult = ClassAssessmentHistoryResponseSchema.safeParse(data);
+  if (!parseResult.success) {
+    throw new Error("Invalid class assessment history response.");
   }
 
   return parseResult.data;

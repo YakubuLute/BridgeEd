@@ -22,7 +22,7 @@ const parseWithSchema = <T>(schemaName: string, parseResult: { success: boolean;
   return parseResult.data as T;
 };
 
-const getAuthContext = (auth: AuthContext | undefined): AuthContext => {
+export const getAuthContext = (auth: AuthContext | undefined): AuthContext => {
   if (!auth) {
     throw new AppError(401, "UNAUTHORIZED", "Authentication is required.");
   }
@@ -48,6 +48,22 @@ export const listClassesController: RequestHandler = async (req, res, next) => {
       "class list response",
       ClassListResponseSchema.safeParse({ classes: result })
     );
+    res.status(200).json(successResponse(validatedResult));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getClassByIdController: RequestHandler = async (req, res, next) => {
+  try {
+    const classIdParam = req.params.classId;
+    const classId = Array.isArray(classIdParam) ? classIdParam[0] : classIdParam;
+    if (!classId) {
+      throw new AppError(400, "VALIDATION_ERROR", "Class identifier is required.");
+    }
+
+    const result = await classService.getClassById(getAuthContext(req.auth), classId);
+    const validatedResult = parseWithSchema("class response", ClassSchema.safeParse(result));
     res.status(200).json(successResponse(validatedResult));
   } catch (error) {
     next(error);
@@ -104,6 +120,21 @@ export const getClassAssessmentOverviewController: RequestHandler = async (req, 
       ClassAssessmentOverviewResponseSchema.safeParse(result)
     );
     res.status(200).json(successResponse(validatedResult));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getClassAssessmentHistoryController: RequestHandler = async (req, res, next) => {
+  try {
+    const classIdParam = req.params.classId;
+    const classId = Array.isArray(classIdParam) ? classIdParam[0] : classIdParam;
+    if (!classId) {
+      throw new AppError(400, "VALIDATION_ERROR", "Class identifier is required.");
+    }
+
+    const result = await classService.getClassAssessmentHistory(getAuthContext(req.auth), classId);
+    res.status(200).json(successResponse(result));
   } catch (error) {
     next(error);
   }

@@ -76,4 +76,4 @@ export const getPasswordStrength = (password: string): PasswordStrength | null =
   return { label: "Weak", color: "#DC2626" };
 };
 
-export const requirementColor = (isMet: boolean): string => (isMet ? "#15803D" : "#6A6C7D");
+export const requirementColor = (isMet: boolean): string => (isMet ? "#15803D" : "#4B5563");

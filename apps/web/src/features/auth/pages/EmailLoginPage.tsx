@@ -1,56 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
-import { Alert, Anchor, Button, Card, Group, Input, Stack, Text } from "@mantine/core";
+import { useState } from "react";
+import { Button, TextInput, PasswordInput, Stack, Text, Anchor, Alert } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
-
-import {
-  readEmailLoginErrorDetails,
-  useEmailLoginMutation
-} from "../../../api/hooks/useAuthMutations";
-import { AuthLayout } from "../AuthLayout";
-import { AlertCircleIcon, LockIcon, MailIcon } from "../AuthIcons";
-import {
-  LOCKOUT_DURATION_MINUTES,
-  MAX_LOGIN_ATTEMPTS,
-  SESSION_STORAGE_KEY,
-  getPasswordStrength,
-  requirementColor,
-  validateEmail,
-  validatePassword
-} from "../auth.constants";
-import {
-  authCardStyle,
-  authInputClassNames,
-  getActionButtonClassName,
-  getActionButtonStyles,
-  getAuthInputStyles
-} from "../auth.styles";
+import { AuthLayout } from "../components/AuthLayout";
+import { useEmailLoginMutation } from "../../../api/hooks/useAuthMutations";
+import { validateEmail, SESSION_STORAGE_KEY } from "../auth.constants";
 import { getPostLoginPath } from "../../../utils/role-routing";
 
 export const EmailLoginPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [success, setSuccess] = useState<string>("");
-  const [failedAttempts, setFailedAttempts] = useState<number>(0);
-  const [maxAttemptsAllowed, setMaxAttemptsAllowed] = useState<number>(MAX_LOGIN_ATTEMPTS);
-  const [lockoutSecondsRemaining, setLockoutSecondsRemaining] = useState<number>(0);
-  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const passwordValidation = useMemo(() => validatePassword(password), [password]);
-  const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
-  const isLockedOut = lockoutSecondsRemaining > 0;
-  const lockoutMinutesRemaining = Math.max(1, Math.ceil(lockoutSecondsRemaining / 60));
-  const isFormValid = validateEmail(email) && passwordValidation.isValid && !isLockedOut;
-
-  const emailLoginMutation = useEmailLoginMutation({
+  const loginMutation = useEmailLoginMutation({
     onSuccess: (result) => {
-      setFailedAttempts(0);
-      setMaxAttemptsAllowed(MAX_LOGIN_ATTEMPTS);
-      setLockoutSecondsRemaining(0);
-      setError("");
-      setSuccess("Login successful. A secure session has been created.");
-
       sessionStorage.setItem(
         SESSION_STORAGE_KEY,
         JSON.stringify({
@@ -61,270 +24,131 @@ export const EmailLoginPage = (): JSX.Element => {
           loginAt: new Date().toISOString()
         })
       );
-
       navigate(getPostLoginPath(result.user), { replace: true });
     },
-    onError: (mutationError) => {
-      const details = readEmailLoginErrorDetails(mutationError);
-      const errorMessage =
-        mutationError instanceof Error ? mutationError.message : "Unable to login right now.";
-
-      setError(errorMessage);
-      setSuccess("");
-
-      if (!details) {
-        return;
-      }
-
-      const maxAttempts = details.maxAttempts ?? MAX_LOGIN_ATTEMPTS;
-      const attemptsRemaining = details.attemptsRemaining ?? maxAttempts;
-      setMaxAttemptsAllowed(maxAttempts);
-      setFailedAttempts(Math.max(0, maxAttempts - attemptsRemaining));
-
-      if (details.isLockedOut) {
-        const lockoutMinutes = details.lockoutMinutes ?? LOCKOUT_DURATION_MINUTES;
-        setLockoutSecondsRemaining(lockoutMinutes * 60);
-      }
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : "Invalid email or password");
     }
   });
 
-  useEffect(() => {
-    if (!isLockedOut) {
-      return;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setLockoutSecondsRemaining((currentValue) => (currentValue > 0 ? currentValue - 1 : 0));
-    }, 1000);
-
-    return () => window.clearInterval(intervalId);
-  }, [isLockedOut]);
-
-  const handleLogin = (): void => {
-    setError("");
-    setSuccess("");
-
-    if (isLockedOut) {
-      setError(`Account locked. Please try again in ${lockoutMinutesRemaining} minutes.`);
-      return;
-    }
+  const handleLogin = () => {
+    setError(null);
 
     if (!validateEmail(email)) {
       setError("Please enter a valid email address");
       return;
     }
 
-    if (!passwordValidation.isValid) {
-      setError("Password does not meet requirements");
+    if (!password) {
+      setError("Please enter your password");
       return;
     }
 
-    emailLoginMutation.mutate({
-      email: email.trim(),
-      password
-    });
+    loginMutation.mutate({ email: email.trim(), password });
+  };
+
+  const inputStyles = {
+    input: { border: "2px solid #E2E8F0", height: "56px", fontSize: "16px", fontWeight: 600 },
+    label: {
+      fontWeight: 700,
+      marginBottom: "8px",
+      fontSize: "13px",
+      color: "#64748b",
+      textTransform: "uppercase" as const,
+      letterSpacing: "0.05em"
+    }
   };
 
   return (
-    <AuthLayout
-      footer={
-        <Stack align="center" gap={4}>
-          <Text c="#6A6C7D" fz={14} fw={500} lh="20px" ta="center">
-            Secure login for authorized teachers only
-          </Text>
-          {isLockedOut && (
-            <Text c="#DC2626" fz={12} lh="16px" ta="center">
-              For security assistance, contact your administrator
-            </Text>
-          )}
-        </Stack>
-      }
-    >
-      <Card p={24} radius={16} style={authCardStyle}>
-        <Stack gap={24}>
-          <Stack align="center" gap={8}>
-            <Text c="#121421" fw={700} fz={22} lh="32px" ta="center">
-              Email Login
-            </Text>
-            <Text c="#696C7D" fw={500} fz={16} lh="24px" ta="center">
-              Enter your credentials to access your account
-            </Text>
-          </Stack>
+    <AuthLayout title="Email Login" subtitle="Enter your credentials to access your account">
+      <Stack gap="xl">
+        {error && (
+          <Alert color="red" variant="light" radius="md">
+            {error}
+          </Alert>
+        )}
 
-          {error && (
-            <Alert
-              color="red"
-              icon={<AlertCircleIcon />}
-              radius="md"
-              styles={{
-                message: {
-                  fontSize: "14px",
-                  lineHeight: "20px"
-                }
-              }}
-              variant="light"
-            >
-              {error}
-            </Alert>
-          )}
+        <TextInput
+          label="Email Address"
+          placeholder="teacher@school.edu"
+          size="lg"
+          radius="md"
+          styles={inputStyles}
+          value={email}
+          onChange={(e) => setEmail(e.currentTarget.value)}
+          error={error?.includes("email")}
+        />
 
-          {failedAttempts > 0 && !isLockedOut && (
-            <Alert
-              color="yellow"
-              radius="md"
-              styles={{
-                message: {
-                  fontSize: "14px",
-                  lineHeight: "20px"
-                }
-              }}
-              variant="light"
-            >
-              Warning: {Math.max(0, maxAttemptsAllowed - failedAttempts)} attempt(s) remaining before lockout
-            </Alert>
-          )}
-
-          {success && (
-            <Alert
-              color="teal"
-              radius="md"
-              styles={{
-                message: {
-                  fontSize: "14px",
-                  lineHeight: "20px"
-                }
-              }}
-              variant="light"
-            >
-              {success}
-            </Alert>
-          )}
-
-          <Stack gap={8}>
-            <Text c="#151721" fw={700} fz={16} lh="24px">
-              Email Address
-            </Text>
-            <Input
-              classNames={authInputClassNames}
-              disabled={isLockedOut}
-              leftSection={<MailIcon />}
-              onChange={(event) => setEmail(event.currentTarget.value)}
-              placeholder="teacher@example.com"
-              styles={getAuthInputStyles()}
-              type="email"
-              value={email}
-            />
-          </Stack>
-
-          <Stack gap={8}>
-            <Text c="#151721" fw={700} fz={16} lh="24px">
-              Password
-            </Text>
-            <Input
-              classNames={authInputClassNames}
-              disabled={isLockedOut}
-              leftSection={<LockIcon />}
-              onChange={(event) => setPassword(event.currentTarget.value)}
-              placeholder="Enter your password"
-              rightSection={
-                <Anchor
-                  component="button"
-                  fw={600}
-                  fz={12}
-                  lh="16px"
-                  onClick={() => setShowPassword((value) => !value)}
-                  style={{ color: "#1B1D2D" }}
-                  type="button"
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </Anchor>
-              }
-              rightSectionWidth={52}
-              styles={getAuthInputStyles()}
-              type={showPassword ? "text" : "password"}
-              value={password}
-            />
-          </Stack>
-
-          {password.length > 0 && (
-            <Stack gap={8}>
-              {passwordStrength && (
-                <Text c="#6A6C7D" fz={14} fw={500} lh="20px">
-                  Password strength:{" "}
-                  <Text c={passwordStrength.color} component="span" fz={14} fw={600} lh="20px">
-                    {passwordStrength.label}
-                  </Text>
-                </Text>
-              )}
-
-              <Stack gap={4}>
-                <Text c={requirementColor(passwordValidation.minLength)} fz={12} lh="16px">
-                  {passwordValidation.minLength ? "✓" : "○"} At least 8 characters
-                </Text>
-                <Text c={requirementColor(passwordValidation.hasUpperCase)} fz={12} lh="16px">
-                  {passwordValidation.hasUpperCase ? "✓" : "○"} One uppercase letter
-                </Text>
-                <Text c={requirementColor(passwordValidation.hasLowerCase)} fz={12} lh="16px">
-                  {passwordValidation.hasLowerCase ? "✓" : "○"} One lowercase letter
-                </Text>
-                <Text c={requirementColor(passwordValidation.hasNumber)} fz={12} lh="16px">
-                  {passwordValidation.hasNumber ? "✓" : "○"} One number
-                </Text>
-              </Stack>
-            </Stack>
-          )}
-
-          <Group justify="space-between">
-            <Anchor
-              component="button"
-              fw={600}
-              fz={14}
-              lh="20px"
-              onClick={() => navigate("/register")}
-              type="button"
-            >
-              Create Account
-            </Anchor>
-            <Anchor
-              component="button"
-              fw={600}
-              fz={14}
-              lh="20px"
-              onClick={() => navigate("/forgot-password")}
-              type="button"
-            >
-              Forgot Password?
-            </Anchor>
-          </Group>
-
-          <Button
-            className={getActionButtonClassName(isFormValid)}
-            color="gray"
-            disabled={!isFormValid || emailLoginMutation.isPending}
-            fullWidth
-            onClick={handleLogin}
-            radius={14}
-            size="md"
-            styles={getActionButtonStyles()}
+        <Stack gap={8}>
+          <PasswordInput
+            label="Password"
+            placeholder="Your password"
+            size="lg"
+            radius="md"
+            styles={inputStyles}
+            value={password}
+            onChange={(e) => setPassword(e.currentTarget.value)}
+            error={error?.includes("password")}
+          />
+          <Anchor
+            component="button"
+            fz="sm"
+            fw={700}
+            color="orange"
+            ta="right"
+            onClick={() => navigate("/forgot-password")}
           >
-            {emailLoginMutation.isPending ? "Logging in..." : isLockedOut ? "Account Locked" : "Login"}
-          </Button>
-
-          <Group justify="center">
-            <Anchor
-              c="#6A6C7D"
-              component="button"
-              fw={500}
-              fz={14}
-              lh="20px"
-              onClick={() => navigate("/")}
-              type="button"
-            >
-              ← Back to Phone Login
-            </Anchor>
-          </Group>
+            Forgot Password?
+          </Anchor>
         </Stack>
-      </Card>
+
+        <Button
+          fullWidth
+          size="xl"
+          radius="md"
+          bg="#ea580c"
+          className="hover:bg-[#c2410c] h-16 font-bold shadow-lg shadow-orange-100"
+          loading={loginMutation.isPending}
+          onClick={handleLogin}
+        >
+          Sign In
+        </Button>
+
+        <Stack gap="sm" mt="xl">
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-[1px] bg-[#E2E8F0]" />
+            <Text c="#94a3b8" fz="xs" fw={700} tt="uppercase">
+              Or
+            </Text>
+            <div className="flex-1 h-[1px] bg-[#E2E8F0]" />
+          </div>
+          <Button
+            fullWidth
+            variant="outline"
+            size="lg"
+            radius="md"
+            color="gray"
+            className="border-2 border-[#E2E8F0] text-[#1e293b] font-bold h-14"
+            onClick={() => navigate("/login/phone")}
+          >
+            ← Back to Phone Login
+          </Button>
+        </Stack>
+
+        <Text ta="center" fz="sm" fw={600} c="#64748b">
+          Don&apos;t have an account?{" "}
+          <Button
+            variant="transparent"
+            p={0}
+            h="auto"
+            fw={700}
+            color="orange"
+            onClick={() => navigate("/register")}
+          >
+            Register School
+          </Button>
+        </Text>
+      </Stack>
     </AuthLayout>
   );
 };

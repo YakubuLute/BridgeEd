@@ -1,523 +1,619 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  ActionIcon,
-  Box,
-  Button,
-  Card,
-  Group,
-  Loader,
-  Paper,
-  Progress,
-  Select,
-  SimpleGrid,
-  Stack,
+  Title,
   Text,
-  TextInput,
-  ThemeIcon,
-  Title
+  SimpleGrid,
+  Paper,
+  Group,
+  Stack,
+  Button,
+  Box,
+  Badge,
+  Tabs,
+  ActionIcon,
+  Select,
+  Progress,
+  Loader,
+  Center
 } from "@mantine/core";
-import { Role } from "@bridgeed/shared";
-import { Link } from "react-router-dom";
+import { useDisclosure } from "@mantine/hooks";
+import {
+  useClassesQuery,
+  useClassAssessmentOverviewQuery,
+  useClassAssessmentHistoryQuery
+} from "../../../api/hooks/useClassQueries";
+import { useAssessmentsQuery } from "../../../api/hooks/useAssessmentQueries";
+import { RunScreenerModal } from "../components/RunScreenerModal";
 
-import { useClassAssessmentOverviewQuery, useClassesQuery } from "../../../api/hooks/useClassQueries";
-import { DashboardLayout } from "../components/DashboardLayout";
-
-type IconProps = {
-  className?: string;
-  style?: CSSProperties;
-};
-
-const IconBack = ({ className }: IconProps): JSX.Element => (
-  <svg className={className} fill="none" viewBox="0 0 24 24">
-    <path
-      d="M15 18L9 12L15 6"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    />
+// --- Icons ---
+const IconZap = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
   </svg>
 );
 
-const IconSearch = ({ className }: IconProps): JSX.Element => (
-  <svg className={className} fill="none" viewBox="0 0 24 24">
-    <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-    <path d="M20 20L16.65 16.65" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+const IconClipboard = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    <rect width="8" height="4" x="8" y="2" rx="1" />
+    <path d="M9 14h6" />
+    <path d="M9 10h6" />
   </svg>
 );
 
-const IconAlertCircle = ({ className }: IconProps): JSX.Element => (
-  <svg className={className} fill="none" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-    <path d="M12 8V12" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
-    <circle cx="12" cy="16" fill="currentColor" r="1.2" />
+const IconHistory = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+    <path d="M3 3v5h5" />
+    <path d="M12 7v5l4 2" />
   </svg>
 );
 
-const IconWarningTriangle = ({ className }: IconProps): JSX.Element => (
-  <svg className={className} fill="none" viewBox="0 0 24 24">
-    <path
-      d="M12 4L21 20H3L12 4Z"
-      stroke="currentColor"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    />
-    <path d="M12 10V14" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
-    <circle cx="12" cy="17" fill="currentColor" r="1.2" />
+const IconArrowRight = () => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="5" y1="12" x2="19" y2="12" />
+    <polyline points="12 5 19 12 12 19" />
   </svg>
 );
 
-const IconCheckCircle = ({ className }: IconProps): JSX.Element => (
-  <svg className={className} fill="none" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-    <path
-      d="M8.5 12.5L11 15L15.5 10.5"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    />
+const IconSparkles = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
   </svg>
 );
-
-const formatRelativeDate = (value: string | null): string => {
-  if (!value) {
-    return "No assessment yet";
-  }
-
-  const now = Date.now();
-  const measuredAt = new Date(value).getTime();
-  if (Number.isNaN(measuredAt) || measuredAt > now) {
-    return "No assessment yet";
-  }
-
-  const dayMs = 24 * 60 * 60 * 1000;
-  const diffDays = Math.max(1, Math.floor((now - measuredAt) / dayMs));
-  if (diffDays < 7) {
-    return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
-  }
-
-  const weeks = Math.floor(diffDays / 7);
-  return `${weeks} week${weeks === 1 ? "" : "s"} ago`;
-};
-
-const getStatusMeta = (
-  status: "at_risk" | "support" | "on_track"
-): { color: string; icon: (props: IconProps) => JSX.Element; label: string } => {
-  if (status === "at_risk") {
-    return { color: "#D32F45", icon: IconAlertCircle, label: "At Risk" };
-  }
-
-  if (status === "support") {
-    return { color: "#A4A6B5", icon: IconWarningTriangle, label: "Needs Support" };
-  }
-
-  return { color: "#1FA54A", icon: IconCheckCircle, label: "On Track" };
-};
 
 export const AssessmentsPage = (): JSX.Element => {
-  const classesQuery = useClassesQuery();
-  const [selectedClassId, setSelectedClassId] = useState<string>("");
-  const [search, setSearch] = useState<string>("");
+  const navigate = useNavigate();
+  const [screenerModalOpened, { open: openScreenerModal, close: closeScreenerModal }] = useDisclosure(false);
+  const { data: classes } = useClassesQuery();
+  const { data: savedAssessments, isLoading: savedLoading } = useAssessmentsQuery();
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (selectedClassId || !classesQuery.data || classesQuery.data.length === 0) {
-      return;
-    }
-
-    setSelectedClassId(classesQuery.data[0]?.classId ?? "");
-  }, [classesQuery.data, selectedClassId]);
-
-  const assessmentQuery = useClassAssessmentOverviewQuery(selectedClassId);
-  const assessmentData = assessmentQuery.data;
-  const borderColor = "var(--mantine-color-bridgeed-2)";
-
-  const filteredLearners = useMemo(() => {
-    const learners = assessmentData?.learners ?? [];
-    const query = search.trim().toLowerCase();
-    if (!query) {
-      return learners;
-    }
-
-    return learners.filter((learner) => learner.name.toLowerCase().includes(query));
-  }, [assessmentData?.learners, search]);
-
-  const classOptions = useMemo(
-    () =>
-      (classesQuery.data ?? []).map((classItem) => ({
-        value: classItem.classId,
-        label: `${classItem.name} (${classItem.gradeLevel})`
-      })),
-    [classesQuery.data]
+  const { data: overview, isLoading: overviewLoading } = useClassAssessmentOverviewQuery(
+    selectedClassId || ""
+  );
+  const { data: history, isLoading: historyLoading } = useClassAssessmentHistoryQuery(
+    selectedClassId || ""
   );
 
-  const summary = assessmentData?.summary ?? {
-    atRisk: 0,
-    support: 0,
-    onTrack: 0,
-    totalStudents: 0
-  };
+  const assessmentTypes = [
+    {
+      title: "Foundational Literacy Screener",
+      duration: "10-15 mins",
+      desc: "Comprehensive diagnostic for letter recognition, phonics, and basic reading fluency.",
+      tags: ["LITERACY", "RAPID"],
+      color: "blue"
+    },
+    {
+      title: "Core Numeracy Diagnostic",
+      duration: "12-18 mins",
+      desc: "Evaluates number sense, place value, and basic arithmetic operations (addition/subtraction).",
+      tags: ["NUMERACY", "ADAPTIVE"],
+      color: "teal"
+    },
+    {
+      title: "Misconception Check: Fractions",
+      duration: "5-8 mins",
+      desc: "Targeted skill check for identifying common conceptual errors in basic fractions.",
+      tags: ["NUMERACY", "FOCUSED"],
+      color: "orange"
+    }
+  ];
 
   return (
-    <DashboardLayout role={Role.Teacher}>
-      <Box className="md:hidden max-w-[393px] mx-auto px-4 pt-4 pb-8">
-        <Paper bg="green.6" p={16} radius="xl">
-          <Stack gap={14}>
-            <Group align="center" gap={8} wrap="nowrap">
-              <ActionIcon
-                aria-label="Go back to classes"
-                color="green"
-                component={Link}
-                radius="xl"
-                size={32}
-                style={{ color: "white" }}
-                to="/classes"
-                variant="subtle"
-              >
-                <IconBack className="w-5 h-5" />
-              </ActionIcon>
-              <Stack gap={0}>
-                <Text c="white" fw={700} fz={34} lh="1">
-                  {assessmentData?.class.name ?? "Class"}
-                </Text>
-                <Text c="green.1" fw={600} fz={14}>
-                  {(assessmentData?.class.subject ?? "Subject")} • {summary.totalStudents} Students
-                </Text>
-              </Stack>
-            </Group>
-
-            <TextInput
-              leftSection={<IconSearch className="w-5 h-5" />}
-              onChange={(event) => setSearch(event.currentTarget.value)}
-              placeholder="Search students..."
-              radius="md"
-              size="md"
-              styles={{
-                input: {
-                  backgroundColor: "white",
-                  border: "none"
-                },
-                section: {
-                  color: "#6A6C7D"
-                }
-              }}
-              value={search}
-            />
-          </Stack>
-        </Paper>
-
-        <SimpleGrid cols={3} mt={18} spacing={12}>
-          <Card p={14} radius="md" withBorder style={{ borderColor }}>
-            <Stack align="center" gap={6}>
-              <ThemeIcon color="red" radius="xl" size={32} variant="light">
-                <IconAlertCircle className="w-4 h-4" />
-              </ThemeIcon>
-              <Text c="#121421" fw={700} fz={34} lh="1">
-                {summary.atRisk}
-              </Text>
-              <Text c="#6A6C7D" fz={14}>
-                At Risk
-              </Text>
-            </Stack>
-          </Card>
-          <Card p={14} radius="md" withBorder style={{ borderColor }}>
-            <Stack align="center" gap={6}>
-              <ThemeIcon color="gray" radius="xl" size={32} variant="light">
-                <IconWarningTriangle className="w-4 h-4" />
-              </ThemeIcon>
-              <Text c="#121421" fw={700} fz={34} lh="1">
-                {summary.support}
-              </Text>
-              <Text c="#6A6C7D" fz={14}>
-                Support
-              </Text>
-            </Stack>
-          </Card>
-          <Card p={14} radius="md" withBorder style={{ borderColor }}>
-            <Stack align="center" gap={6}>
-              <ThemeIcon color="green" radius="xl" size={32} variant="light">
-                <IconCheckCircle className="w-4 h-4" />
-              </ThemeIcon>
-              <Text c="#121421" fw={700} fz={34} lh="1">
-                {summary.onTrack}
-              </Text>
-              <Text c="#6A6C7D" fz={14}>
-                On Track
-              </Text>
-            </Stack>
-          </Card>
-        </SimpleGrid>
-
-        <Stack gap="md" mt={24}>
-          <Title c="#121421" order={2} size="h2">
-            Students
+    <Stack gap={32}>
+      <Group align="flex-end" justify="space-between">
+        <Stack gap={4}>
+          <Title className="text-3xl font-black text-[#1e293b] tracking-tight" order={1}>
+            Assessments
           </Title>
+          <Text c="#64748b" fw={500}>
+            Diagnose learning gaps and track mastery across your classes.
+          </Text>
+        </Stack>
+      </Group>
 
-          {assessmentQuery.isLoading && (
-            <Group justify="center" py={12}>
-              <Loader size="sm" />
+      <Tabs defaultValue="available" radius="md" variant="pills">
+        <Tabs.List mb="xl">
+          <Tabs.Tab leftSection={<IconClipboard />} value="available">
+            Library
+          </Tabs.Tab>
+          <Tabs.Tab leftSection={<IconZap />} value="saved">
+            Saved Screeners
+          </Tabs.Tab>
+          <Tabs.Tab leftSection={<IconSparkles />} value="tracking">
+            Status & Insights
+          </Tabs.Tab>
+          <Tabs.Tab leftSection={<IconHistory />} value="history">
+            History
+          </Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel value="available">
+          <Stack gap="xl">
+            <Group justify="space-between">
+              <Title className="text-2xl font-black text-[#1e293b]" order={2}>
+                Available Diagnostics
+              </Title>
+              <Select
+                className="w-64"
+                data={classes?.map((c) => ({ value: c.classId, label: c.name })) || []}
+                onChange={setSelectedClassId}
+                placeholder="Select a class to start"
+                radius="md"
+                value={selectedClassId}
+              />
             </Group>
-          )}
 
-          {assessmentQuery.isError && (
-            <Card p={16} radius="md" withBorder>
-              <Text c="red" fz={14}>
-                {assessmentQuery.error?.message ?? "Unable to load assessments."}
-              </Text>
-            </Card>
-          )}
-
-          <Stack gap={14}>
-            {filteredLearners.map((learner) => {
-              const statusMeta = getStatusMeta(learner.status);
-              const StatusIcon = statusMeta.icon;
-              return (
-                <Card
-                  component={Link}
-                  key={learner.learnerId}
-                  p={16}
-                  radius="md"
-                  style={{ borderColor, textDecoration: "none" }}
-                  to={`/assessments/${learner.learnerId}`}
-                  withBorder
+            <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="xl">
+              {assessmentTypes.map((type, i) => (
+                <Paper
+                  className="border border-[#e2e8f0] shadow-sm flex flex-col justify-between hover:border-[#ea580c] transition-colors bg-white"
+                  key={i}
+                  p="xl"
+                  radius="24px"
                 >
-                  <Group align="flex-start" justify="space-between" mb={4}>
-                    <Text c="#121421" fw={700} fz={16} lh="24px">
-                      {learner.name}
-                    </Text>
-                    <Text c="#6A6C7D" fz={14} lh="20px">
-                      {formatRelativeDate(learner.lastAssessedAt)}
-                    </Text>
-                  </Group>
-
-                  <Group gap={6} mb={12}>
-                    <StatusIcon className="w-5 h-5" style={{ color: statusMeta.color }} />
-                    <Text fz={16} fw={600} style={{ color: statusMeta.color }}>
-                      {statusMeta.label}
-                    </Text>
-                  </Group>
-
-                  <SimpleGrid cols={2} spacing={14}>
-                    <Stack gap={4}>
-                      <Text c="#6A6C7D" fz={14}>
-                        Literacy
+                  <Box>
+                    <Group justify="space-between" mb="xl">
+                      <Group gap={8}>
+                        {type.tags.map((tag) => (
+                          <Badge color={type.color} key={tag} size="sm" variant="light">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </Group>
+                      <Text c="#94a3b8" fw={800} fz="xs">
+                        {type.duration}
                       </Text>
-                      <Group align="center" gap={8} wrap="nowrap">
-                        <Progress
-                          color="green"
-                          radius="xl"
-                          size={8}
-                          value={learner.literacyScore ?? 0}
-                          w="100%"
-                        />
-                        <Text c="#121421" fz={16} fw={500}>
-                          {learner.literacyScore ?? 0}%
+                    </Group>
+                    <Title className="text-xl font-black text-[#1e293b] mb-4" order={3}>
+                      {type.title}
+                    </Title>
+                    <Text c="#64748b" fw={500} fz="sm" lh="1.6" mb="xl">
+                      {type.desc}
+                    </Text>
+                  </Box>
+
+                  <Button
+                    bg="#ea580c"
+                    className="hover:bg-[#c2410c] h-12"
+                    disabled={!selectedClassId}
+                    fullWidth
+                    radius="md"
+                    onClick={openScreenerModal}
+                  >
+                    Start Assessment
+                  </Button>
+                </Paper>
+              ))}
+            </SimpleGrid>
+          </Stack>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="saved">
+          <Stack gap="xl">
+            <Group justify="space-between">
+              <Title className="text-2xl font-black text-[#1e293b]" order={2}>
+                Your Generated Screeners
+              </Title>
+              <Button 
+                variant="light" 
+                color="orange" 
+                radius="md" 
+                leftSection={<IconSparkles />}
+                onClick={openScreenerModal}
+              >
+                Generate New
+              </Button>
+            </Group>
+
+            {savedLoading ? (
+              <Center py={100}><Loader color="orange" /></Center>
+            ) : savedAssessments && savedAssessments.length > 0 ? (
+              <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="xl">
+                {savedAssessments.map((assessment) => (
+                  <Paper
+                    className="border border-[#e2e8f0] shadow-sm flex flex-col justify-between hover:border-[#ea580c] transition-colors bg-white"
+                    key={assessment.assessmentId}
+                    p="xl"
+                    radius="24px"
+                  >
+                    <Box>
+                      <Group justify="space-between" mb="md">
+                        <Badge color="orange" size="sm" variant="light">
+                          {assessment.subject}
+                        </Badge>
+                        <Text c="#94a3b8" fw={800} fz="xs">
+                          {assessment.gradeLevel}
                         </Text>
                       </Group>
-                    </Stack>
-
-                    <Stack gap={4}>
-                      <Text c="#6A6C7D" fz={14}>
-                        Numeracy
+                      <Title className="text-xl font-black text-[#1e293b] mb-2" order={3}>
+                        {assessment.title}
+                      </Title>
+                      <Text c="#64748b" fw={500} fz="sm" lh="1.6" mb="xl">
+                        {assessment.description}
                       </Text>
-                      <Group align="center" gap={8} wrap="nowrap">
-                        <Progress
-                          color="green"
-                          radius="xl"
-                          size={8}
-                          value={learner.numeracyScore ?? 0}
-                          w="100%"
-                        />
-                        <Text c="#121421" fz={16} fw={500}>
-                          {learner.numeracyScore ?? 0}%
-                        </Text>
-                      </Group>
-                    </Stack>
-                  </SimpleGrid>
-                </Card>
-              );
-            })}
+                    </Box>
 
-            {!assessmentQuery.isLoading && filteredLearners.length === 0 && (
-              <Card p={16} radius="md" withBorder>
-                <Text c="#6A6C7D" fz={14}>
-                  No learners match your search.
-                </Text>
-              </Card>
+                    <Button
+                      variant="outline"
+                      color="orange"
+                      className="h-12 border-2"
+                      fullWidth
+                      radius="md"
+                      onClick={() => navigate(`/assessments/${assessment.assessmentId}/administer`)}
+                    >
+                      Administer Now
+                    </Button>
+                  </Paper>
+                ))}
+              </SimpleGrid>
+            ) : (
+              <Paper
+                className="border-2 border-dashed border-[#e2e8f0] bg-[#f8fafc]"
+                p={80}
+                radius="24px"
+              >
+                <Center>
+                  <Stack align="center" gap="md">
+                    <Box className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#94a3b8]">
+                      <IconZap />
+                    </Box>
+                    <Text c="#64748b" fw={700}>
+                      No saved screeners yet. Use the AI generator to get started!
+                    </Text>
+                    <Button bg="#ea580c" onClick={openScreenerModal} mt="sm">Generate First Screener</Button>
+                  </Stack>
+                </Center>
+              </Paper>
             )}
           </Stack>
-        </Stack>
-      </Box>
+        </Tabs.Panel>
 
-      <Box className="hidden md:block p-8">
-        <div className="max-w-6xl mx-auto">
-          <Group justify="space-between" mb={20}>
-            <Stack gap={4}>
-              <Title c="#121421" order={1} size="h1">
-                Assessments
+        <Tabs.Panel value="tracking">
+          <Stack gap="xl">
+            <Group justify="space-between">
+              <Title className="text-2xl font-black text-[#1e293b]" order={2}>
+                Class Insights
               </Title>
-              <Text c="#6A6C7D" fz={14}>
-                Monitor literacy and numeracy progress by class.
-              </Text>
-            </Stack>
-            <Select
-              data={classOptions}
-              onChange={(value) => setSelectedClassId(value ?? "")}
-              placeholder="Select class"
-              value={selectedClassId}
-              w={260}
-            />
-          </Group>
-
-          {assessmentQuery.isLoading && (
-            <Group justify="center" py={24}>
-              <Loader size="sm" />
+              <Select
+                className="w-64"
+                data={classes?.map((c) => ({ value: c.classId, label: c.name })) || []}
+                onChange={setSelectedClassId}
+                placeholder="Select Class"
+                radius="md"
+                value={selectedClassId}
+              />
             </Group>
-          )}
 
-          {assessmentQuery.isError && (
-            <Card p={16} radius={12} withBorder>
-              <Text c="red" fz={14}>
-                {assessmentQuery.error?.message ?? "Unable to load assessments."}
-              </Text>
-            </Card>
-          )}
+            {!selectedClassId ? (
+              <Paper
+                className="border-2 border-dashed border-[#e2e8f0] bg-[#f8fafc]"
+                p={80}
+                radius="24px"
+              >
+                <Center>
+                  <Stack align="center" gap="md">
+                    <Box className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#94a3b8]">
+                      <IconClipboard />
+                    </Box>
+                    <Text c="#64748b" fw={700}>
+                      Select a class to view diagnostic coverage and results
+                    </Text>
+                  </Stack>
+                </Center>
+              </Paper>
+            ) : overviewLoading ? (
+              <Center py={100}>
+                <Loader color="orange" />
+              </Center>
+            ) : overview ? (
+              <Stack gap="xl">
+                <SimpleGrid cols={{ base: 1, md: 4 }} spacing="lg">
+                  <Paper className="border border-[#e2e8f0] bg-white" p="lg" radius="xl">
+                    <Text c="#94a3b8" fw={800} fz="xs" mb="xs">
+                      ASSESSED
+                    </Text>
+                    <Text fz="24px" fw={900}>
+                      {overview.summary.totalStudents -
+                        (overview.summary.atRisk +
+                          overview.summary.support +
+                          overview.summary.onTrack)}{" "}
+                      / {overview.summary.totalStudents}
+                    </Text>
+                  </Paper>
+                  <Paper className="border border-[#e2e8f0] bg-white" p="lg" radius="xl">
+                    <Text c="red" fw={800} fz="xs" mb="xs">
+                      AT RISK
+                    </Text>
+                    <Text c="red" fz="24px" fw={900}>
+                      {overview.summary.atRisk}
+                    </Text>
+                  </Paper>
+                  <Paper className="border border-[#e2e8f0] bg-white" p="lg" radius="xl">
+                    <Text c="orange" fw={800} fz="xs" mb="xs">
+                      NEEDS SUPPORT
+                    </Text>
+                    <Text c="orange" fz="24px" fw={900}>
+                      {overview.summary.support}
+                    </Text>
+                  </Paper>
+                  <Paper className="border border-[#e2e8f0] bg-white" p="lg" radius="xl">
+                    <Text c="green" fw={800} fz="xs" mb="xs">
+                      ON TRACK
+                    </Text>
+                    <Text c="green" fz="24px" fw={900}>
+                      {overview.summary.onTrack}
+                    </Text>
+                  </Paper>
+                </SimpleGrid>
 
-          {assessmentData && (
-            <Stack gap={16}>
-              <SimpleGrid cols={4} spacing={12}>
-                <Card p={14} radius={12} withBorder>
-                  <Text c="#6A6C7D" fz={13}>
-                    Class
-                  </Text>
-                  <Text c="#121421" fw={700} fz={16}>
-                    {assessmentData.class.name}
-                  </Text>
-                </Card>
-                <Card p={14} radius={12} withBorder>
-                  <Text c="#6A6C7D" fz={13}>
-                    At Risk
-                  </Text>
-                  <Text c="#121421" fw={700} fz={16}>
-                    {assessmentData.summary.atRisk}
-                  </Text>
-                </Card>
-                <Card p={14} radius={12} withBorder>
-                  <Text c="#6A6C7D" fz={13}>
-                    Support
-                  </Text>
-                  <Text c="#121421" fw={700} fz={16}>
-                    {assessmentData.summary.support}
-                  </Text>
-                </Card>
-                <Card p={14} radius={12} withBorder>
-                  <Text c="#6A6C7D" fz={13}>
-                    On Track
-                  </Text>
-                  <Text c="#121421" fw={700} fz={16}>
-                    {assessmentData.summary.onTrack}
-                  </Text>
-                </Card>
-              </SimpleGrid>
+                <Paper
+                  className="border border-[#e2e8f0] bg-white overflow-hidden"
+                  p="xl"
+                  radius="24px"
+                >
+                  <Group justify="space-between" mb="xl">
+                    <Title className="text-xl font-black text-[#1e293b]" order={3}>
+                      Learner Performance Snapshot
+                    </Title>
+                    <Button color="orange" fw={700} variant="subtle">
+                      Download CSV Report
+                    </Button>
+                  </Group>
 
-              <Card p={0} radius={12} withBorder>
-                <Box px={16} py={12}>
-                  <TextInput
-                    leftSection={<IconSearch className="w-4 h-4" />}
-                    onChange={(event) => setSearch(event.currentTarget.value)}
-                    placeholder="Search students..."
-                    value={search}
-                  />
-                </Box>
-                <Box px={16} pb={16}>
-                  <SimpleGrid cols={{ base: 1, md: 2, xl: 3 }} spacing={12}>
-                    {filteredLearners.map((learner) => {
-                      const statusMeta = getStatusMeta(learner.status);
-                      const StatusIcon = statusMeta.icon;
-
-                      return (
-                        <Card key={learner.learnerId} p={16} radius="md" style={{ borderColor }} withBorder>
-                          <Group align="flex-start" justify="space-between" mb={4}>
-                            <Text c="#121421" fw={700} fz={16} lh="24px">
-                              {learner.name}
-                            </Text>
-                            <Text c="#6A6C7D" fz={13} lh="20px">
-                              {formatRelativeDate(learner.lastAssessedAt)}
-                            </Text>
-                          </Group>
-
-                          <Group gap={6} mb={12}>
-                            <StatusIcon className="w-5 h-5" style={{ color: statusMeta.color }} />
-                            <Text fz={15} fw={600} style={{ color: statusMeta.color }}>
-                              {statusMeta.label}
-                            </Text>
-                          </Group>
-
-                          <SimpleGrid cols={2} spacing={12}>
-                            <Stack gap={4}>
-                              <Text c="#6A6C7D" fz={13}>
-                                Literacy
-                              </Text>
-                              <Group align="center" gap={8} wrap="nowrap">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#f1f5f9]">
+                          <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                            Learner Name
+                          </th>
+                          <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                            Literacy
+                          </th>
+                          <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                            Numeracy
+                          </th>
+                          <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                            Last Assessed
+                          </th>
+                          <th className="pb-4"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {overview.learners.map((learner) => (
+                          <tr
+                            className="border-b border-[#f1f5f9] last:border-0 hover:bg-[#f8fafc] transition-colors"
+                            key={learner.learnerId}
+                          >
+                            <td className="py-4 font-bold text-[#1e293b]">{learner.name}</td>
+                            <td className="py-4">
+                              <Badge
+                                className="font-bold"
+                                color={
+                                  learner.status === "at_risk"
+                                    ? "red"
+                                    : learner.status === "support"
+                                      ? "orange"
+                                      : "green"
+                                }
+                                size="sm"
+                                variant="light"
+                              >
+                                {learner.status.replace("_", " ")}
+                              </Badge>
+                            </td>
+                            <td className="py-4">
+                              <Group gap="xs" className="w-32">
                                 <Progress
-                                  color="green"
+                                  className="flex-1"
+                                  color="blue"
                                   radius="xl"
-                                  size={8}
-                                  value={learner.literacyScore ?? 0}
-                                  w="100%"
+                                  size="xs"
+                                  value={learner.literacyScore || 0}
                                 />
-                                <Text c="#121421" fz={14} fw={500}>
-                                  {learner.literacyScore ?? 0}%
+                                <Text c="#1e293b" fw={800} fz="xs">
+                                  {learner.literacyScore || 0}%
                                 </Text>
                               </Group>
-                            </Stack>
-                            <Stack gap={4}>
-                              <Text c="#6A6C7D" fz={13}>
-                                Numeracy
-                              </Text>
-                              <Group align="center" gap={8} wrap="nowrap">
+                            </td>
+                            <td className="py-4">
+                              <Group gap="xs" className="w-32">
                                 <Progress
-                                  color="green"
+                                  className="flex-1"
+                                  color="teal"
                                   radius="xl"
-                                  size={8}
-                                  value={learner.numeracyScore ?? 0}
-                                  w="100%"
+                                  size="xs"
+                                  value={learner.numeracyScore || 0}
                                 />
-                                <Text c="#121421" fz={14} fw={500}>
-                                  {learner.numeracyScore ?? 0}%
+                                <Text c="#1e293b" fw={800} fz="xs">
+                                  {learner.numeracyScore || 0}%
                                 </Text>
                               </Group>
-                            </Stack>
-                          </SimpleGrid>
+                            </td>
+                            <td className="py-4 text-xs font-bold text-[#64748b]">
+                              {learner.lastAssessedAt
+                                ? new Date(learner.lastAssessedAt).toLocaleDateString()
+                                : "Never"}
+                            </td>
+                            <td className="py-4">
+                              <ActionIcon color="gray" radius="xl" variant="subtle">
+                                <IconArrowRight />
+                              </ActionIcon>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Paper>
+              </Stack>
+            ) : (
+              <Text>Error loading overview.</Text>
+            )}
+          </Stack>
+        </Tabs.Panel>
 
-                          <Group justify="flex-end" mt={12}>
-                            <Button
-                              component={Link}
-                              size="compact-xs"
-                              to={`/assessments/${learner.learnerId}`}
+        <Tabs.Panel value="history">
+          <Stack gap="xl">
+            <Group justify="space-between">
+              <Title className="text-2xl font-black text-[#1e293b]" order={2}>
+                Assessment History
+              </Title>
+              <Select
+                className="w-64"
+                data={classes?.map((c) => ({ value: c.classId, label: c.name })) || []}
+                onChange={setSelectedClassId}
+                placeholder="Select Class"
+                radius="md"
+                value={selectedClassId}
+              />
+            </Group>
+
+            {!selectedClassId ? (
+              <Paper
+                className="border-2 border-dashed border-[#e2e8f0] bg-[#f8fafc]"
+                p={80}
+                radius="24px"
+              >
+                <Center>
+                  <Stack align="center" gap="md">
+                    <Box className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#94a3b8]">
+                      <IconHistory />
+                    </Box>
+                    <Text c="#64748b" fw={700}>
+                      Select a class to view assessment history
+                    </Text>
+                  </Stack>
+                </Center>
+              </Paper>
+            ) : historyLoading ? (
+              <Center py={100}>
+                <Loader color="orange" />
+              </Center>
+            ) : history && history.attempts.length > 0 ? (
+              <Paper
+                className="border border-[#e2e8f0] bg-white overflow-hidden"
+                p="xl"
+                radius="24px"
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#f1f5f9]">
+                        <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                          Learner
+                        </th>
+                        <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                          Assessment
+                        </th>
+                        <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                          Score
+                        </th>
+                        <th className="pb-4 font-black text-[#94a3b8] text-[10px] uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="pb-4"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.attempts.map((attempt) => (
+                        <tr
+                          className="border-b border-[#f1f5f9] last:border-0 hover:bg-[#f8fafc] transition-colors"
+                          key={attempt.attemptId}
+                        >
+                          <td className="py-4 font-bold text-[#1e293b]">{attempt.learnerName}</td>
+                          <td className="py-4 text-sm font-semibold text-[#475569]">
+                            {attempt.assessmentName}
+                          </td>
+                          <td className="py-4">
+                            <Badge
+                              color={
+                                attempt.score !== null && attempt.score > 70
+                                  ? "green"
+                                  : attempt.score !== null && attempt.score > 50
+                                    ? "orange"
+                                    : "red"
+                              }
                               variant="light"
                             >
-                              View
+                              {attempt.score !== null ? `${attempt.score}%` : "N/A"}
+                            </Badge>
+                          </td>
+                          <td className="py-4 text-xs font-bold text-[#64748b]">
+                            {new Date(attempt.assessedAt).toLocaleString()}
+                          </td>
+                          <td className="py-4 text-right">
+                            <Button color="orange" fw={700} size="xs" variant="subtle">
+                              View Details
                             </Button>
-                          </Group>
-                        </Card>
-                      );
-                    })}
-                  </SimpleGrid>
-                </Box>
-              </Card>
-
-              {!assessmentQuery.isLoading && filteredLearners.length === 0 && (
-                <Card p={16} radius={12} withBorder>
-                  <Text c="#6A6C7D" fz={14}>
-                    No learners match your search.
-                  </Text>
-                </Card>
-              )}
-            </Stack>
-          )}
-        </div>
-      </Box>
-    </DashboardLayout>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Paper>
+            ) : (
+              <Paper
+                className="border-2 border-dashed border-[#e2e8f0] bg-[#f8fafc]"
+                p={80}
+                radius="24px"
+              >
+                <Center>
+                  <Stack align="center" gap="md">
+                    <Text c="#64748b" fw={700}>
+                      No assessment attempts found for this class yet.
+                    </Text>
+                  </Stack>
+                </Center>
+              </Paper>
+            )}
+          </Stack>
+        </Tabs.Panel>
+      </Tabs>
+      <RunScreenerModal opened={screenerModalOpened} onClose={closeScreenerModal} defaultClassId={selectedClassId} />
+    </Stack>
   );
 };

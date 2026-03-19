@@ -1,294 +1,200 @@
-import { useMemo, useState } from "react";
-import { Button, Card, Grid, Group, Loader, Modal, Select, Stack, Text, TextInput, Title } from "@mantine/core";
-import { GradeLevel, Role, type ClassRecord } from "@bridgeed/shared";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Title,
+  Text,
+  SimpleGrid,
+  Paper,
+  Group,
+  Stack,
+  Button,
+  TextInput,
+  Box,
+  Badge,
+  ActionIcon,
+  Loader,
+  Center
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { useClassesQuery } from "../../../api/hooks/useClassQueries";
+import { CreateClassModal } from "../components/CreateClassModal";
 
-import { useClassesQuery, useCreateClassMutation, useUpdateClassMutation } from "../../../api/hooks/useClassQueries";
-import { DashboardLayout } from "../components/DashboardLayout";
+// --- Icons ---
+const IconSearch = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
 
-const gradeLevelOptions = Object.values(GradeLevel).map((gradeLevel) => ({
-  value: gradeLevel,
-  label: gradeLevel
-}));
+const IconPlus = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
 
-type ClassFormState = {
-  name: string;
-  gradeLevel: GradeLevel;
-  subject: string;
-  academicYear: string;
-};
+const IconArrowRight = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+  </svg>
+);
 
-const defaultClassFormState: ClassFormState = {
-  name: "",
-  gradeLevel: GradeLevel.JHS1,
-  subject: "",
-  academicYear: ""
-};
-
-const toUpdatePayload = (values: ClassFormState) => ({
-  name: values.name.trim(),
-  gradeLevel: values.gradeLevel,
-  subject: values.subject.trim() || undefined,
-  academicYear: values.academicYear.trim() || undefined
-});
+const IconFilter = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </svg>
+);
 
 export const ClassesPage = (): JSX.Element => {
-  const classesQuery = useClassesQuery();
-  const [classForm, setClassForm] = useState<ClassFormState>(defaultClassFormState);
-  const [formError, setFormError] = useState<string>("");
-  const [editingClass, setEditingClass] = useState<ClassRecord | null>(null);
-  const [editForm, setEditForm] = useState<ClassFormState>(defaultClassFormState);
+  const navigate = useNavigate();
+  const { data: classes, isLoading } = useClassesQuery();
+  const [opened, { open, close }] = useDisclosure(false);
+  const [search, setSearch] = useState("");
 
-  const createClassMutation = useCreateClassMutation({
-    onSuccess: () => {
-      setClassForm(defaultClassFormState);
-      setFormError("");
-    },
-    onError: (error) => {
-      setFormError(error.message);
-    }
-  });
-
-  const updateClassMutation = useUpdateClassMutation({
-    onSuccess: () => {
-      setEditingClass(null);
-    }
-  });
-
-  const isCreateDisabled = classForm.name.trim().length === 0 || createClassMutation.isPending;
-
-  const sortedClasses = useMemo(() => {
-    const sourceClasses = classesQuery.data ?? [];
-    return [...sourceClasses].sort((a, b) => a.name.localeCompare(b.name));
-  }, [classesQuery.data]);
-
-  const handleCreateClass = (): void => {
-    if (classForm.name.trim().length === 0) {
-      setFormError("Class name is required.");
-      return;
-    }
-
-    setFormError("");
-    createClassMutation.mutate(toUpdatePayload(classForm));
-  };
-
-  const openEditModal = (classItem: ClassRecord): void => {
-    setEditingClass(classItem);
-    setEditForm({
-      name: classItem.name,
-      gradeLevel: classItem.gradeLevel,
-      subject: classItem.subject ?? "",
-      academicYear: classItem.academicYear ?? ""
-    });
-  };
-
-  const handleUpdateClass = (): void => {
-    if (!editingClass) {
-      return;
-    }
-
-    if (editForm.name.trim().length === 0) {
-      return;
-    }
-
-    updateClassMutation.mutate({
-      classId: editingClass.classId,
-      payload: toUpdatePayload(editForm)
-    });
-  };
+  const filteredClasses = classes?.filter((c) =>
+    c.name.toLowerCase().includes(search.toLowerCase()) ||
+    c.gradeLevel.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <DashboardLayout role={Role.Teacher}>
-      <div className="p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
-          <Stack gap={4} mb={20}>
-            <Title c="#121421" order={1} size="h1">
-              Classes
-            </Title>
-            <Text c="#6A6C7D" fz={14}>
-              Create and manage your classes by grade level.
-            </Text>
-          </Stack>
-
-          <Grid gutter={16}>
-            <Grid.Col span={{ base: 12, md: 5 }}>
-              <Card p={18} radius={12} withBorder>
-                <Stack gap={10}>
-                  <Text c="#121421" fw={700} fz={18}>
-                    Create Class
-                  </Text>
-                  <TextInput
-                    label="Class name"
-                    onChange={(event) =>
-                      setClassForm((current) => ({
-                        ...current,
-                        name: event.currentTarget.value
-                      }))
-                    }
-                    placeholder="JHS 1A"
-                    required
-                    value={classForm.name}
-                  />
-                  <Select
-                    data={gradeLevelOptions}
-                    label="Grade level"
-                    onChange={(value) =>
-                      setClassForm((current) => ({
-                        ...current,
-                        gradeLevel: (value as GradeLevel | null) ?? GradeLevel.JHS1
-                      }))
-                    }
-                    required
-                    value={classForm.gradeLevel}
-                  />
-                  <TextInput
-                    label="Subject (optional)"
-                    onChange={(event) =>
-                      setClassForm((current) => ({
-                        ...current,
-                        subject: event.currentTarget.value
-                      }))
-                    }
-                    placeholder="Mathematics"
-                    value={classForm.subject}
-                  />
-                  <TextInput
-                    label="Academic year (optional)"
-                    onChange={(event) =>
-                      setClassForm((current) => ({
-                        ...current,
-                        academicYear: event.currentTarget.value
-                      }))
-                    }
-                    placeholder="2025/2026"
-                    value={classForm.academicYear}
-                  />
-                  {formError && (
-                    <Text c="red" fz={13}>
-                      {formError}
-                    </Text>
-                  )}
-                  <Button disabled={isCreateDisabled} onClick={handleCreateClass}>
-                    {createClassMutation.isPending ? "Creating..." : "Create Class"}
-                  </Button>
-                </Stack>
-              </Card>
-            </Grid.Col>
-
-            <Grid.Col span={{ base: 12, md: 7 }}>
-              <Card p={18} radius={12} withBorder>
-                <Stack gap={12}>
-                  <Group justify="space-between">
-                    <Text c="#121421" fw={800} fz={18}>
-                      My Classes
-                    </Text>
-                    <Text c="#6A6C7D" fz={13}>
-                      {sortedClasses.length} total
-                    </Text>
-                  </Group>
-
-                  {classesQuery.isLoading && <Loader size="sm" />}
-                  {classesQuery.isError && (
-                    <Text c="red" fz={14}>
-                      {classesQuery.error?.message ?? "Unable to load classes."}
-                    </Text>
-                  )}
-
-                  {!classesQuery.isLoading && sortedClasses.length === 0 && (
-                    <Text c="#6A6C7D" fz={14}>
-                      No classes created yet.
-                    </Text>
-                  )}
-
-                  {sortedClasses.map((classItem) => (
-                    <Card key={classItem.classId} p={14} radius={10} withBorder>
-                      <Group justify="space-between" align="flex-start">
-                        <div>
-                          <Text c="#121421" fw={600} fz={15}>
-                            {classItem.name}
-                          </Text>
-                          <Text c="#6A6C7D" fz={13}>
-                            {classItem.gradeLevel}
-                            {classItem.subject ? ` • ${classItem.subject}` : ""}
-                          </Text>
-                        </div>
-
-                        <Group gap={8}>
-                          <Button
-                            component={Link}
-                            size="xs"
-                            to={`/classes/${classItem.classId}`}
-                            variant="light"
-                          >
-                            Open
-                          </Button>
-                          <Button onClick={() => openEditModal(classItem)} size="xs" variant="outline">
-                            Edit
-                          </Button>
-                        </Group>
-                      </Group>
-                    </Card>
-                  ))}
-                </Stack>
-              </Card>
-            </Grid.Col>
-          </Grid>
-        </div>
-      </div>
-
-      <Modal
-        centered
-        onClose={() => setEditingClass(null)}
-        opened={Boolean(editingClass)}
-        title="Edit Class"
-      >
-        <Stack gap={10}>
-          <TextInput
-            label="Class name"
-            onChange={(event) =>
-              setEditForm((current) => ({
-                ...current,
-                name: event.currentTarget.value
-              }))
-            }
-            value={editForm.name}
-          />
-          <Select
-            data={gradeLevelOptions}
-            label="Grade level"
-            onChange={(value) =>
-              setEditForm((current) => ({
-                ...current,
-                gradeLevel: (value as GradeLevel | null) ?? GradeLevel.JHS1
-              }))
-            }
-            value={editForm.gradeLevel}
-          />
-          <TextInput
-            label="Subject (optional)"
-            onChange={(event) =>
-              setEditForm((current) => ({
-                ...current,
-                subject: event.currentTarget.value
-              }))
-            }
-            value={editForm.subject}
-          />
-          <TextInput
-            label="Academic year (optional)"
-            onChange={(event) =>
-              setEditForm((current) => ({
-                ...current,
-                academicYear: event.currentTarget.value
-              }))
-            }
-            value={editForm.academicYear}
-          />
-          <Button disabled={updateClassMutation.isPending} onClick={handleUpdateClass}>
-            {updateClassMutation.isPending ? "Saving..." : "Save Changes"}
-          </Button>
+    <Stack gap={32}>
+      {/* Header Section */}
+      <Group justify="space-between" align="flex-end">
+        <Stack gap={4}>
+          <Title order={1} className="text-3xl font-black text-[#1e293b] tracking-tight">
+            My Classes
+          </Title>
+          <Text c="#64748b" fw={500}>Manage and track progress across your assigned class streams.</Text>
         </Stack>
-      </Modal>
-    </DashboardLayout>
+        <Button
+          onClick={open}
+          bg="#ea580c"
+          radius="md"
+          size="md"
+          leftSection={<IconPlus />}
+          className="hover:bg-[#c2410c] font-bold shadow-lg shadow-orange-100 h-12 px-6"
+        >
+          Create New Class
+        </Button>
+      </Group>
+
+      {/* Filters & Actions Bar */}
+      <Paper p="md" radius="xl" className="border border-[#e2e8f0] shadow-sm">
+        <Group justify="space-between">
+          <Box className="flex-1 max-w-md">
+            <TextInput
+              placeholder="Search classes by name or grade..."
+              leftSection={<IconSearch />}
+              value={search}
+              onChange={(e) => setSearch(e.currentTarget.value)}
+              variant="unstyled"
+              className="px-4"
+              styles={{
+                input: { fontSize: "15px", fontWeight: 600 }
+              }}
+            />
+          </Box>
+          <Group gap="sm">
+            <Button
+              variant="subtle"
+              color="gray"
+              leftSection={<IconFilter />}
+              fw={700}
+              size="sm"
+            >
+              Filter
+            </Button>
+            <div className="w-[1px] h-6 bg-[#e2e8f0]" />
+            <Text c="#94a3b8" fz="xs" fw={800} tt="uppercase" px="xs">
+              {filteredClasses?.length || 0} Classes Total
+            </Text>
+          </Group>
+        </Group>
+      </Paper>
+
+      {/* Classes Grid */}
+      {isLoading ? (
+        <Center py={100}>
+          <Loader color="orange" size="xl" />
+        </Center>
+      ) : filteredClasses && filteredClasses.length > 0 ? (
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="xl">
+          {filteredClasses.map((cls) => (
+            <Paper
+              key={cls.id}
+              p={0}
+              radius="24px"
+              className="border border-[#e2e8f0] shadow-sm hover:shadow-md hover:border-[#ea580c] transition-all cursor-pointer group overflow-hidden bg-white"
+              onClick={() => navigate(`/classes/${cls.classId}/learners`)}
+            >
+              <Box className="p-8">
+                <Group justify="space-between" mb="xl">
+                  <Badge
+                    bg="#fff7ed"
+                    c="#ea580c"
+                    size="lg"
+                    radius="md"
+                    className="font-black border border-orange-100"
+                  >
+                    {cls.gradeLevel}
+                  </Badge>
+                  <ActionIcon variant="subtle" color="gray" radius="xl" size="lg">
+                    <IconArrowRight />
+                  </ActionIcon>
+                </Group>
+
+                <Title order={3} className="text-2xl font-black text-[#1e293b] mb-2 tracking-tight group-hover:text-[#ea580c] transition-colors">
+                  {cls.name}
+                </Title>
+                <Text c="#64748b" fw={600} fz="sm" mb="xl">
+                  {cls.subject || "General Classroom"} • {cls.academicYear}
+                </Text>
+
+                <SimpleGrid cols={2} spacing="md" className="pt-6 border-t border-[#f1f5f9]">
+                  <Stack gap={2}>
+                    <Text c="#94a3b8" fz="10px" fw={800} tt="uppercase" className="tracking-wider">Total Students</Text>
+                    <Text fw={900} fz="xl" c="#1e293b">--</Text>
+                  </Stack>
+                  <Stack gap={2}>
+                    <Text c="#94a3b8" fz="10px" fw={800} tt="uppercase" className="tracking-wider">Status</Text>
+                    <Badge
+                      variant="dot"
+                      color={cls.isActive ? "green" : "gray"}
+                      size="sm"
+                      className="font-bold p-0"
+                    >
+                      {cls.isActive ? "Active" : "Archived"}
+                    </Badge>
+                  </Stack>
+                </SimpleGrid>
+              </Box>
+              
+              <Box className="bg-[#f8fafc] px-8 py-4 border-t border-[#f1f5f9] flex justify-between items-center group-hover:bg-[#fff7ed] transition-colors">
+                 <Text c="#64748b" fz="xs" fw={700}>Last assessed: 2 days ago</Text>
+                 <Text c="#ea580c" fz="xs" fw={800} className="opacity-0 group-hover:opacity-100 transition-opacity">Manage Class →</Text>
+              </Box>
+            </Paper>
+          ))}
+        </SimpleGrid>
+      ) : (
+        <Paper p={80} radius="24px" className="border-2 border-dashed border-[#e2e8f0] bg-[#f8fafc]">
+          <Stack align="center" gap="md">
+            <Box className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#94a3b8]">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              </svg>
+            </Box>
+            <Title order={3} className="text-[#1e293b]">No classes found</Title>
+            <Text c="#64748b" ta="center" className="max-w-xs">
+              {search ? `No classes match "${search}". Try a different search term.` : "You haven't created any classes yet. Click the button above to get started."}
+            </Text>
+            {search && (
+               <Button variant="subtle" color="orange" onClick={() => setSearch("")} fw={700}>Clear search</Button>
+            )}
+          </Stack>
+        </Paper>
+      )}
+
+      <CreateClassModal opened={opened} onClose={close} />
+    </Stack>
   );
 };

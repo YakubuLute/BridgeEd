@@ -13,6 +13,16 @@ export type SessionState = {
 const isRole = (value: unknown): value is Role =>
   typeof value === "string" && Object.values(Role).includes(value as Role);
 
+export const isSessionExpired = (session: SessionState): boolean => {
+  if (!session.expiresAt) {
+    return false;
+  }
+
+  const expiry = new Date(session.expiresAt).getTime();
+  const now = Date.now();
+  return now >= expiry;
+};
+
 export const readSession = (): SessionState | null => {
   if (typeof window === "undefined") {
     return null;
@@ -46,7 +56,7 @@ export const readSession = (): SessionState | null => {
       return null;
     }
 
-    return {
+    const session: SessionState = {
       accessToken: parsed.accessToken,
       refreshToken: typeof parsed.refreshToken === "string" ? parsed.refreshToken : undefined,
       expiresAt: typeof parsed.expiresAt === "string" ? parsed.expiresAt : undefined,
@@ -64,6 +74,13 @@ export const readSession = (): SessionState | null => {
       },
       loginAt: typeof parsed.loginAt === "string" ? parsed.loginAt : new Date().toISOString()
     };
+
+    if (isSessionExpired(session)) {
+      clearSession();
+      return null;
+    }
+
+    return session;
   } catch {
     return null;
   }

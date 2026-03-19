@@ -1,50 +1,21 @@
-import { useMemo, useState } from "react";
-import { Alert, Anchor, Button, Card, Group, Input, Stack, Text } from "@mantine/core";
+import { useState } from "react";
+import { Button, TextInput, PasswordInput, Stack, Text, Box, Alert } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
-
+import { AuthLayout } from "../components/AuthLayout";
 import { useRegisterEmailMutation } from "../../../api/hooks/useAuthMutations";
-import { AuthLayout } from "../AuthLayout";
-import { AlertCircleIcon, LockIcon, MailIcon } from "../AuthIcons";
-import {
-  SESSION_STORAGE_KEY,
-  getPasswordStrength,
-  requirementColor,
-  validateEmail,
-  validatePassword
-} from "../auth.constants";
-import {
-  authCardStyle,
-  authInputClassNames,
-  getActionButtonClassName,
-  getActionButtonStyles,
-  getAuthInputStyles
-} from "../auth.styles";
+import { SESSION_STORAGE_KEY, validateEmail, validatePassword } from "../auth.constants";
 import { getPostLoginPath } from "../../../utils/role-routing";
 
 export const RegisterPage = (): JSX.Element => {
   const navigate = useNavigate();
-  const [name, setName] = useState<string>("");
-  const [schoolId, setSchoolId] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-
-  const passwordValidation = useMemo(() => validatePassword(password), [password]);
-  const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
-  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
-
-  const isFormValid =
-    name.trim().length > 0 &&
-    schoolId.trim().length > 0 &&
-    validateEmail(email) &&
-    passwordValidation.isValid &&
-    passwordsMatch;
+  const [name, setName] = useState("");
+  const [schoolId, setSchoolId] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const registerMutation = useRegisterEmailMutation({
     onSuccess: (result) => {
-      setError("");
       sessionStorage.setItem(
         SESSION_STORAGE_KEY,
         JSON.stringify({
@@ -55,225 +26,146 @@ export const RegisterPage = (): JSX.Element => {
           loginAt: new Date().toISOString()
         })
       );
-
       navigate(getPostLoginPath(result.user), { replace: true });
     },
-    onError: (mutationError) => {
-      setError(mutationError instanceof Error ? mutationError.message : "Unable to create account right now.");
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : "Registration failed");
     }
   });
 
-  const handleRegister = (): void => {
-    setError("");
+  const handleRegister = () => {
+    setError(null);
 
-    if (name.trim().length === 0) {
-      setError("Full name is required.");
+    if (!schoolId.trim()) {
+      setError("Please enter your School Identifier");
       return;
     }
 
-    if (schoolId.trim().length === 0) {
-      setError("School identifier is required.");
+    if (!name.trim()) {
+      setError("Please enter your full name");
       return;
     }
 
     if (!validateEmail(email)) {
-      setError("Please enter a valid email address.");
+      setError("Please enter a valid email address");
       return;
     }
 
+    const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
-      setError("Password does not meet requirements.");
-      return;
-    }
-
-    if (!passwordsMatch) {
-      setError("Password confirmation does not match.");
+      setError(
+        "Password must be at least 8 characters and include uppercase, lowercase, and a number"
+      );
       return;
     }
 
     registerMutation.mutate({
       name: name.trim(),
       schoolId: schoolId.trim(),
-      email: email.trim().toLowerCase(),
+      email: email.trim(),
       password
     });
   };
 
+  const inputStyles = {
+    input: { border: "2px solid #E2E8F0", height: "56px", fontSize: "16px", fontWeight: 600 },
+    label: {
+      fontWeight: 700,
+      marginBottom: "8px",
+      fontSize: "13px",
+      color: "#64748b",
+      textTransform: "uppercase" as const,
+      letterSpacing: "0.05em"
+    }
+  };
+
   return (
-    <AuthLayout
-      footer={
-        <Text c="#6A6C7D" fz={14} fw={500} lh="20px" ta="center">
+    <AuthLayout title="Create Account" subtitle="Register your school to start tracking progress">
+      <Stack gap="lg">
+        {error && (
+          <Alert color="red" variant="light" radius="md">
+            {error}
+          </Alert>
+        )}
+
+        <TextInput
+          label="School Identifier"
+          placeholder="SCH-123456"
+          size="lg"
+          radius="md"
+          styles={inputStyles}
+          description="Provided by your school administrator"
+          value={schoolId}
+          onChange={(e) => setSchoolId(e.currentTarget.value)}
+        />
+
+        <TextInput
+          label="Full Name"
+          placeholder="Enter your full name"
+          size="lg"
+          radius="md"
+          styles={inputStyles}
+          value={name}
+          onChange={(e) => setName(e.currentTarget.value)}
+        />
+
+        <TextInput
+          label="Email Address"
+          placeholder="teacher@school.edu"
+          size="lg"
+          radius="md"
+          styles={inputStyles}
+          value={email}
+          onChange={(e) => setEmail(e.currentTarget.value)}
+        />
+
+        <PasswordInput
+          label="Password"
+          placeholder="Create a strong password"
+          size="lg"
+          radius="md"
+          styles={inputStyles}
+          value={password}
+          onChange={(e) => setPassword(e.currentTarget.value)}
+        />
+
+        <Button
+          fullWidth
+          size="xl"
+          radius="md"
+          bg="#ea580c"
+          className="hover:bg-[#c2410c] h-16 font-bold shadow-lg shadow-orange-100 mt-4"
+          loading={registerMutation.isPending}
+          onClick={handleRegister}
+        >
+          Create Teacher Account
+        </Button>
+
+        <Text ta="center" fz="sm" fw={600} c="#64748b">
           Already have an account?{" "}
-          <Anchor component="button" fw={600} onClick={() => navigate("/login/email")} type="button">
-            Sign in
-          </Anchor>
-        </Text>
-      }
-    >
-      <Card p={24} radius={16} style={authCardStyle}>
-        <Stack gap={20}>
-          <Stack align="center" gap={8}>
-            <Text c="#121421" fw={700} fz={22} lh="32px" ta="center">
-              Create Teacher Account
-            </Text>
-            <Text c="#696C7D" fw={500} fz={16} lh="24px" ta="center">
-              Register with your school identifier
-            </Text>
-          </Stack>
-
-          {error && (
-            <Alert
-              color="red"
-              icon={<AlertCircleIcon />}
-              radius="md"
-              styles={{
-                message: {
-                  fontSize: "14px",
-                  lineHeight: "20px"
-                }
-              }}
-              variant="light"
-            >
-              {error}
-            </Alert>
-          )}
-
-          <Stack gap={8}>
-            <Text c="#151721" fw={700} fz={16} lh="24px">
-              Full Name
-            </Text>
-            <Input
-              classNames={authInputClassNames}
-              onChange={(event) => setName(event.currentTarget.value)}
-              placeholder="Kwame Mensah"
-              styles={getAuthInputStyles()}
-              value={name}
-            />
-          </Stack>
-
-          <Stack gap={8}>
-            <Text c="#151721" fw={700} fz={16} lh="24px">
-              School Identifier
-            </Text>
-            <Input
-              classNames={authInputClassNames}
-              onChange={(event) => setSchoolId(event.currentTarget.value)}
-              placeholder="school-demo-001"
-              styles={getAuthInputStyles()}
-              value={schoolId}
-            />
-          </Stack>
-
-          <Stack gap={8}>
-            <Text c="#151721" fw={700} fz={16} lh="24px">
-              Email Address
-            </Text>
-            <Input
-              classNames={authInputClassNames}
-              leftSection={<MailIcon />}
-              onChange={(event) => setEmail(event.currentTarget.value)}
-              placeholder="teacher@example.com"
-              styles={getAuthInputStyles()}
-              type="email"
-              value={email}
-            />
-          </Stack>
-
-          <Stack gap={8}>
-            <Text c="#151721" fw={700} fz={16} lh="24px">
-              Password
-            </Text>
-            <Input
-              classNames={authInputClassNames}
-              leftSection={<LockIcon />}
-              onChange={(event) => setPassword(event.currentTarget.value)}
-              placeholder="Create password"
-              rightSection={
-                <Anchor
-                  component="button"
-                  fw={600}
-                  fz={12}
-                  lh="16px"
-                  onClick={() => setShowPassword((value) => !value)}
-                  style={{ color: "#1B1D2D" }}
-                  type="button"
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </Anchor>
-              }
-              rightSectionWidth={52}
-              styles={getAuthInputStyles()}
-              type={showPassword ? "text" : "password"}
-              value={password}
-            />
-          </Stack>
-
-          <Stack gap={8}>
-            <Text c="#151721" fw={700} fz={16} lh="24px">
-              Confirm Password
-            </Text>
-            <Input
-              classNames={authInputClassNames}
-              leftSection={<LockIcon />}
-              onChange={(event) => setConfirmPassword(event.currentTarget.value)}
-              placeholder="Re-enter password"
-              styles={getAuthInputStyles()}
-              type={showPassword ? "text" : "password"}
-              value={confirmPassword}
-            />
-          </Stack>
-
-          {password.length > 0 && (
-            <Stack gap={8}>
-              {passwordStrength && (
-                <Text c="#6A6C7D" fz={14} fw={500} lh="20px">
-                  Password strength:{" "}
-                  <Text c={passwordStrength.color} component="span" fz={14} fw={600} lh="20px">
-                    {passwordStrength.label}
-                  </Text>
-                </Text>
-              )}
-
-              <Stack gap={4}>
-                <Text c={requirementColor(passwordValidation.minLength)} fz={12} lh="16px">
-                  {passwordValidation.minLength ? "✓" : "○"} At least 8 characters
-                </Text>
-                <Text c={requirementColor(passwordValidation.hasUpperCase)} fz={12} lh="16px">
-                  {passwordValidation.hasUpperCase ? "✓" : "○"} One uppercase letter
-                </Text>
-                <Text c={requirementColor(passwordValidation.hasLowerCase)} fz={12} lh="16px">
-                  {passwordValidation.hasLowerCase ? "✓" : "○"} One lowercase letter
-                </Text>
-                <Text c={requirementColor(passwordValidation.hasNumber)} fz={12} lh="16px">
-                  {passwordValidation.hasNumber ? "✓" : "○"} One number
-                </Text>
-                <Text c={requirementColor(passwordsMatch)} fz={12} lh="16px">
-                  {passwordsMatch ? "✓" : "○"} Password confirmation matches
-                </Text>
-              </Stack>
-            </Stack>
-          )}
-
           <Button
-            className={getActionButtonClassName(isFormValid)}
-            color="gray"
-            disabled={!isFormValid || registerMutation.isPending}
-            fullWidth
-            onClick={handleRegister}
-            radius={14}
-            size="md"
-            styles={getActionButtonStyles()}
+            variant="transparent"
+            p={0}
+            h="auto"
+            fw={700}
+            color="orange"
+            onClick={() => navigate("/login/phone")}
           >
-            {registerMutation.isPending ? "Creating account..." : "Create Account"}
+            Sign In
           </Button>
+        </Text>
 
-          <Group justify="center">
-            <Anchor component="button" fw={600} fz={14} lh="20px" onClick={() => navigate("/")} type="button">
-              Back to Phone Login
-            </Anchor>
-          </Group>
-        </Stack>
-      </Card>
+        <Box className="pt-4 border-t border-[#E2E8F0]">
+          <Text c="#94a3b8" fz="xs" ta="center" className="leading-relaxed">
+            By creating an account, you agree to BridgeEd&apos;s <br />
+            <span className="font-bold cursor-pointer hover:text-[#ea580c]">
+              Terms of Service
+            </span>{" "}
+            and{" "}
+            <span className="font-bold cursor-pointer hover:text-[#ea580c]">Privacy Policy</span>.
+          </Text>
+        </Box>
+      </Stack>
     </AuthLayout>
   );
 };

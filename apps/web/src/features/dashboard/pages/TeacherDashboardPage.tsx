@@ -1,378 +1,208 @@
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Card,
-  Divider,
-  Group,
-  Paper,
-  SimpleGrid,
-  Stack,
-  Text,
-  ThemeIcon,
-  Title,
-} from "@mantine/core";
-import { Role } from "@bridgeed/shared";
-import { Link } from "react-router-dom";
+import { Title, Text, SimpleGrid, Paper, Group, Box, Badge, Stack, Button, Progress, Loader, Center } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { useClassesQuery } from "../../../api/hooks/useClassQueries";
+import { useTeacherReportQuery } from "../../../api/hooks/useReportQueries";
+import { RunScreenerModal } from "../components/RunScreenerModal";
 
-import { DashboardLayout } from "../components/DashboardLayout";
-
-type IconProps = {
-  className?: string;
-};
-
-type StatItem = {
-  color: "green" | "bridgeed" | "yellow";
-  icon: (props: IconProps) => JSX.Element;
-  label: string;
-  value: string;
-};
-
-const IconUsers = ({ className }: IconProps): JSX.Element => (
-  <svg className={className} fill="none" viewBox="0 0 24 24">
-    <circle cx="8.5" cy="8" r="3.5" stroke="currentColor" strokeWidth="2" />
-    <path d="M2.5 19C2.5 15.9 5 13.5 8.5 13.5C12 13.5 14.5 15.9 14.5 19" stroke="currentColor" strokeWidth="2" />
-    <circle cx="17.5" cy="7.5" r="2.5" stroke="currentColor" strokeWidth="2" />
-    <path d="M15.5 13.5C17.7 13.8 19.5 15.4 19.5 17.9" stroke="currentColor" strokeWidth="2" />
+// --- Icons ---
+const IconUsers = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
   </svg>
 );
 
-const IconTrendUp = ({ className }: IconProps): JSX.Element => (
-  <svg className={className} fill="none" viewBox="0 0 24 24">
-    <path
-      d="M4 15L9 10L13 14L20 7"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    />
-    <path d="M15 7H20V12" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+const IconClipboard = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect width="8" height="4" x="8" y="2" rx="1" /><path d="M9 14h6" /><path d="M9 10h6" />
   </svg>
 );
 
-const IconBook = ({ className }: IconProps): JSX.Element => (
-  <svg className={className} fill="none" viewBox="0 0 24 24">
-    <path d="M3 5.5C3 4.67 3.67 4 4.5 4H11V20H4.5A1.5 1.5 0 0 1 3 18.5V5.5Z" stroke="currentColor" strokeWidth="2" />
-    <path d="M21 5.5C21 4.67 20.33 4 19.5 4H13V20H19.5A1.5 1.5 0 0 0 21 18.5V5.5Z" stroke="currentColor" strokeWidth="2" />
+const IconAlertCircle = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" />
   </svg>
 );
 
-const IconFile = ({ className }: IconProps): JSX.Element => (
-  <svg className={className} fill="none" viewBox="0 0 24 24">
-    <path d="M7 3H14L19 8V21H7V3Z" stroke="currentColor" strokeWidth="2" />
-    <path d="M14 3V8H19" stroke="currentColor" strokeWidth="2" />
-    <path d="M10 12H16" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
-    <path d="M10 16H16" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+const IconArrowUpRight = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="7" y1="17" x2="17" y2="7" /><polyline points="7 7 17 7 17 17" />
   </svg>
 );
-
-const IconSettings = ({ className }: IconProps): JSX.Element => (
-  <svg className={className} fill="none" viewBox="0 0 24 24">
-    <path
-      d="M12 15.5A3.5 3.5 0 1 0 12 8.5A3.5 3.5 0 0 0 12 15.5Z"
-      stroke="currentColor"
-      strokeWidth="2"
-    />
-    <path
-      d="M19.4 15.1L20.5 17L18.3 19.2L16.4 18.1C15.9 18.4 15.3 18.6 14.7 18.8L14.1 21H9.9L9.3 18.8C8.7 18.6 8.1 18.4 7.6 18.1L5.7 19.2L3.5 17L4.6 15.1C4.3 14.6 4.1 14 3.9 13.4L1.7 12.8V11.2L3.9 10.6C4.1 10 4.3 9.4 4.6 8.9L3.5 7L5.7 4.8L7.6 5.9C8.1 5.6 8.7 5.4 9.3 5.2L9.9 3H14.1L14.7 5.2C15.3 5.4 15.9 5.6 16.4 5.9L18.3 4.8L20.5 7L19.4 8.9C19.7 9.4 19.9 10 20.1 10.6L22.3 11.2V12.8L20.1 13.4C19.9 14 19.7 14.6 19.4 15.1Z"
-      stroke="currentColor"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    />
-  </svg>
-);
-
-const stats: StatItem[] = [
-  {
-    color: "green",
-    label: "Students",
-    value: "165",
-    icon: IconUsers
-  },
-  {
-    color: "green",
-    label: "On Track",
-    value: "78%",
-    icon: IconTrendUp
-  },
-  {
-    color: "bridgeed",
-    label: "Classes",
-    value: "4",
-    icon: IconBook
-  },
-  {
-    color: "yellow",
-    label: "Pending",
-    value: "12",
-    icon: IconFile
-  }
-];
-
-const classes = [
-  { id: "jhs-1a", name: "JHS 1A", students: 42, subject: "Mathematics" },
-  { id: "jhs-1b", name: "JHS 1B", students: 38, subject: "English" },
-  { id: "jhs-2a", name: "JHS 2A", students: 45, subject: "Mathematics" },
-  { id: "shs-1c", name: "SHS 1C", students: 40, subject: "English" }
-];
-
-const recentActivity = [
-  { student: "Kwame Mensah", action: "Assessment completed", time: "2 hours ago" },
-  { student: "Akua Asante", action: "Remediation plan created", time: "5 hours ago" },
-  { student: "Kofi Owusu", action: "Progress updated", time: "1 day ago" }
-];
 
 export const TeacherDashboardPage = (): JSX.Element => {
-  const borderColor = "var(--mantine-color-bridgeed-2)";
+  const [screenerModalOpened, { open: openScreenerModal, close: closeScreenerModal }] = useDisclosure(false);
+  const { data: classes, isLoading: classesLoading } = useClassesQuery();
+  const { data: report, isLoading: reportLoading } = useTeacherReportQuery();
+
+  const stats = [
+    { label: "Total Students", value: report?.summary?.totalStudents?.toString() || "-", icon: <IconUsers />, trend: "Active", color: "blue" },
+    { label: "Avg. Mastery", value: `${report?.summary?.avgMastery || 0}%`, icon: <IconArrowUpRight />, trend: "Current", color: "teal" },
+    { label: "Diagnostic Coverage", value: `${report?.summary?.diagnosticCoverage || 0}%`, icon: <IconClipboard />, trend: "Completion", color: "orange" },
+    { label: "Total Classes", value: report?.summary?.totalClasses?.toString() || "-", icon: <IconUsers />, trend: "Managed", color: "indigo" },
+  ];
+
+  if (classesLoading || reportLoading) {
+    return (
+      <Center py={100}>
+        <Loader color="orange" size="xl" />
+      </Center>
+    );
+  }
+
+  const getMasteryColor = (mastery: number) => {
+    if (mastery >= 75) return "teal";
+    if (mastery >= 50) return "orange";
+    return "red";
+  };
 
   return (
-    <DashboardLayout role={Role.Teacher}>
-      <Box className="max-w-[390px] mx-auto px-4 pt-4 pb-8" hiddenFrom="lg">
-        <Paper bg="green.6" p={16} radius="xl">
-          <Stack gap={12}>
-            <Group align="flex-start" justify="space-between" wrap="nowrap">
-              <Stack gap={0}>
-                <Title c="white" order={1} size="h1">
-                  Teacher Dashboard
-                </Title>
-                <Text c="green.1" fw={600} fz={14} mt={2}>
-                  BridgeEd
-                </Text>
-              </Stack>
-              <ActionIcon
-                aria-label="Open settings"
-                radius="md"
-                size={40}
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.2)", color: "white" }}
-                variant="filled"
-              >
-                <IconSettings className="w-4 h-4" />
-              </ActionIcon>
-            </Group>
-
-            <Group gap={10} wrap="nowrap">
-              <ThemeIcon
-                radius="xl"
-                size={32}
-                style={{ backgroundColor: "rgba(255, 255, 255, 0.2)", color: "white" }}
-              >
-                <Text c="white" fw={700} fz={16}>
-                  T
-                </Text>
-              </ThemeIcon>
-              <Stack gap={0}>
-                <Text c="white" fw={700} fz={16} lh="24px">
-                  Teacher Name
-                </Text>
-                <Text c="green.1" fw={600} fz={12} lh="16px">
-                  teacher@school.gh
-                </Text>
-              </Stack>
-            </Group>
-          </Stack>
-        </Paper>
-
-        <SimpleGrid cols={2} mt={16} spacing="md">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={`mobile-${stat.label}`} p={16} radius="md" withBorder style={{ borderColor }}>
-                <Group align="flex-start" gap={10} wrap="nowrap">
-                  <ThemeIcon color={stat.color} radius="md" size={40} variant="light">
-                    <Icon className="w-5 h-5" />
-                  </ThemeIcon>
-                  <Stack gap={0}>
-                    <Text c="bridgeed.9" fw={700} fz={44} lh="1">
-                      {stat.value}
-                    </Text>
-                    <Text c="bridgeed.6" fz={14}>
-                      {stat.label}
-                    </Text>
-                  </Stack>
-                </Group>
-              </Card>
-            );
-          })}
-        </SimpleGrid>
-
-        <Stack gap="md" mt={24}>
-          <Title c="bridgeed.9" order={2} size="h2">
-            Quick Actions
+    <Stack gap={32}>
+      {/* Header Section */}
+      <Group justify="space-between" align="flex-end">
+        <Stack gap={4}>
+          <Title order={1} className="text-3xl font-black text-[#1e293b] tracking-tight">
+            Teacher Dashboard
           </Title>
-          <SimpleGrid cols={2} spacing="md">
-            <Link style={{ textDecoration: "none" }} to="/assessments">
-              <Card p={20} radius="md" withBorder style={{ borderColor }}>
-                <Stack align="center" gap={10}>
-                  <ThemeIcon color="green" radius="xl" size={52} variant="light">
-                    <IconFile className="w-6 h-6" />
-                  </ThemeIcon>
-                  <Text c="bridgeed.9" fz={14} fw={600} ta="center">
-                    New Assessment
-                  </Text>
-                </Stack>
-              </Card>
-            </Link>
-            <Link style={{ textDecoration: "none" }} to="/classes">
-              <Card p={20} radius="md" withBorder style={{ borderColor }}>
-                <Stack align="center" gap={10}>
-                  <ThemeIcon color="bridgeed" radius="xl" size={52} variant="light">
-                    <IconBook className="w-6 h-6" />
-                  </ThemeIcon>
-                  <Text c="bridgeed.9" fz={14} fw={600} ta="center">
-                    View Classes
-                  </Text>
-                </Stack>
-              </Card>
-            </Link>
-          </SimpleGrid>
+          <Text c="#64748b" fw={500}>Welcome back! Here&apos;s what&apos;s happening in your classes.</Text>
         </Stack>
+        <Button 
+          bg="#ea580c" 
+          radius="md" 
+          size="md" 
+          className="hover:bg-[#c2410c] font-bold shadow-lg shadow-orange-100"
+          onClick={openScreenerModal}
+        >
+          Run New Screener
+        </Button>
+      </Group>
 
-        <Stack gap="md" mt={32}>
-          <Title c="bridgeed.9" order={2} size="h2">
-            My Classes
-          </Title>
-          <Stack gap="md">
-            {classes.map((classItem) => (
-              <Link
-                key={`mobile-class-${classItem.id}`}
-                style={{ textDecoration: "none" }}
-                to={`/classes/${classItem.id}`}
+      {/* KPI Stats Grid */}
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="xl">
+        {stats.map((stat, i) => (
+          <Paper key={i} p="xl" radius="24px" className="border border-[#e2e8f0] shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className={`absolute top-0 left-0 w-1.5 h-full bg-${stat.color}-500 opacity-20`} />
+            <Group justify="space-between" mb="md">
+              <Box className={`w-10 h-10 rounded-xl bg-${stat.color}-50 flex items-center justify-center text-${stat.color}-600`}>
+                {stat.icon}
+              </Box>
+              <Badge 
+                variant="light" 
+                color={stat.trend.startsWith('+') ? 'green' : stat.trend.startsWith('-') ? 'blue' : 'red'} 
+                radius="sm" 
+                size="sm"
+                className="font-bold"
               >
-                <Card p={18} radius="md" withBorder style={{ borderColor }}>
-                  <Group align="flex-start" justify="space-between" mb={8}>
-                    <Text c="bridgeed.9" fw={700} fz={16} lh="24px">
-                      {classItem.name}
-                    </Text>
-                    <Text c="bridgeed.6" fz={14} lh="20px">
-                      {classItem.students} students
-                    </Text>
-                  </Group>
-                  <Text c="bridgeed.6" fz={14} lh="20px">
-                    {classItem.subject}
-                  </Text>
-                </Card>
-              </Link>
+                {stat.trend}
+              </Badge>
+            </Group>
+            <Stack gap={2}>
+              <Text c="#94a3b8" fz="xs" fw={800} tt="uppercase" className="tracking-wider">{stat.label}</Text>
+              <Text c="#1e293b" fz="28px" fw={900}>{stat.value}</Text>
+            </Stack>
+          </Paper>
+        ))}
+      </SimpleGrid>
+
+      <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="xl">
+        {/* Skill Heatmap Mockup */}
+        <Paper p="xl" radius="24px" className="border border-[#e2e8f0] shadow-sm">
+          <Group justify="space-between" mb="xl">
+            <Stack gap={4}>
+              <Text fw={900} fz="lg" c="#1e293b">Foundational Skill Mastery</Text>
+              <Text c="#94a3b8" fz="xs" fw={700}>LITERACY & NUMERACY FOCUS</Text>
+            </Stack>
+            <Button variant="subtle" size="xs" color="gray" fw={700}>View Full Report</Button>
+          </Group>
+
+          <Stack gap="lg">
+            {report?.skillPerformance?.map((skill, i) => (
+              <Stack key={i} gap={8}>
+                <Group justify="space-between">
+                  <Text fz="sm" fw={700} c="#475569">{skill.skill}</Text>
+                  <Text fz="sm" fw={800} c={skill.mastery < 50 ? "red" : "#1e293b"}>{skill.mastery}%</Text>
+                </Group>
+                <Progress value={skill.mastery} color={getMasteryColor(skill.mastery)} size="md" radius="xl" />
+              </Stack>
             ))}
           </Stack>
-        </Stack>
-      </Box>
-
-      <Box visibleFrom="lg">
-        <Paper bg="white" radius={0} style={{ borderBottom: `1px solid ${borderColor}` }}>
-          <Group className="px-8 py-6" justify="space-between">
-            <Stack gap={2}>
-              <Title c="bridgeed.9" order={1} size="h1">
-                Dashboard
-              </Title>
-              <Text c="bridgeed.6" fz={14}>
-                Welcome back, Teacher Name
-              </Text>
-            </Stack>
-
-            <Group gap="md">
-              <Button
-                color="green"
-                component={Link}
-                fw={600}
-                radius="md"
-                size="md"
-                to="/assessments"
-              >
-                New Assessment
-              </Button>
-              <ActionIcon
-                aria-label="Open settings"
-                color="bridgeed"
-                radius="md"
-                size={48}
-                variant="outline"
-              >
-                <IconSettings className="w-5 h-5" />
-              </ActionIcon>
-            </Group>
-          </Group>
         </Paper>
 
-        <Box className="px-8 py-8">
-          <SimpleGrid cols={4} mb={32} spacing="md">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={stat.label} p={24} radius="md" withBorder style={{ borderColor }}>
-                <Group align="flex-start" gap="md" wrap="nowrap">
-                  <ThemeIcon color={stat.color} radius="md" size={40} variant="light">
-                    <Icon className="w-5 h-5" />
-                  </ThemeIcon>
-                  <Stack gap={2}>
-                    <Text c="bridgeed.9" fw={600} fz={28} lh="36px">
-                      {stat.value}
-                    </Text>
-                    <Text c="bridgeed.6" fz={14}>
-                      {stat.label}
-                    </Text>
+        {/* Recent Activity / At-Risk List */}
+        <Paper p="xl" radius="24px" className="border border-[#e2e8f0] shadow-sm flex flex-col">
+          <Group justify="space-between" mb="xl">
+            <Stack gap={4}>
+              <Text fw={900} fz="lg" c="#1e293b">Needs Attention</Text>
+              <Text c="#94a3b8" fz="xs" fw={700}>STUDENTS REQUIRING REMEDIATION</Text>
+            </Stack>
+            <Badge color="red" variant="filled">7 High Alert</Badge>
+          </Group>
+
+          <Stack gap={1} className="flex-1">
+            {[
+              { name: "Kofi Mensah", class: "JHS 1A", gap: "Decimals", status: "Critical" },
+              { name: "Ama Serwaa", class: "JHS 1A", gap: "Phonics", status: "Struggling" },
+              { name: "John Doe", class: "JHS 2B", gap: "Division", status: "Review Needed" },
+              { name: "Sarah Smith", class: "JHS 1A", gap: "Comprehension", status: "Struggling" },
+              { name: "Prince Boateng", class: "JHS 3C", gap: "Fractions", status: "Review Needed" },
+            ].map((learner, i) => (
+              <Group key={i} justify="space-between" p="md" className={`border-b border-[#f1f5f9] last:border-0 hover:bg-[#f8fafc] transition-colors rounded-xl`}>
+                <Group gap="md">
+                  <Box className="w-10 h-10 rounded-full bg-[#f1f5f9] flex items-center justify-center font-bold text-[#64748b]">
+                    {learner.name[0]}
+                  </Box>
+                  <Stack gap={0}>
+                    <Text fw={800} fz="sm" c="#1e293b">{learner.name}</Text>
+                    <Text c="#94a3b8" fz="xs" fw={700}>{learner.class} • {learner.gap}</Text>
                   </Stack>
                 </Group>
-              </Card>
-            );
-          })}
-          </SimpleGrid>
+                <Badge 
+                  color={learner.status === 'Critical' ? 'red' : learner.status === 'Struggling' ? 'orange' : 'blue'} 
+                  variant="light"
+                  size="sm"
+                >
+                  {learner.status}
+                </Badge>
+              </Group>
+            ))}
+          </Stack>
+          <Button variant="outline" color="gray" fullWidth mt="xl" radius="md" fw={700} className="border-[#e2e8f0]">View All At-Risk Students</Button>
+        </Paper>
+      </SimpleGrid>
 
-          <SimpleGrid cols={2} spacing={32}>
-            <Stack gap="md">
-              <Title c="bridgeed.9" order={2} size="h2">
-                My Classes
-              </Title>
-              <Stack gap="md">
-                {classes.map((classItem) => (
-                  <Link
-                    key={classItem.id}
-                    style={{ textDecoration: "none" }}
-                    to={`/classes/${classItem.id}`}
-                  >
-                    <Card p={20} radius="md" withBorder style={{ borderColor }}>
-                      <Group align="flex-start" justify="space-between" mb={8}>
-                        <Text c="bridgeed.9" fw={600} fz={16} lh="24px">
-                          {classItem.name}
-                        </Text>
-                        <Text c="bridgeed.6" fz={14} lh="20px">
-                          {classItem.students} students
-                        </Text>
-                      </Group>
-                      <Text c="bridgeed.6" fz={14} lh="20px">
-                        {classItem.subject}
-                      </Text>
-                    </Card>
-                  </Link>
-                ))}
-              </Stack>
-            </Stack>
+      {/* Classes Overview */}
+      <Paper p="xl" radius="24px" className="border border-[#e2e8f0] shadow-sm">
+        <Title order={3} className="text-xl font-black text-[#1e293b] mb-xl">Your Classes</Title>
+        <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
+          {classesLoading ? (
+            <Text>Loading classes...</Text>
+          ) : classes?.map((cls) => (
+            <Paper key={cls.id} p="xl" radius="20px" className="bg-[#f8fafc] border border-[#e2e8f0] hover:border-[#ea580c] transition-colors cursor-pointer group">
+              <Group justify="space-between" mb="md">
+                <Text fw={900} fz="lg" c="#1e293b">{cls.name}</Text>
+                <IconArrowUpRight />
+              </Group>
+              <Group gap="xl">
+                <Stack gap={2}>
+                  <Text c="#94a3b8" fz="xs" fw={800}>GRADE</Text>
+                  <Text fw={900} fz="xl">{cls.gradeLevel}</Text>
+                </Stack>
+                <Stack gap={2}>
+                  <Text c="#94a3b8" fz="xs" fw={800}>STATUS</Text>
+                  <Text fw={900} fz="xl">{cls.isActive ? "Active" : "Inactive"}</Text>
+                </Stack>
+              </Group>
+              <Box mt="xl">
+                <Text c="#64748b" fz="xs" fw={700} mb={8}>DIAGNOSTIC COVERAGE</Text>
+                <Progress value={Math.random() * 100} color="orange" size="sm" radius="xl" />
+              </Box>
+            </Paper>
+          )) || (
+            <Text c="#94a3b8" fw={600}>No classes found. Create your first class to get started.</Text>
+          )}
+        </SimpleGrid>
+      </Paper>
 
-            <Stack gap="md">
-              <Title c="bridgeed.9" order={2} size="h2">
-                Recent Activity
-              </Title>
-              <Card p={0} radius="md" withBorder style={{ borderColor }}>
-                {recentActivity.map((item, index) => (
-                  <Box key={`${item.student}-${index}`}>
-                    <Box px={24} py={20}>
-                      <Text c="bridgeed.9" fw={600} fz={16} lh="24px">
-                        {item.student}
-                      </Text>
-                      <Text c="bridgeed.6" fz={14} lh="20px" mt={4}>
-                        {item.action}
-                      </Text>
-                      <Text c="bridgeed.6" fz={14} lh="20px" mt={4}>
-                        {item.time}
-                      </Text>
-                    </Box>
-                    {index < recentActivity.length - 1 && <Divider color="bridgeed.2" />}
-                  </Box>
-                ))}
-              </Card>
-            </Stack>
-          </SimpleGrid>
-        </Box>
-      </Box>
-    </DashboardLayout>
+      <RunScreenerModal opened={screenerModalOpened} onClose={closeScreenerModal} />
+    </Stack>
   );
 };

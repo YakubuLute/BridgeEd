@@ -9,12 +9,17 @@ export const queryKeys = {
     emailLogin: () => ["auth", "email", "login"] as const,
     forgotPassword: () => ["auth", "email", "forgot-password"] as const
   },
+  activity: {
+    list: () => ["activity", "list"] as const
+  },
   classes: {
     list: () => ["classes", "list"] as const,
+    detail: (classId: string) => ["classes", "detail", classId] as const,
     create: () => ["classes", "create"] as const,
     update: () => ["classes", "update"] as const,
     learners: (classId: string) => ["classes", classId, "learners"] as const,
-    assessmentOverview: (classId: string) => ["classes", classId, "assessment-overview"] as const
+    assessmentOverview: (classId: string) => ["classes", classId, "assessment-overview"] as const,
+    assessmentHistory: (classId: string) => ["classes", classId, "assessment-history"] as const
   },
   learners: {
     create: () => ["learners", "create"] as const,
