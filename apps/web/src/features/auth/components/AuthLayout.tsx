@@ -9,9 +9,9 @@ type AuthLayoutProps = {
 
 export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps): JSX.Element => {
   return (
-    <div className="min-h-screen bg-white flex flex-col md:flex-row font-sans text-[#334155]">
+    <div className="h-screen bg-white flex flex-col md:flex-row font-sans text-[#334155] overflow-hidden">
       {/* --- Left Panel: Branding (Desktop) --- */}
-      <div className="hidden md:flex w-1/2 bg-[#ea580c] p-16 flex-col justify-between relative overflow-hidden">
+      <div className="hidden md:flex w-1/2 bg-[#ea580c] p-16 flex-col justify-between relative overflow-hidden h-full">
         {/* Abstract Background Decor */}
         <div className="absolute top-0 left-0 w-full h-full opacity-10">
           <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -57,7 +57,7 @@ export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps): JSX.
       </div>
 
       {/* --- Right Panel: Content --- */}
-      <div className="flex-1 flex flex-col justify-center items-center p-8 md:p-16 bg-[#FBFBFF]">
+      <div className="flex-1 flex flex-col items-center p-8 md:p-16 bg-[#FBFBFF] h-full overflow-y-auto">
         {/* Mobile Logo */}
         <div className="md:hidden flex items-center gap-3 mb-12">
           <Box className="w-10 h-10 rounded-lg bg-[#ea580c] flex items-center justify-center shadow-lg">
@@ -78,12 +78,12 @@ export const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps): JSX.
           </Text>
         </div>
 
-        <Box className="w-full max-w-md">
+        <Box className="w-full max-w-md my-auto py-8">
           <Stack
             gap="xs"
             mb={40}
-            align="center"
-            className="text-center md:text-left md:align-baseline"
+            align={{ base: "center", md: "flex-start" }}
+            className="text-center md:text-left"
           >
             <Title order={2} className="text-4xl font-black text-[#1e293b] tracking-tight">
               {title}
