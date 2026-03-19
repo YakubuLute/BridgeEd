@@ -81,7 +81,7 @@ export const RegisterPage = (): JSX.Element => {
 
   return (
     <AuthLayout title="Create Account" subtitle="Register your school to start tracking progress">
-      <Stack gap="lg">
+      <Stack gap="xl">
         {error && (
           <Alert color="red" variant="light" radius="md">
             {error}
