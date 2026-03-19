@@ -12,6 +12,7 @@ import {
   Badge,
   Avatar
 } from "@mantine/core";
+import { IconActivity, IconBook, IconClipboard, IconReports, IconSettings } from "../../dashboard/components/DashboardLayout";
 
 // --- Icons (Lucide-style) ---
 const IconPlay = () => (
@@ -298,31 +299,38 @@ export const LandingPage = (): JSX.Element => {
                         Dashboard
                       </Text>
                     </Group>
-                    <Text
-                      c="white"
-                      opacity={0.7}
-                      fz={10}
-                      fw={800}
-                      tt="uppercase"
-                      mt={24}
-                      mb={12}
-                      className="px-4"
-                    >
-                      AI Agents
-                    </Text>
-                    {["aiDiagnostics", "aiRemediation", "aiProfiles"].map((item) => (
-                      <Group
-                        key={item}
-                        className="px-4 py-3 text-white/70 hover:bg-white/10 rounded-xl transition-colors"
-                      >
-                        <Box className="w-5 h-5 rounded-md border border-white/30 flex items-center justify-center">
-                          <Box className="w-1 h-1 rounded-full bg-white" />
-                        </Box>
-                        <Text fz="sm" fw={600}>
-                          {item}
-                        </Text>
-                      </Group>
-                    ))}
+                    <Group className="bg-gray-600/20 px-4 py-3 rounded-xl text-white">
+                     <IconBook className="w-5 h-5"/>
+                      <Text fz="sm" fw={700}>
+                        Classes
+                      </Text>
+                    </Group>
+                    <Group className="bg-gray-600/20 px-4 py-3 rounded-xl text-white">
+                      <IconClipboard className="w-5 h-5"/>
+                      <Text fz="sm" fw={700}>
+                        Assessments
+                      </Text>
+                    </Group>
+                    <Group className="bg-gray-600/20 px-4 py-3 rounded-xl text-white">
+                      <IconActivity className="w-5 h-5"/>
+                      <Text fz="sm" fw={700}>
+                        Activity
+                      </Text>
+                    </Group>
+                    <Group className="bg-gray-600/20 px-4 py-3 rounded-xl text-white">
+                      <IconReports className="w-5 h-5"/>
+                      <Text fz="sm" fw={700}>
+                        Reports
+                      </Text>
+                    </Group>
+                    <Group className="bg-gray-600/20 px-4 py-3 rounded-xl text-white">
+                      <IconSettings className="w-5 h-5"/>
+                      <Text fz="sm" fw={700}>
+                        Settings
+                      </Text>
+                    </Group>
+                
+                
                   </div>
                 </div>
 
@@ -337,10 +345,10 @@ export const LandingPage = (): JSX.Element => {
                       />
                       <Stack gap={0}>
                         <Text fw={800} fz="sm">
-                          Rose Knight
+                          Ruth Armstrong
                         </Text>
                         <Text c="#94a3b8" fz={10} fw={700}>
-                          Cathedral School
+                          School Teacher
                         </Text>
                       </Stack>
                       <svg
@@ -368,7 +376,7 @@ export const LandingPage = (): JSX.Element => {
                           Welcome,
                         </Text>
                         <Title order={2} className="text-5xl font-black mb-4">
-                          <span className="text-[#ea580c]">Alpha Vidyalaya School</span>
+                          <span className="text-[#ea580c]">Lute's School of Sciences</span>
                         </Title>
                         <Text fz="xl" fw={700} mb="xl">
                           to the digital revolution
@@ -384,7 +392,7 @@ export const LandingPage = (): JSX.Element => {
                         <Stack gap="xs">
                           <Text fz="sm">
                             <span className="text-[#ea580c] fw-bold">Save you time</span> with
-                            aiAutomation
+                            Dashboard
                           </Text>
                           <Text fz="sm">
                             <span className="text-[#ea580c] fw-bold">Save you money</span> with

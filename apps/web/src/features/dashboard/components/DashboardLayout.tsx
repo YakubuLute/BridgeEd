@@ -34,7 +34,7 @@ type NavItem = {
 };
 
 // --- Modern 1.5px Stroke Icons ---
-const IconDashboard = ({ className }: IconProps): JSX.Element => (
+export const IconDashboard = ({ className }: IconProps): JSX.Element => (
   <svg
     className={className}
     fill="none"
@@ -51,7 +51,7 @@ const IconDashboard = ({ className }: IconProps): JSX.Element => (
   </svg>
 );
 
-const IconBook = ({ className }: IconProps): JSX.Element => (
+export const IconBook = ({ className }: IconProps): JSX.Element => (
   <svg
     className={className}
     fill="none"
@@ -65,7 +65,7 @@ const IconBook = ({ className }: IconProps): JSX.Element => (
   </svg>
 );
 
-const IconClipboard = ({ className }: IconProps): JSX.Element => (
+export const IconClipboard = ({ className }: IconProps): JSX.Element => (
   <svg
     className={className}
     fill="none"
@@ -82,7 +82,7 @@ const IconClipboard = ({ className }: IconProps): JSX.Element => (
   </svg>
 );
 
-const IconActivity = ({ className }: IconProps): JSX.Element => (
+export const IconActivity = ({ className }: IconProps): JSX.Element => (
   <svg
     className={className}
     fill="none"
@@ -96,7 +96,7 @@ const IconActivity = ({ className }: IconProps): JSX.Element => (
   </svg>
 );
 
-const IconReports = ({ className }: IconProps): JSX.Element => (
+export const IconReports = ({ className }: IconProps): JSX.Element => (
   <svg
     className={className}
     fill="none"
@@ -113,7 +113,7 @@ const IconReports = ({ className }: IconProps): JSX.Element => (
   </svg>
 );
 
-const IconSettings = ({ className }: IconProps): JSX.Element => (
+export const IconSettings = ({ className }: IconProps): JSX.Element => (
   <svg
     className={className}
     fill="none"
